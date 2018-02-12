@@ -1,8 +1,7 @@
 package betterquesting.client.toolbox.tools;
 
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.nbt.NBTTagCompound;
 import com.google.gson.JsonObject;
+
 import betterquesting.client.gui.GuiQuesting;
 import betterquesting.client.gui.editors.json.GuiJsonItemSelection;
 import betterquesting.network.PacketAssembly;
@@ -10,6 +9,8 @@ import betterquesting.network.PacketTypeRegistry.BQPacketType;
 import betterquesting.quests.QuestInstance;
 import betterquesting.utils.JsonHelper;
 import betterquesting.utils.NBTConverter;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.nbt.NBTTagCompound;
 
 public class GuiToolIconProxy extends GuiQuesting
 {
@@ -17,7 +18,7 @@ public class GuiToolIconProxy extends GuiQuesting
 	JsonObject jProg = new JsonObject();
 	JsonObject json = new JsonObject();
 	boolean flag = false;
-	
+
 	public GuiToolIconProxy(GuiScreen parent, QuestInstance quest)
 	{
 		super(parent, "");
@@ -25,7 +26,7 @@ public class GuiToolIconProxy extends GuiQuesting
 		quest.writeToJSON(json);
 		quest.writeProgressToJSON(jProg);
 	}
-	
+
 	@Override
 	public void initGui()
 	{
@@ -42,7 +43,7 @@ public class GuiToolIconProxy extends GuiQuesting
 			mc.displayGuiScreen(new GuiJsonItemSelection(this, JsonHelper.GetObject(json, "icon")));
 		}
 	}
-	
+
 	// If the changes are approved by the server, it will be broadcast to all players including the editor
 	public void SendChanges()
 	{

@@ -212,3 +212,9 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+out/
+.gradle/
+*.bat
+Better Questing.iml
+Better Questing.iws
+Better Questing.ipr

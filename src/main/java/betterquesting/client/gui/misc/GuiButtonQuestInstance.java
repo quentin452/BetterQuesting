@@ -3,14 +3,11 @@ package betterquesting.client.gui.misc;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.UUID;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.init.Items;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.MathHelper;
+
+import javax.vecmath.Vector2f;
+
 import org.lwjgl.opengl.GL11;
+
 import betterquesting.client.themes.ThemeRegistry;
 import betterquesting.quests.QuestDatabase;
 import betterquesting.quests.QuestInstance;
@@ -18,6 +15,13 @@ import betterquesting.quests.QuestInstance.IconVisibility;
 import betterquesting.utils.RenderUtils;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.MathHelper;
 
 @SideOnly(Side.CLIENT)
 public class GuiButtonQuestInstance extends GuiButtonQuesting
@@ -25,18 +29,18 @@ public class GuiButtonQuestInstance extends GuiButtonQuesting
 	Entity itemIcon;
 	public QuestInstance quest;
 	public ArrayList<GuiButtonQuestInstance> parents = new ArrayList<GuiButtonQuestInstance>();;
-	
+
 	// Clamping bounds
 	boolean enableClamp = false;
 	int clampMinX = 0;
 	int clampMaxX = 256;
 	int clampMinY = 0;
 	int clampMaxY = 256;
-	
+
 	// Scrolling offsets
 	int offX = 0;
 	int offY = 0;
-	
+
 	public GuiButtonQuestInstance(int id, int x, int y, QuestInstance quest)
 	{
 		super(id, x, y, 24, 24, "");
@@ -61,7 +65,7 @@ public class GuiButtonQuestInstance extends GuiButtonQuesting
 			this.visible = isQuestShown(quest, mc.thePlayer.getUniqueID());
 			this.enabled = this.visible && quest.isUnlocked(mc.thePlayer.getUniqueID());
 		}
-		
+
         if (this.visible)
         {
         	if(!enableClamp)
@@ -71,7 +75,7 @@ public class GuiButtonQuestInstance extends GuiButtonQuesting
         		this.clampMaxX = mc.displayWidth;
         		this.clampMaxY = mc.displayHeight;
         	}
-        	
+
             mc.getTextureManager().bindTexture(ThemeRegistry.curTheme().guiTexture());
             GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
             this.field_146123_n = this.mousePressed(mc, mx, my);
@@ -79,76 +83,74 @@ public class GuiButtonQuestInstance extends GuiButtonQuesting
             GL11.glEnable(GL11.GL_BLEND);
             OpenGlHelper.glBlendFunc(770, 771, 1, 0);
             GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-            
+
             int cx = MathHelper.clamp_int(xPosition + offX, clampMinX, clampMaxX);
             int cy = MathHelper.clamp_int(yPosition + offY, clampMinY, clampMaxY);
             int cw = MathHelper.clamp_int(xPosition + offX + width, clampMinX, clampMaxX) - cx;
             int ch = MathHelper.clamp_int(yPosition + offY + height, clampMinY, clampMaxY) - cy;
 
         	int questState = getQuestState(quest, mc.thePlayer.getUniqueID());
-        	
+
         	for(GuiButtonQuestInstance p : parents)
         	{
         		if(!p.visible)
         		{
         			continue;
         		}
-        		
+
         		float lsx = p.offX + p.xPosition + p.width/2F;
         		float lsy = p.offY + p.yPosition + p.height/2F;
         		float lex = offX + xPosition + width/2F;
         		float ley = offY + yPosition + height/2F;
-        		
+
         		double la = Math.atan2(ley - lsy, lex - lsx);
         		double dx = Math.cos(la) * 16;
         		double dy = Math.sin(la) * 16;
         		lsx += MathHelper.clamp_float((float)dx, -12, 12);
         		lsy += MathHelper.clamp_float((float)dy, -12, 12);
-        		
+
         		la = Math.atan2(lsy - ley, lsx - lex);
         		dx = Math.cos(la) * 16;
         		dy = Math.sin(la) * 16;
         		lex += MathHelper.clamp_float((float)dx, -12, 12);
         		ley += MathHelper.clamp_float((float)dy, -12, 12);
-        		
-        		lsx = MathHelper.clamp_float(lsx, clampMinX, clampMaxX);
-        		lsy = MathHelper.clamp_float(lsy, clampMinY, clampMaxY);
-        		lex = MathHelper.clamp_float(lex, clampMinX, clampMaxX);
-        		ley = MathHelper.clamp_float(ley, clampMinY, clampMaxY);
-        		
-        		
-        		
-        		if(!(lsx == lex && (lsx == clampMinX || lex == clampMaxX)) && !(lsy == ley && (lsy == clampMinY || ley == clampMaxY)))
+
+        		Vector2f posFrom = new Vector2f(lsx, lsy);
+        		Vector2f posTo = new Vector2f(lex, ley);
+        		clampPos(posTo, posFrom);
+        		clampPos(posFrom, posTo);
+
+        		if(!(posFrom.x == posTo.x && (posFrom.x == clampMinX || posTo.x == clampMaxX)) && !(posFrom.y == posTo.y && (posFrom.y == clampMinY || posTo.y == clampMaxY)))
         		{
 	        		GL11.glPushMatrix();
-	        		
+
 	        		GL11.glDisable(GL11.GL_TEXTURE_2D);
 
 	            	Color ci = ThemeRegistry.curTheme().getLineColor(MathHelper.clamp_int(questState, 0, 2), quest.isMain);
 	            	GL11.glColor4f(ci.getRed()/255F, ci.getGreen()/255F, ci.getBlue()/255F, 1F);
-	        		
+
 	        		GL11.glLineWidth(quest.isMain? 8F : 4F);
 	        		GL11.glBegin(GL11.GL_LINES);
-	        		
-	        		
-	        		GL11.glVertex2f(lsx, lsy);
-	        		GL11.glVertex2f(lex, ley);
+
+
+	        		GL11.glVertex2f(posFrom.x, posFrom.y);
+	        		GL11.glVertex2f(posTo.x, posTo.y);
 	        		GL11.glEnd();
-	        		
+
 	        		GL11.glEnable(GL11.GL_TEXTURE_2D);
 	        		GL11.glColor4f(1F, 1F, 1F, 1F);
-	        		
+
 	        		GL11.glPopMatrix();
         		}
         	}
-            
+
             if(cw > 0 && ch > 0)
             {
             	Color ci = ThemeRegistry.curTheme().getIconColor(state, questState, quest.isMain);
             	GL11.glColor4f(ci.getRed()/255F, ci.getGreen()/255F, ci.getBlue()/255F, 1F);
-            	
+
             	this.drawTexturedModalRect(cx, cy, (quest.isMain? 24 : 0) + Math.max(0, cx - (xPosition + offX)), 104 + Math.max(0, cy - (yPosition + offY)), cw, ch);
-            	
+
             	if(itemIcon == null)
             	{
             		EntityItem eItem = new EntityItem(mc.theWorld);
@@ -156,17 +158,67 @@ public class GuiButtonQuestInstance extends GuiButtonQuesting
             		eItem.hoverStart = 0F;
             		itemIcon = eItem;
             	}
-            	
+
             	if(cw >= width * 0.66F && ch >= height * 0.66F && quest.itemIcon != null)
             	{
             		RenderUtils.RenderItemStack(mc, quest.itemIcon.getBaseStack(), xPosition + offX + 4, yPosition + offY + 4, "");
             	}
-            	
+
             	this.mouseDragged(mc, mx, my);
             }
         }
     }
-    
+
+	private void clampPos(Vector2f pos, Vector2f source) {
+		float x = pos.x;
+		float y = pos.y;
+		if (x > clampMaxX) {
+			float reduceXBy = x - clampMaxX;
+
+			float w = x - source.x;
+			float h = y - source.y;
+
+			x = clampMaxX;
+			float prc = (w - reduceXBy) / w;
+
+			y = source.y + h * prc;
+		} else if (x < clampMinX) {
+			float reduceXBy = x - clampMinX;
+
+			float w = x - source.x;
+			float h = y - source.y;
+
+			x = clampMinX;
+			float prc = (w - reduceXBy) / w;
+
+			y = source.y + h * prc;
+		}
+
+		if (y > clampMaxY) {
+			float reduceYBy = y - clampMaxY;
+
+			float w = x - source.x;
+			float h = y - source.y;
+
+			y = clampMaxY;
+			float prc = (h - reduceYBy) / h;
+
+			x = source.x + w * prc;
+		} else if (y < clampMinY) {
+			float reduceYBy = y - clampMinY;
+
+			float w = x - source.x;
+			float h = y - source.y;
+
+			y = clampMinY;
+			float prc = (h - reduceYBy) / h;
+
+			x = source.x + w * prc;
+		}
+
+		pos.set(x, y);
+	}
+
     @Override
     public boolean mousePressed(Minecraft mc, int mx, int my)
     {
@@ -184,7 +236,7 @@ public class GuiButtonQuestInstance extends GuiButtonQuesting
     		return true;
     	}
     }
-	
+
 	/**
 	 * Makes this button not render/function outside the given bounds
 	 */
@@ -197,14 +249,14 @@ public class GuiButtonQuestInstance extends GuiButtonQuesting
 		this.clampMaxY = posY + sizeY;
 		return this;
 	}
-	
+
 	public GuiButtonQuestInstance SetScrollOffset(int scrollX, int scrollY)
 	{
 		this.offX = scrollX;
 		this.offY = scrollY;
 		return this;
 	}
-	
+
 	public boolean isQuestShown(QuestInstance quest, UUID uuid)
 	{
 		if(QuestDatabase.editMode || quest.visibility == IconVisibility.ALWAYS)
@@ -228,7 +280,7 @@ public class GuiButtonQuestInstance extends GuiButtonQuesting
 					}
 				}
 			}
-			
+
 			return true;
 		} else if(quest.visibility == IconVisibility.COMPLETED)
 		{
@@ -242,13 +294,13 @@ public class GuiButtonQuestInstance extends GuiButtonQuesting
 					return true;
 				}
 			}
-			
+
 			return parents.size() <= 0;
 		}
-		
+
 		return true;
 	}
-	
+
 	public int getQuestState(QuestInstance quest, UUID uuid)
 	{
 		if(!quest.isUnlocked(uuid))
@@ -261,7 +313,7 @@ public class GuiButtonQuestInstance extends GuiButtonQuesting
 		{
 			return 2; // Unclaimed
 		}
-		
+
 		return 3; // Complete
 	}
 }
