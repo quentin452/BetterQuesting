@@ -14,3 +14,7 @@ MinecraftForge-Credits.txt
 MinecraftForge-License.txt
 README.txt
 .metadata
+*.bat
+QuestBook.iws
+QuestBook.ipr
+QuestBook.iml
