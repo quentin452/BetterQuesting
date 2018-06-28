@@ -19,7 +19,9 @@ public class UpdateNotification
 	@SubscribeEvent
 	public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event)
 	{
-	    event.player.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "This is a custom version of Better Questing for modpack GregTech:New Horizons. Any BQ questions please send to GTNH devs."));
+	    event.player.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "This is a custom version of Better Questing for") );
+        event.player.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD + "GregTech:New Horizons." + EnumChatFormatting.GREEN + " Any BQ questions please") );
+        event.player.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN  +"please send to GTNH devs."));
 /*
 		if(!BetterQuesting.proxy.isClient() || hasChecked)
 		{
