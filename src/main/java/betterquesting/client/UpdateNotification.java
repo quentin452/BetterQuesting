@@ -33,13 +33,13 @@ public class UpdateNotification
 		}
 		
 		try
-		{
-			String[] data = getNotification("http://bit.ly/1YddmJP", true);
-			
+		{					
 			if(BQ_Settings.hideUpdates)
 			{
 				return;
 			}
+			
+			String[] data = getNotification("http://bit.ly/1YddmJP", true);
 			
 			ArrayList<String> changelog = new ArrayList<String>();
 			boolean hasLog = false;
