@@ -93,7 +93,7 @@ public class GuiQuestLinesMain extends GuiQuesting {
 		if (reset || selected == null) {
 			selected = null;
 		} else {
-			qlDesc.SetText(selected.line.description);
+			qlDesc.SetText(I18n.format(selected.line.description));
 			qlGui.setQuestLine(selected.tree);
 		}
 

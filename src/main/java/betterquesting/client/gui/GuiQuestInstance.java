@@ -73,8 +73,7 @@ public class GuiQuestInstance extends GuiQuesting
 		btnEdit.enabled = btnEdit.visible = QuestDatabase.editMode;
 		this.buttonList.add(btnEdit);
 
-		desc = new GuiScrollingText(this, sizeX/2 - 24, quest.rewards.size() > 0? sizeY/2 - 48 : sizeY - 64, this.guiTop + 32, this.guiLeft + 16, I18n.format(quest.description));
-
+		desc = new GuiScrollingText(this, sizeX/2 - 24, quest.rewards.size() > 0? sizeY/2 - 48 : sizeY - 64, this.guiTop + 32, this.guiLeft + 16, I18n.format(quest.description).replaceAll("\n", "\n"));
 		btnTLeft = new GuiButtonQuesting(1, this.guiLeft + (sizeX/4)*3 - 70, this.guiTop + sizeY - 48, 20, 20, "<");
 		btnTLeft.enabled = selTask > 0;
 		btnTRight = new GuiButtonQuesting(3, this.guiLeft + (sizeX/4)*3 + 50, this.guiTop + sizeY - 48, 20, 20, ">");
