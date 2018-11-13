@@ -47,9 +47,7 @@ import net.minecraftforge.fluids.FluidRegistry;
 public class BetterQuesting
 {
     public static final String MODID = "betterquesting";
-    public static final String VERSION = "1.0.173";
-    public static final String BRANCH = "1.0.173";
-    public static final String HASH = "1.0.173";
+    public static final String VERSION = "1.0.173e_unofficial";
     public static final String NAME = "BetterQuesting";
     public static final String PROXY = "betterquesting.core.proxies";
     public static final String CHANNEL = "BQ_NET_CHAN";

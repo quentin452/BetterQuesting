@@ -19,6 +19,10 @@ public class UpdateNotification
 	@SubscribeEvent
 	public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event)
 	{
+	    event.player.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "This is a custom version of Better Questing for") );
+        event.player.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD + "GregTech:New Horizons." + EnumChatFormatting.GREEN + " Any BQ questions please") );
+        event.player.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN  +"please send to GTNH devs."));
+/*
 		if(!BetterQuesting.proxy.isClient() || hasChecked)
 		{
 			return;
@@ -33,13 +37,13 @@ public class UpdateNotification
 		}
 		
 		try
-		{					
+		{
+			String[] data = getNotification("http://bit.ly/1YddmJP", true);
+			
 			if(BQ_Settings.hideUpdates)
 			{
 				return;
 			}
-			
-			String[] data = getNotification("http://bit.ly/1YddmJP", true);
 			
 			ArrayList<String> changelog = new ArrayList<String>();
 			boolean hasLog = false;
@@ -111,8 +115,10 @@ public class UpdateNotification
 			BetterQuesting.logger.log(Level.ERROR, "An error has occured while checking " + BetterQuesting.NAME + " version!", e);
 			return;
 		}
+*/
 	}
-	
+
+/* Not used for GT:NH
 	public static String[] getNotification(String link, boolean doRedirect) throws Exception
 	{
 		URL url = new URL(link);
@@ -161,4 +167,5 @@ public class UpdateNotification
 		
 		return pageSplit;
 	}
+*/
 }

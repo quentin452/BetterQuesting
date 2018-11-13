@@ -41,6 +41,10 @@ public class QuestDatabase {
 	 * Turns on the hardcore life system
 	 */
 	public static boolean bqHardcore = false;
+    /**
+     * Turns on shared party loot
+    */
+    public static boolean partySingleReward = true;
 	public static volatile ConcurrentHashMap<Integer, QuestInstance> questDB = new ConcurrentHashMap<>();
 	public static volatile CopyOnWriteArrayList<QuestLine> questLines = new CopyOnWriteArrayList<>();
 
@@ -229,6 +233,7 @@ public class QuestDatabase {
 	public static void writeToJson_Quests(JsonObject json) {
 		json.addProperty("editMode", editMode);
 		json.addProperty("hardcore", bqHardcore);
+		json.addProperty("partySingleReward", partySingleReward);
 		json.addProperty("defLives", LifeManager.defLives);
 		json.addProperty("maxLives", LifeManager.maxLives);
 
@@ -248,6 +253,7 @@ public class QuestDatabase {
 
 		editMode = JsonHelper.GetBoolean(json, "editMode", true);
 		bqHardcore = JsonHelper.GetBoolean(json, "hardcore", false);
+		partySingleReward = JsonHelper.GetBoolean(json, "partySingleReward", true);
 		LifeManager.defLives = JsonHelper.GetNumber(json, "defLives", 3).intValue();
 		LifeManager.maxLives = JsonHelper.GetNumber(json, "maxLives", 10).intValue();
 

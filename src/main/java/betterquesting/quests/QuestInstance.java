@@ -330,11 +330,23 @@ public class QuestInstance {
 
 			rew.Claim(player, cTag);
 		}
+		UUID uuid = player.getUniqueID();
+		PartyInstance party = PartyManager.GetParty(uuid);
 
-		UserEntry entry = GetUserEntry(player.getUniqueID());
-		entry.claimed = true;
-		entry.timestamp = player.worldObj.getTotalWorldTime();
-
+		if ((party != null) && (QuestDatabase.partySingleReward == true)) {
+            for (PartyMember mem : party.GetMembers()) {
+                UserEntry partyPerson = GetUserEntry(mem.userID);
+                if(partyPerson == null){  // This party member has not completed this quest
+                    partyPerson = new UserEntry(mem.userID, player.worldObj.getTotalWorldTime());
+                    this.completeUsers.add(partyPerson);  // Add party member to completed list
+                }
+                partyPerson.claimed = true;
+            }
+        } else {
+    		UserEntry entry = GetUserEntry(player.getUniqueID());
+    		entry.claimed = true;
+    		entry.timestamp = player.worldObj.getTotalWorldTime();
+        }
 		UpdatePartyMembers(player);
 	}
 
