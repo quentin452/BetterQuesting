@@ -225,3 +225,6 @@ jars/
 classes/
 out/
 libs/
+*.bat
+Standart-Expansion.ipr
+Standart-Expansion.iws
