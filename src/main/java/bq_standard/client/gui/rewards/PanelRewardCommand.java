@@ -36,9 +36,9 @@ public class PanelRewardCommand extends CanvasMinimum
         super.initPanel();
         int width = initialRect.getWidth();
         this.addPanel(new PanelGeneric(new GuiTransform(new Vector4f(0F, 0F, 0F, 0F), 0, 0, 32, 32, 0), new ItemTexture(new BigItemStack(Blocks.command_block))));
-        String txt = QuestTranslation.translate("advMode.command") + "\n\n" + (reward.hideCmd ? "[HIDDEN]" : reward.command);
+        String txt = QuestTranslation.translate("advMode.command") + "\n" + (reward.hideCmd ? "[HIDDEN]" : reward.command);
         // TODO: Fix full text display by implementing normal measurement of the minimum required text height
-        this.addPanel(new PanelTextBox(new GuiTransform(new Vector4f(0F, 0F, 0F, 0F), 40, 0, width - 40, 64, 0), txt).setColor(PresetColor.TEXT_MAIN.getColor()));
+        this.addPanel(new PanelTextBox(new GuiTransform(new Vector4f(0F, 0F, 0F, 0F), 40, 0, width - 40, 32, 0), txt).setColor(PresetColor.TEXT_MAIN.getColor()));
         recalcSizes();
     }
 }

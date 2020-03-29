@@ -36,7 +36,7 @@ public class PanelRewardXP extends CanvasMinimum
     {
         super.initPanel();
         int width = initialRect.getWidth();
-        this.addPanel(new PanelGeneric(new GuiTransform(new Vector4f(0F, 0.5F, 0F, 0.5F), -32, -16, 32, 32, 0), new ItemTexture(new BigItemStack(Items.experience_bottle))));
+        this.addPanel(new PanelGeneric(new GuiTransform(new Vector4f(0F, 0F, 0F, 0F), 0, 0, 32, 32, 0), new ItemTexture(new BigItemStack(Items.experience_bottle))));
         
 		String txt2;
 		
@@ -50,8 +50,8 @@ public class PanelRewardXP extends CanvasMinimum
 		
 		txt2 += reward.levels? "L" : "XP";
 		
-        this.addPanel(new PanelTextBox(new GuiTransform(new Vector4f(0F, 0.5F, 0F, 0.5F), 4, 0, width / 2 - 4, 32, 0), QuestTranslation.translate("bq_standard.gui.experience")).setAlignment(1).setColor(PresetColor.TEXT_MAIN.getColor()));
-        this.addPanel(new PanelTextBox(new GuiTransform(new Vector4f(0F, 0.5F, 0F, 0.5F), 16, 32, width / 2 - 16, 32, 0), txt2).setAlignment(1).setColor(PresetColor.TEXT_MAIN.getColor()));
+        this.addPanel(new PanelTextBox(new GuiTransform(new Vector4f(0F, 0F, 0F, 0F), 36, 2, width - 36, 16, 0), QuestTranslation.translate("bq_standard.gui.experience")).setColor(PresetColor.TEXT_MAIN.getColor()));
+        this.addPanel(new PanelTextBox(new GuiTransform(new Vector4f(0F, 0F, 0F, 0F), 40, 16, width - 40, 16, 0), txt2).setColor(PresetColor.TEXT_MAIN.getColor()));
         recalcSizes();
     }
 }
