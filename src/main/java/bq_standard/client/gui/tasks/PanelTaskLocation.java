@@ -3,10 +3,12 @@ package bq_standard.client.gui.tasks;
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.utils.RenderUtils;
+import betterquesting.api2.client.gui.misc.GuiAlign;
 import betterquesting.api2.client.gui.misc.GuiPadding;
 import betterquesting.api2.client.gui.misc.GuiTransform;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.CanvasEmpty;
+import betterquesting.api2.client.gui.panels.CanvasMinimum;
 import betterquesting.api2.client.gui.panels.content.PanelGeneric;
 import betterquesting.api2.client.gui.panels.content.PanelTextBox;
 import betterquesting.api2.client.gui.resources.colors.IGuiColor;
@@ -18,27 +20,32 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
+import org.apache.commons.lang3.StringUtils;
+import org.lwjgl.Sys;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector4f;
 
 import java.awt.*;
 
-public class PanelTaskLocation extends CanvasEmpty
+public class PanelTaskLocation extends CanvasMinimum
 {
     private final IQuest quest;
     private final TaskLocation task;
+    private final IGuiRect initialRect;
     
     public PanelTaskLocation(IGuiRect rect, IQuest quest, TaskLocation task)
     {
         super(rect);
         this.quest = quest;
         this.task = task;
+        initialRect = rect;
     }
     
     @Override
     public void initPanel()
     {
         super.initPanel();
+        int width = initialRect.getWidth();
         
         String desc = QuestTranslation.translate(task.name);
         
@@ -60,8 +67,9 @@ public class PanelTaskLocation extends CanvasEmpty
         {
             desc += "\n" + EnumChatFormatting.BOLD + EnumChatFormatting.RED + QuestTranslation.translate("bq_standard.gui.undiscovered");
         }
-        
-        this.addPanel(new PanelTextBox(new GuiTransform(new Vector4f(0F, 0F, 1F, 0.3F), new GuiPadding(0, 0, 0, 0), 0), desc).setColor(PresetColor.TEXT_MAIN.getColor()));
+
+        int textHeight = (StringUtils.countMatches(desc, "\n") + 1) * 12;
+        this.addPanel(new PanelTextBox(new GuiTransform(GuiAlign.TOP_LEFT, 0, 0, width, textHeight, 0), desc).setColor(PresetColor.TEXT_MAIN.getColor()));
         
         IGuiTexture texCompass = new IGuiTexture()
         {
@@ -119,8 +127,9 @@ public class PanelTaskLocation extends CanvasEmpty
             }
         };
         
-        int innerSize = Math.min(this.getTransform().getWidth(), (int)Math.floor(this.getTransform().getHeight() * 0.7D));
-        PanelGeneric innerCanvas = new PanelGeneric(new GuiTransform(new Vector4f(0.5F, 0.65F, 0.5F, 0.65F), -innerSize/2, -innerSize/2, innerSize, innerSize, 0), texCompass, PresetColor.TEXT_MAIN.getColor());
+        int innerSize = Math.min(Math.min(initialRect.getWidth(), 128), initialRect.getHeight() - textHeight);
+        PanelGeneric innerCanvas = new PanelGeneric(new GuiTransform(GuiAlign.TOP_LEFT, (width - innerSize) / 2, textHeight, innerSize, innerSize, 0), texCompass, PresetColor.TEXT_MAIN.getColor());
         this.addPanel(innerCanvas);
+        recalcSizes();
     }
 }
