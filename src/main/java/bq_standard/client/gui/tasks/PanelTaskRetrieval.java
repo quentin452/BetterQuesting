@@ -6,6 +6,7 @@ import betterquesting.api.questing.IQuest;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api2.client.gui.misc.*;
 import betterquesting.api2.client.gui.panels.CanvasEmpty;
+import betterquesting.api2.client.gui.panels.CanvasMinimum;
 import betterquesting.api2.client.gui.panels.bars.PanelVScrollBar;
 import betterquesting.api2.client.gui.panels.content.PanelItemSlot;
 import betterquesting.api2.client.gui.panels.content.PanelTextBox;
@@ -22,39 +23,33 @@ import net.minecraft.util.EnumChatFormatting;
 
 import java.util.UUID;
 
-public class PanelTaskRetrieval extends CanvasEmpty
+public class PanelTaskRetrieval extends CanvasMinimum
 {
     private final IQuest quest;
     private final TaskRetrieval task;
+    private final IGuiRect initialRect;
     
     public PanelTaskRetrieval(IGuiRect rect, IQuest quest, TaskRetrieval task)
     {
         super(rect);
         this.quest = quest;
         this.task = task;
+        initialRect = rect;
     }
     
     @Override
     public void initPanel()
     {
         super.initPanel();
+        int listW = initialRect.getWidth();
         
         UUID uuid = QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer);
         int[] progress = quest == null || !quest.getProperty(NativeProps.GLOBAL) ? task.getPartyProgress(uuid) : task.getGlobalProgress();
         boolean isComplete = task.isComplete(uuid);
         
         String sCon = (task.consume ? EnumChatFormatting.RED : EnumChatFormatting.GREEN) + QuestTranslation.translate(task.consume ? "gui.yes" : "gui.no");
-        this.addPanel(new PanelTextBox(new GuiTransform(GuiAlign.TOP_EDGE, new GuiPadding(0, 0, 0, -16), 0), QuestTranslation.translate("bq_standard.btn.consume", sCon)).setColor(PresetColor.TEXT_MAIN.getColor()));
-        
-        CanvasScrolling cvList = new CanvasScrolling(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 16, 8, 0), 0));
-        this.addPanel(cvList);
-    
-        PanelVScrollBar scList = new PanelVScrollBar(new GuiTransform(GuiAlign.RIGHT_EDGE, new GuiPadding(-8, 16, 0, 0), 0));
-        this.addPanel(scList);
-        cvList.setScrollDriverY(scList);
-        
-        int listW = cvList.getTransform().getWidth();
-        
+        this.addPanel(new PanelTextBox(new GuiTransform(GuiAlign.TOP_EDGE, 0, 0, listW, 16, 0), QuestTranslation.translate("bq_standard.btn.consume", sCon)).setColor(PresetColor.TEXT_MAIN.getColor()));
+
         for(int i = 0; i < task.requiredItems.size(); i++)
         {
             BigItemStack stack = task.requiredItems.get(i);
@@ -64,9 +59,9 @@ public class PanelTaskRetrieval extends CanvasEmpty
                 continue;
             }
     
-            PanelItemSlot slot = new PanelItemSlot(new GuiRectangle(0, i * 32, 32, 32, 0), -1, stack, false, true);
+            PanelItemSlot slot = new PanelItemSlot(new GuiRectangle(0, i * 32 + 16, 28, 28, 0), -1, stack, false, true);
             if(BQ_Standard.hasNEI) slot.setCallback(value -> lookupRecipe(value.getBaseStack()));
-            cvList.addPanel(slot);
+            this.addPanel(slot);
             
             StringBuilder sb = new StringBuilder();
             
@@ -84,10 +79,12 @@ public class PanelTaskRetrieval extends CanvasEmpty
 				sb.append(EnumChatFormatting.RED).append(QuestTranslation.translate("betterquesting.tooltip.incomplete"));
 			}
             
-            PanelTextBox text = new PanelTextBox(new GuiRectangle(36, i * 32, listW - 36, 32, 0), sb.toString());
+            PanelTextBox text = new PanelTextBox(new GuiRectangle(32, i * 32 + 16, listW - 28, 28, 0), sb.toString());
 			text.setColor(PresetColor.TEXT_MAIN.getColor());
-			cvList.addPanel(text);
+			this.addPanel(text);
         }
+
+        recalcSizes();
     }
     
     @Method(modid = "NotEnoughItems")

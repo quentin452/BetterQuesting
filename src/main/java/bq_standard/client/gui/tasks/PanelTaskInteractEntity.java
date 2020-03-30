@@ -8,6 +8,7 @@ import betterquesting.api2.client.gui.misc.GuiPadding;
 import betterquesting.api2.client.gui.misc.GuiTransform;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.CanvasEmpty;
+import betterquesting.api2.client.gui.panels.CanvasMinimum;
 import betterquesting.api2.client.gui.panels.content.PanelEntityPreview;
 import betterquesting.api2.client.gui.panels.content.PanelGeneric;
 import betterquesting.api2.client.gui.panels.content.PanelItemSlot;
@@ -25,16 +26,18 @@ import net.minecraft.entity.EntityList;
 
 import java.util.UUID;
 
-public class PanelTaskInteractEntity extends CanvasEmpty
+public class PanelTaskInteractEntity extends CanvasMinimum
 {
     private final TaskInteractEntity task;
     private final IQuest quest;
+    private final IGuiRect initialRect;
     
     public PanelTaskInteractEntity(IGuiRect rect, IQuest quest, TaskInteractEntity task)
     {
         super(rect);
         this.quest = quest;
         this.task = task;
+        initialRect = rect;
     }
     
     @Override
@@ -42,25 +45,25 @@ public class PanelTaskInteractEntity extends CanvasEmpty
     {
         super.initPanel();
         
-        this.addPanel(new PanelItemSlot(new GuiTransform(GuiAlign.MID_LEFT, 0, -48, 32, 32, 0), -1, task.targetItem, false, true));
-        this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.MID_LEFT, 32, -40, 16, 16, 0), PresetIcon.ICON_RIGHT.getTexture()));
+        this.addPanel(new PanelItemSlot(new GuiTransform(GuiAlign.TOP_LEFT, 0, 0, 32, 32, 0), -1, task.targetItem, false, true));
+        this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.TOP_LEFT, 32, 8, 16, 16, 0), PresetIcon.ICON_RIGHT.getTexture()));
         
         UUID playerID = QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer);
         int prog = task.getPartyProgress(playerID);
-        this.addPanel(new PanelTextBox(new GuiTransform(GuiAlign.MID_LEFT, 0, -14, 32, 14, 0), prog + "/" + task.required).setAlignment(1).setColor(PresetColor.TEXT_MAIN.getColor()));
+        this.addPanel(new PanelTextBox(new GuiTransform(GuiAlign.TOP_LEFT, 0, 34, 32, 14, 0), prog + "/" + task.required).setAlignment(1).setColor(PresetColor.TEXT_MAIN.getColor()));
         
-        this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.MID_LEFT, 0, 0, 24, 24, 0), BQSTextures.HAND_LEFT.getTexture()));
-        this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.MID_LEFT, 24, 0, 24, 24, 0), BQSTextures.HAND_RIGHT.getTexture()));
-        this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.MID_LEFT, 0, 24, 24, 24, 0), BQSTextures.ATK_SYMB.getTexture()));
-        this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.MID_LEFT, 24, 24, 24, 24, 0), BQSTextures.USE_SYMB.getTexture()));
+        this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.TOP_LEFT, 0, 48, 24, 24, 0), BQSTextures.HAND_LEFT.getTexture()));
+        this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.TOP_LEFT, 24, 48, 24, 24, 0), BQSTextures.HAND_RIGHT.getTexture()));
+        this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.TOP_LEFT, 0, 72, 24, 24, 0), BQSTextures.ATK_SYMB.getTexture()));
+        this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.TOP_LEFT, 24, 72, 24, 24, 0), BQSTextures.USE_SYMB.getTexture()));
         
         IGuiTexture txTick = new GuiTextureColored(PresetIcon.ICON_TICK.getTexture(), new GuiColorStatic(0xFF00FF00));
         IGuiTexture txCross = new GuiTextureColored(PresetIcon.ICON_CROSS.getTexture(), new GuiColorStatic(0xFFFF0000));
         
-        //this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.MID_LEFT, 16, 16, 8, 8, 0), task.useOffHand ? txTick : txCross));
-        //this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.MID_LEFT, 40, 16, 8, 8, 0), task.useMainHand ? txTick : txCross));
-        this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.MID_LEFT, 16, 40, 8, 8, 0), task.onHit ? txTick : txCross));
-        this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.MID_LEFT, 40, 40, 8, 8, 0), task.onInteract ? txTick : txCross));
+        //this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.TOP_LEFT, 16, 64, 8, 8, 0), task.useOffHand ? txTick : txCross));
+        //this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.TOP_LEFT, 40, 64, 8, 8, 0), task.useMainHand ? txTick : txCross));
+        this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.TOP_LEFT, 16, 88, 8, 8, 0), task.onHit ? txTick : txCross));
+        this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.TOP_LEFT, 40, 88, 8, 8, 0), task.onInteract ? txTick : txCross));
         
         Entity target;
         
@@ -73,6 +76,7 @@ public class PanelTaskInteractEntity extends CanvasEmpty
             target = null;
         }
         
-        if(target != null) this.addPanel(new PanelEntityPreview(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(48, 0, 0, 0), 0), target).setRotationDriven(new ValueFuncIO<>(() -> 15F), new ValueFuncIO<>(() -> (float)(Minecraft.getSystemTime()%30000L / 30000D * 360D))));
+        if(target != null) this.addPanel(new PanelEntityPreview(new GuiTransform(GuiAlign.TOP_LEFT, 48, 0, initialRect.getWidth() - 48, 96, 0), target).setRotationDriven(new ValueFuncIO<>(() -> 15F), new ValueFuncIO<>(() -> (float)(Minecraft.getSystemTime()%30000L / 30000D * 360D))));
+        recalcSizes();
     }
 }

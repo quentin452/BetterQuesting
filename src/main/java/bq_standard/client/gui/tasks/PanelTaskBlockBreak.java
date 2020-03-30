@@ -6,6 +6,7 @@ import betterquesting.api.questing.IQuest;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api2.client.gui.misc.*;
 import betterquesting.api2.client.gui.panels.CanvasEmpty;
+import betterquesting.api2.client.gui.panels.CanvasMinimum;
 import betterquesting.api2.client.gui.panels.bars.PanelVScrollBar;
 import betterquesting.api2.client.gui.panels.content.PanelItemSlot;
 import betterquesting.api2.client.gui.panels.content.PanelTextBox;
@@ -18,16 +19,18 @@ import net.minecraft.util.EnumChatFormatting;
 
 import java.util.UUID;
 
-public class PanelTaskBlockBreak extends CanvasEmpty
+public class PanelTaskBlockBreak extends CanvasMinimum
 {
     private final IQuest quest;
     private final TaskBlockBreak task;
+    private final IGuiRect initialRect;
     
     public PanelTaskBlockBreak(IGuiRect rect, IQuest quest, TaskBlockBreak task)
     {
         super(rect);
         this.quest = quest;
         this.task = task;
+        initialRect = rect;
     }
     
     @Override
@@ -39,14 +42,7 @@ public class PanelTaskBlockBreak extends CanvasEmpty
         int[] progress = quest == null || !quest.getProperty(NativeProps.GLOBAL) ? task.getPartyProgress(uuid) : task.getGlobalProgress();
         boolean isComplete = task.isComplete(uuid);
         
-        CanvasScrolling cvList = new CanvasScrolling(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 0, 8, 0), 0));
-        this.addPanel(cvList);
-    
-        PanelVScrollBar scList = new PanelVScrollBar(new GuiTransform(GuiAlign.RIGHT_EDGE, new GuiPadding(-8, 0, 0, 0), 0));
-        this.addPanel(scList);
-        cvList.setScrollDriverY(scList);
-        
-        int listW = cvList.getTransform().getWidth();
+        int listW = initialRect.getWidth();
         
         for(int i = 0; i < task.blockTypes.size(); i++)
         {
@@ -58,7 +54,7 @@ public class PanelTaskBlockBreak extends CanvasEmpty
             }
     
             PanelItemSlot slot = new PanelItemSlot(new GuiRectangle(0, i * 36, 36, 36, 0), -1, stack, true, true);
-            cvList.addPanel(slot);
+            this.addPanel(slot);
             
             StringBuilder sb = new StringBuilder();
             
@@ -78,7 +74,9 @@ public class PanelTaskBlockBreak extends CanvasEmpty
             
             PanelTextBox text = new PanelTextBox(new GuiRectangle(40, i * 36, listW - 40, 36, 0), sb.toString());
 			text.setColor(PresetColor.TEXT_MAIN.getColor());
-			cvList.addPanel(text);
+			this.addPanel(text);
         }
+
+        recalcSizes();
     }
 }
