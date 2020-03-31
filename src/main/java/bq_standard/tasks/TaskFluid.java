@@ -40,7 +40,7 @@ public class TaskFluid implements ITaskInventory, IFluidTask, IItemTask, IProgre
 	public final List<FluidStack> requiredFluids = new ArrayList<>();
 	public final Map<UUID, int[]> userProgress = new HashMap<>();
 	//public boolean partialMatch = true; // Not many ideal ways of implementing this with fluid handlers
-	public boolean ignoreNbt = false;
+	public boolean ignoreNbt = true;
 	public boolean consume = true;
 	public boolean groupDetect = false;
 	public boolean autoConsume = false;
