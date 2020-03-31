@@ -38,8 +38,8 @@ public class TaskRetrieval implements ITaskInventory, IProgression<int[]>, IItem
 	public final List<BigItemStack> requiredItems = new ArrayList<>();
 	private final HashMap<UUID, int[]> userProgress = new HashMap<>();
 	public boolean partialMatch = true;
-	public boolean ignoreNBT = false;
-	public boolean consume = true;
+	public boolean ignoreNBT = true;
+	public boolean consume = false;
 	public boolean groupDetect = false;
 	public boolean autoConsume = false;
 	

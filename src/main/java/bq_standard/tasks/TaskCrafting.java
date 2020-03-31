@@ -40,7 +40,7 @@ public class TaskCrafting implements ITask, IProgression<int[]>
 	public final List<BigItemStack> requiredItems = new ArrayList<>();
 	public final HashMap<UUID, int[]> userProgress = new HashMap<>();
 	public boolean partialMatch = true;
-	public boolean ignoreNBT = false;
+	public boolean ignoreNBT = true;
 	public boolean allowAnvil = false;
 	public boolean allowSmelt = true;
 	public boolean allowCraft = true;
