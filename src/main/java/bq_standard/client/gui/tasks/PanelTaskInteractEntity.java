@@ -1,7 +1,6 @@
 package bq_standard.client.gui.tasks;
 
 import betterquesting.api.api.QuestingAPI;
-import betterquesting.api.questing.IQuest;
 import betterquesting.api2.client.gui.controls.io.ValueFuncIO;
 import betterquesting.api2.client.gui.misc.GuiAlign;
 import betterquesting.api2.client.gui.misc.GuiPadding;
@@ -29,13 +28,11 @@ import java.util.UUID;
 public class PanelTaskInteractEntity extends CanvasMinimum
 {
     private final TaskInteractEntity task;
-    private final IQuest quest;
     private final IGuiRect initialRect;
     
-    public PanelTaskInteractEntity(IGuiRect rect, IQuest quest, TaskInteractEntity task)
+    public PanelTaskInteractEntity(IGuiRect rect, TaskInteractEntity task)
     {
         super(rect);
-        this.quest = quest;
         this.task = task;
         initialRect = rect;
     }
@@ -49,8 +46,8 @@ public class PanelTaskInteractEntity extends CanvasMinimum
         this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.TOP_LEFT, 32, 8, 16, 16, 0), PresetIcon.ICON_RIGHT.getTexture()));
         
         UUID playerID = QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer);
-        int prog = task.getPartyProgress(playerID);
-        this.addPanel(new PanelTextBox(new GuiTransform(GuiAlign.TOP_LEFT, 0, 34, 32, 14, 0), prog + "/" + task.required).setAlignment(1).setColor(PresetColor.TEXT_MAIN.getColor()));
+        int prog = task.getUsersProgress(playerID);
+        this.addPanel(new PanelTextBox(new GuiTransform(GuiAlign.TOP_LEFT, 0, -14, 32, 14, 0), prog + "/" + task.required).setAlignment(1).setColor(PresetColor.TEXT_MAIN.getColor()));
         
         this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.TOP_LEFT, 0, 48, 24, 24, 0), BQSTextures.HAND_LEFT.getTexture()));
         this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.TOP_LEFT, 24, 48, 24, 24, 0), BQSTextures.HAND_RIGHT.getTexture()));

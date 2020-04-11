@@ -25,14 +25,12 @@ import java.util.UUID;
 
 public class PanelTaskRetrieval extends CanvasMinimum
 {
-    private final IQuest quest;
     private final TaskRetrieval task;
     private final IGuiRect initialRect;
     
-    public PanelTaskRetrieval(IGuiRect rect, IQuest quest, TaskRetrieval task)
+    public PanelTaskRetrieval(IGuiRect rect, TaskRetrieval task)
     {
         super(rect);
-        this.quest = quest;
         this.task = task;
         initialRect = rect;
     }
@@ -44,7 +42,7 @@ public class PanelTaskRetrieval extends CanvasMinimum
         int listW = initialRect.getWidth();
         
         UUID uuid = QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer);
-        int[] progress = quest == null || !quest.getProperty(NativeProps.GLOBAL) ? task.getPartyProgress(uuid) : task.getGlobalProgress();
+        int[] progress = task.getUsersProgress(uuid);
         boolean isComplete = task.isComplete(uuid);
         
         String sCon = (task.consume ? EnumChatFormatting.RED : EnumChatFormatting.GREEN) + QuestTranslation.translate(task.consume ? "gui.yes" : "gui.no");
