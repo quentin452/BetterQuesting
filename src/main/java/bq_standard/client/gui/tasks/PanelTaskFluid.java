@@ -1,8 +1,6 @@
 package bq_standard.client.gui.tasks;
 
 import betterquesting.api.api.QuestingAPI;
-import betterquesting.api.properties.NativeProps;
-import betterquesting.api.questing.IQuest;
 import betterquesting.api2.client.gui.misc.*;
 import betterquesting.api2.client.gui.panels.CanvasEmpty;
 import betterquesting.api2.client.gui.panels.CanvasMinimum;
@@ -24,14 +22,12 @@ import java.util.UUID;
 
 public class PanelTaskFluid extends CanvasMinimum
 {
-    private final IQuest quest;
     private final TaskFluid task;
     private final IGuiRect initialRect;
     
-    public PanelTaskFluid(IGuiRect rect, IQuest quest, TaskFluid task)
+    public PanelTaskFluid(IGuiRect rect, TaskFluid task)
     {
         super(rect);
-        this.quest = quest;
         this.task = task;
         initialRect = rect;
     }
@@ -43,7 +39,7 @@ public class PanelTaskFluid extends CanvasMinimum
         int listW = initialRect.getWidth();
 
         UUID uuid = QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer);
-        int[] progress = quest == null || !quest.getProperty(NativeProps.GLOBAL) ? task.getPartyProgress(uuid) : task.getGlobalProgress();
+        int[] progress = task.getUsersProgress(uuid);
         boolean isComplete = task.isComplete(uuid);
 
         String sCon = (task.consume ? EnumChatFormatting.RED : EnumChatFormatting.GREEN) + QuestTranslation.translate(task.consume ? "gui.yes" : "gui.no");

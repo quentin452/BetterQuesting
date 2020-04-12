@@ -1,6 +1,5 @@
 package bq_standard.client.gui.tasks;
 
-import betterquesting.api.questing.IQuest;
 import betterquesting.api2.client.gui.controls.io.ValueFuncIO;
 import betterquesting.api2.client.gui.misc.GuiAlign;
 import betterquesting.api2.client.gui.misc.GuiPadding;
@@ -19,14 +18,12 @@ import net.minecraft.entity.EntityList;
 
 public class PanelTaskMeeting extends CanvasMinimum
 {
-    private final IQuest quest;
     private final TaskMeeting task;
     private final IGuiRect initialRect;
     
-    public PanelTaskMeeting(IGuiRect rect, IQuest quest, TaskMeeting task)
+    public PanelTaskMeeting(IGuiRect rect, TaskMeeting task)
     {
         super(rect);
-        this.quest = quest;
         this.task = task;
         initialRect = rect;
     }

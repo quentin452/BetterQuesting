@@ -1,8 +1,6 @@
 package bq_standard.client.gui.tasks;
 
 import betterquesting.api.api.QuestingAPI;
-import betterquesting.api.properties.NativeProps;
-import betterquesting.api.questing.IQuest;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api2.client.gui.misc.*;
 import betterquesting.api2.client.gui.panels.CanvasEmpty;
@@ -21,14 +19,12 @@ import java.util.UUID;
 
 public class PanelTaskBlockBreak extends CanvasMinimum
 {
-    private final IQuest quest;
     private final TaskBlockBreak task;
     private final IGuiRect initialRect;
     
-    public PanelTaskBlockBreak(IGuiRect rect, IQuest quest, TaskBlockBreak task)
+    public PanelTaskBlockBreak(IGuiRect rect, TaskBlockBreak task)
     {
         super(rect);
-        this.quest = quest;
         this.task = task;
         initialRect = rect;
     }
@@ -39,7 +35,7 @@ public class PanelTaskBlockBreak extends CanvasMinimum
         super.initPanel();
         
         UUID uuid = QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer);
-        int[] progress = quest == null || !quest.getProperty(NativeProps.GLOBAL) ? task.getPartyProgress(uuid) : task.getGlobalProgress();
+        int[] progress = task.getUsersProgress(uuid);
         boolean isComplete = task.isComplete(uuid);
         
         int listW = initialRect.getWidth();

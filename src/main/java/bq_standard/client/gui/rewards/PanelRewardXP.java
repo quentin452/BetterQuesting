@@ -1,6 +1,5 @@
 package bq_standard.client.gui.rewards;
 
-import betterquesting.api.questing.IQuest;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api2.client.gui.misc.GuiPadding;
 import betterquesting.api2.client.gui.misc.GuiTransform;
@@ -19,14 +18,12 @@ import org.lwjgl.util.vector.Vector4f;
 
 public class PanelRewardXP extends CanvasMinimum
 {
-    private final IQuest quest;
     private final RewardXP reward;
     private final IGuiRect initialRect;
     
-    public PanelRewardXP(IGuiRect rect, IQuest quest, RewardXP reward)
+    public PanelRewardXP(IGuiRect rect, RewardXP reward)
     {
         super(rect);
-        this.quest = quest;
         this.reward = reward;
         initialRect = rect;
     }

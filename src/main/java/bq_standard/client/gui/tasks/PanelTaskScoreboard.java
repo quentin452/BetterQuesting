@@ -20,14 +20,12 @@ import java.text.DecimalFormat;
 
 public class PanelTaskScoreboard extends CanvasMinimum
 {
-    private final IQuest quest;
     private final TaskScoreboard task;
     private final IGuiRect initialRect;
-    
-    public PanelTaskScoreboard(IGuiRect rect, IQuest quest, TaskScoreboard task)
+
+    public PanelTaskScoreboard(IGuiRect rect, TaskScoreboard task)
     {
         super(rect);
-        this.quest = quest;
         this.task = task;
         initialRect = rect;
     }
@@ -37,8 +35,8 @@ public class PanelTaskScoreboard extends CanvasMinimum
     {
         super.initPanel();
         int width = initialRect.getWidth();
-        
-		int score = ScoreboardBQ.getScore(QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer), task.scoreName);
+
+		int score = ScoreboardBQ.INSTANCE.getScore(QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer), task.scoreName);
 		DecimalFormat df = new DecimalFormat("0.##");
 		String value = df.format(score/task.conversion) + task.suffix;
 		
