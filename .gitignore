@@ -224,7 +224,7 @@ pip-log.txt
 jars/
 classes/
 out/
-libs/
+run/
 *.bat
 Standart-Expansion.ipr
 Standart-Expansion.iws
