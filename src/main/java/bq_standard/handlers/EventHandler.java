@@ -109,7 +109,7 @@ public class EventHandler
         
         ItemStack refStack = event.crafting.copy();
         
-        if(refStack.stackSize <= 0 && event.craftMatrix instanceof InventoryCrafting) // Hack for broken-ass shift clicking reporting empty stacks
+        if(event.craftMatrix instanceof InventoryCrafting) // Hack for broken-ass shift clicking reporting empty stacks
         {
             ItemStack result = CraftingManager.getInstance().findMatchingRecipe((InventoryCrafting)event.craftMatrix, event.player.worldObj);
             if(result != null) refStack.stackSize = result.stackSize;
