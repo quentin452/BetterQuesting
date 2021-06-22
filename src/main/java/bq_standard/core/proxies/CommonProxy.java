@@ -57,6 +57,7 @@ public class CommonProxy
 		rewardReg.register(FactoryRewardItem.INSTANCE);
 		rewardReg.register(FactoryRewardScoreboard.INSTANCE);
 		rewardReg.register(FactoryRewardXP.INSTANCE);
+		rewardReg.register(FactoryRewardQuestCompletion.INSTANCE);
 		
 		NetLootSync.registerHandler();
 		NetLootClaim.registerHandler();
