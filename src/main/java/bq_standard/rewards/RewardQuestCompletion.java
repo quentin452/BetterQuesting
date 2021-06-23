@@ -1,5 +1,7 @@
 package bq_standard.rewards;
 
+import betterquesting.api.api.ApiReference;
+import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.rewards.IReward;
 import betterquesting.api2.client.gui.misc.IGuiRect;
@@ -13,6 +15,8 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
+
+import java.util.UUID;
 
 public class RewardQuestCompletion implements IReward {
 	public int questNum = -1;
@@ -34,8 +38,14 @@ public class RewardQuestCompletion implements IReward {
 
 	@Override
 	public void claimReward(EntityPlayer player, DBEntry<IQuest> quest)	{
-		//if (questNum == -1) do nothing
-		//else complete the quest defined by questnum	
+		if (questNum == -1)
+			return;
+		IQuest targetQuest = QuestingAPI.getAPI(ApiReference.QUEST_DB).getValue(questNum);
+		if (targetQuest == null)
+			return;
+		UUID uuid = QuestingAPI.getQuestingUUID(player);
+		if (!targetQuest.isComplete(uuid))
+			targetQuest.setComplete(uuid, System.currentTimeMillis());
 	}
 	
 	@Override
