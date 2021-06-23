@@ -20,6 +20,7 @@ bq_standard.reward.scoreboard=Scoreboard Reward
 bq_standard.reward.command=Command Reward
 bq_standard.reward.xp=Experience Reward
 bq_standard.reward.recipe=Unlock Recipes
+bq_standard.reward.questcompletion=Quest Completion Reward
 
 bq_standard.title.edit_hunt=Edit Hunt Task
 bq_standard.title.edit_meeting=Edit Meeting Task
@@ -50,6 +51,7 @@ bq_standard.gui.meet=Meet %s
 bq_standard.gui.weight=Weight
 bq_standard.gui.experience=Experience
 bq_standard.gui.tame=Tame %s
+bq_standard.gui.questcompletion=Quest Completed
 
 bq_standard.importer.hqm_bag.name=HQM Bag Importer
 bq_standard.importer.hqm_bag.desc=Imports HQM rewards bags exported in json format.
