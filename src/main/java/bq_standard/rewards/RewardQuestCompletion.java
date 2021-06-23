@@ -60,7 +60,6 @@ public class RewardQuestCompletion implements IReward {
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT) //Should this be side only or not?
 	public IGuiPanel getRewardGui(IGuiRect rect, DBEntry<IQuest> quest) {
 	    return new PanelRewardQuestCompletion(rect, this);
 	}
