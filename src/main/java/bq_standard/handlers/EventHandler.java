@@ -104,7 +104,7 @@ public class EventHandler
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onItemCrafted(ItemCraftedEvent event)
 	{
-		if(event.player == null || event.entityPlayer instanceof FakePlayer || event.player.worldObj.isRemote) return;
+		if(event.player == null || event.player instanceof FakePlayer || event.player.worldObj.isRemote) return;
         
         ParticipantInfo pInfo = new ParticipantInfo(event.player);
         
