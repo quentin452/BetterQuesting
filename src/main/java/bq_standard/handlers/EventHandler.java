@@ -27,6 +27,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.AnvilRepairEvent;
@@ -48,7 +49,7 @@ public class EventHandler
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onPlayerInteract(PlayerInteractEvent event)
     {
-        if(event.entityPlayer == null || event.entityPlayer.worldObj.isRemote || event.isCanceled()) return;
+        if(event.entityPlayer == null || event.entityPlayer instanceof FakePlayer || event.entityPlayer.worldObj.isRemote || event.isCanceled()) return;
         
 		EntityPlayer player = event.entityPlayer;
         ParticipantInfo pInfo = new ParticipantInfo(player);
@@ -69,7 +70,7 @@ public class EventHandler
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onEntityAttack(AttackEntityEvent event)
     {
-        if(event.entityPlayer == null || event.target == null || event.entityPlayer.worldObj.isRemote || event.isCanceled()) return;
+        if(event.entityPlayer == null || event.entityPlayer instanceof FakePlayer || event.target == null || event.entityPlayer.worldObj.isRemote || event.isCanceled()) return;
         
 		EntityPlayer player = event.entityPlayer;
         ParticipantInfo pInfo = new ParticipantInfo(player);
@@ -86,7 +87,7 @@ public class EventHandler
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onEntityInteract(EntityInteractEvent event)
     {
-        if(event.entityPlayer == null || event.target == null || event.entityPlayer.worldObj.isRemote || event.isCanceled()) return;
+        if(event.entityPlayer == null || event.entityPlayer instanceof FakePlayer || event.target == null || event.entityPlayer.worldObj.isRemote || event.isCanceled()) return;
         
 		EntityPlayer player = event.entityPlayer;
         ParticipantInfo pInfo = new ParticipantInfo(player);
@@ -103,7 +104,7 @@ public class EventHandler
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onItemCrafted(ItemCraftedEvent event)
 	{
-		if(event.player == null || event.player.worldObj.isRemote) return;
+		if(event.player == null || event.entityPlayer instanceof FakePlayer || event.player.worldObj.isRemote) return;
         
         ParticipantInfo pInfo = new ParticipantInfo(event.player);
         
@@ -127,7 +128,7 @@ public class EventHandler
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onItemSmelted(ItemSmeltedEvent event) // This event is even more busted than crafting when shift clicking (only ever reports 2 empty stacks regardless of actual amount)
 	{
-		if(event.player == null || event.player.worldObj.isRemote) return;
+		if(event.player == null || event.player instanceof FakePlayer || event.player.worldObj.isRemote) return;
 		
         ParticipantInfo pInfo = new ParticipantInfo(event.player);
 		
@@ -146,7 +147,7 @@ public class EventHandler
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onItemAnvil(AnvilRepairEvent event) // Somehow actually works as intended unlike other crafting methods
 	{
-		if(event.entityPlayer == null || event.entityPlayer.worldObj.isRemote) return;
+		if(event.entityPlayer == null || event.entityPlayer instanceof FakePlayer || event.entityPlayer.worldObj.isRemote) return;
         
         ParticipantInfo pInfo = new ParticipantInfo(event.entityPlayer);
 		
@@ -162,7 +163,7 @@ public class EventHandler
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onEntityKilled(LivingDeathEvent event)
 	{
-		if(event.source == null || !(event.source.getEntity() instanceof EntityPlayer) || event.source.getEntity().worldObj.isRemote || event.isCanceled()) return;
+		if(event.source == null || !(event.source.getEntity() instanceof EntityPlayer) || event.source.getEntity() instanceof FakePlayer || event.source.getEntity().worldObj.isRemote || event.isCanceled()) return;
 		
 		EntityPlayer player = (EntityPlayer)event.source.getEntity();
         ParticipantInfo pInfo = new ParticipantInfo(player);
@@ -179,7 +180,7 @@ public class EventHandler
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onBlockBreak(BreakEvent event)
 	{
-		if(event.getPlayer() == null || event.getPlayer().worldObj.isRemote || event.isCanceled()) return;
+		if(event.getPlayer() == null || event.getPlayer() instanceof FakePlayer || event.getPlayer().worldObj.isRemote || event.isCanceled()) return;
 		
         ParticipantInfo pInfo = new ParticipantInfo(event.getPlayer());
 		
