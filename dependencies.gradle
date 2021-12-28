@@ -2,4 +2,5 @@
 
 dependencies {
     compile("com.github.GTNewHorizons:NotEnoughItems:master-SNAPSHOT:dev")
+    compileOnly("com.github.GTNewHorizons:BetterQuesting:master-SNAPSHOT:dev")
 }
