@@ -3,4 +3,5 @@
 dependencies {
     compile("com.github.GTNewHorizons:NotEnoughItems:master-SNAPSHOT:dev")
     compile("com.github.GTNewHorizons:BetterQuesting:master-SNAPSHOT:dev")
+    compile("com.github.GTNewHorizons:CodeChickenLib:master-SNAPSHOT:dev")
 }
