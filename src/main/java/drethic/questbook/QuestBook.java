@@ -15,7 +15,7 @@ public class QuestBook {
 	
     public static final String MODID = "questbook";
     public static final String MODNAME = "Better Questing Quest Book";
-    public static final String VERSION = "1.1.0";
+    public static final String VERSION = "GRADLETOKEN_VERSION";
         
     @Instance("MODID")
     public static QuestBook instance = new QuestBook();
