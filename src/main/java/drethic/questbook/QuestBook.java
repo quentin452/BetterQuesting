@@ -9,10 +9,9 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import drethic.questbook.proxy.CommonProxy;
 
-@Mod(modid = QuestBook.MODID, name = QuestBook.MODNAME, version = QuestBook.VERSION, dependencies = "required-after:betterquesting@[1.0.23,)")
+@Mod(modid = QuestBook.MODID, name = QuestBook.MODNAME, version = QuestBook.VERSION, dependencies = "required-after:betterquesting@[2.0.190,)")
 public class QuestBook {
 
-	
     public static final String MODID = "questbook";
     public static final String MODNAME = "Better Questing Quest Book";
     public static final String VERSION = "GRADLETOKEN_VERSION";
@@ -20,21 +19,21 @@ public class QuestBook {
     @Instance("MODID")
     public static QuestBook instance = new QuestBook();
 
-    @SidedProxy(clientSide="drethic.questbook.proxy.ClientProxy", serverSide="drethic.questbook.proxy.ServerProxy")
+    @SidedProxy(clientSide = "drethic.questbook.proxy.ClientProxy", serverSide = "drethic.questbook.proxy.ServerProxy")
     public static CommonProxy proxy;
 
     @EventHandler
-    public void preInit(FMLPreInitializationEvent e) {
-    	proxy.preInit(e);
-    }
-        
-    @EventHandler
     public void init(FMLInitializationEvent e) {
-    	proxy.init(e);
+        proxy.init(e);
     }
-        
+
     @EventHandler
     public void postInit(FMLPostInitializationEvent e) {
-    	proxy.postInit(e);
+        proxy.postInit(e);
+    }
+
+    @EventHandler
+    public void preInit(FMLPreInitializationEvent e) {
+        proxy.preInit(e);
     }
 }
