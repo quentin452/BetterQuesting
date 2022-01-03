@@ -26,6 +26,7 @@ import org.apache.logging.log4j.Level;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.IntSupplier;
 
 public class TaskCrafting implements ITask
 {
@@ -80,10 +81,10 @@ public class TaskCrafting implements ITask
 	    pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
 	}
 	
-	public void onItemCraft(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack)
+	public void onItemCraft(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack, IntSupplier realStackSizeSupplier)
     {
         if(!allowCraft) return;
-        onItemInternal(pInfo, quest, stack);
+        onItemInternal(pInfo, quest, stack, realStackSizeSupplier);
     }
 	
 	public void onItemSmelt(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack)
@@ -97,13 +98,20 @@ public class TaskCrafting implements ITask
         if(!allowAnvil) return;
         onItemInternal(pInfo, quest, stack);
     }
-	
-	private void onItemInternal(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack)
+
+	private void onItemInternal(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack) {
+		onItemInternal(pInfo, quest, stack, null);
+	}
+
+	private void onItemInternal(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack, IntSupplier realStackSizeSupplier)
 	{
-	    if(stack == null || stack.stackSize <= 0) return;
+		// ignore null stack
+		// ignore negatively sized stack only if it's indeed the real stack size
+	    if(stack == null || (stack.stackSize <= 0 && realStackSizeSupplier == null)) return;
 		
         final List<Tuple2<UUID, int[]>> progress = getBulkProgress(pInfo.ALL_UUIDS);
         boolean changed = false;
+		int realStackSizeCache = realStackSizeSupplier == null ? Math.max(0, stack.stackSize) : -1;
         
 		for(int i = 0; i < requiredItems.size(); i++)
 		{
@@ -112,10 +120,21 @@ public class TaskCrafting implements ITask
 			
 			if(ItemComparison.StackMatch(rStack.getBaseStack(), stack, !ignoreNBT, partialMatch) || ItemComparison.OreDictionaryMatch(rStack.getOreIngredient(), rStack.GetTagCompound(), stack, !ignoreNBT, partialMatch))
 			{
-			    progress.forEach((entry) -> {
-			        if(entry.getSecond()[index] >= rStack.stackSize) return;
-			        entry.getSecond()[index] = Math.min(entry.getSecond()[index] + stack.stackSize, rStack.stackSize);
-                });
+				int realStackSize;
+				if(realStackSizeCache < 0)
+				{
+					realStackSize = realStackSizeSupplier.getAsInt();
+					if (realStackSize <= 0)
+						// bruh
+						return;
+					realStackSizeCache = realStackSize;
+				} else
+				{
+					realStackSize = realStackSizeCache;
+				}
+				progress.stream()
+						.filter(e -> e.getSecond()[index] < rStack.stackSize)
+						.forEach(e -> e.getSecond()[index] = Math.min(e.getSecond()[index] + realStackSize, rStack.stackSize));
 			    changed = true;
 			}
 		}
