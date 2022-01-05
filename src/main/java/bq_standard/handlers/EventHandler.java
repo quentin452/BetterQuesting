@@ -42,6 +42,7 @@ import org.apache.commons.lang3.Validate;
 import java.util.ArrayDeque;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
+import java.util.function.IntSupplier;
 
 @SuppressWarnings("unused")
 public class EventHandler
@@ -107,20 +108,30 @@ public class EventHandler
 		if(event.player == null || event.player instanceof FakePlayer || event.player.worldObj.isRemote) return;
         
         ParticipantInfo pInfo = new ParticipantInfo(event.player);
-        
-        ItemStack refStack = event.crafting.copy();
-        
-        if(event.craftMatrix instanceof InventoryCrafting) // Hack for broken-ass shift clicking reporting empty stacks
+
+        IntSupplier realStackSizeSupplier = null;
+        if(event.craftMatrix instanceof InventoryCrafting && event.crafting.stackSize == 0) // Hack for broken-ass shift clicking reporting empty stacks
         {
-            ItemStack result = CraftingManager.getInstance().findMatchingRecipe((InventoryCrafting)event.craftMatrix, event.player.worldObj);
-            if(result != null) refStack.stackSize = result.stackSize;
+            realStackSizeSupplier = new IntSupplier() {
+                private int stackSize = -1;
+                private int get() {
+                    ItemStack result = CraftingManager.getInstance().findMatchingRecipe((InventoryCrafting) event.craftMatrix, event.player.worldObj);
+                    return result != null ? result.stackSize : event.crafting.stackSize;
+                }
+                @Override
+                public int getAsInt() {
+                    if (stackSize < 0)
+                        stackSize = get();
+                    return stackSize;
+                }
+            };
         }
 		
 		for(DBEntry<IQuest> entry : QuestingAPI.getAPI(ApiReference.QUEST_DB).bulkLookup(pInfo.getSharedQuests()))
 		{
 		    for(DBEntry<ITask> task : entry.getValue().getTasks().getEntries())
             {
-                if(task.getValue() instanceof TaskCrafting) ((TaskCrafting)task.getValue()).onItemCraft(pInfo, entry, refStack);
+                if(task.getValue() instanceof TaskCrafting) ((TaskCrafting)task.getValue()).onItemCraft(pInfo, entry, event.crafting, realStackSizeSupplier);
             }
 		}
 	}
