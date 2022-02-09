@@ -50,6 +50,7 @@ public class CommonProxy
 		taskReg.register(FactoryTaskXP.INSTANCE);
 		taskReg.register(FactoryTaskInteractItem.INSTANCE);
 		taskReg.register(FactoryTaskInteractEntity.INSTANCE);
+		taskReg.register(FactoryTaskOptionalRetrieval.INSTANCE);
 
 		IRegistry<IFactoryData<IReward, NBTTagCompound>, IReward> rewardReg = QuestingAPI.getAPI(ApiReference.REWARD_REG);
 		rewardReg.register(FactoryRewardChoice.INSTANCE);
