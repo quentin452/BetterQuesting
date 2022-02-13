@@ -2,7 +2,7 @@
 {
   "modid": "${modId}",
   "name": "${modName}",
-  "description": "Quest book to open the quest GUI to reduce keybinding collison.",
+  "description": "Quest book to open the quest GUI to reduce keybinding collisions.",
   "version": "${modVersion}",
   "mcversion": "${minecraftVersion}",
   "url": "",
