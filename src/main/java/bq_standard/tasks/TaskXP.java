@@ -43,7 +43,7 @@ public class TaskXP implements ITaskTickable
 	@Override
 	public void setComplete(UUID uuid)
 	{
-		completeUsers.add(uuid);
+		ProgressUtil.setComplete(uuid, completeUsers);
 	}
 	
 	@Override
@@ -205,15 +205,7 @@ public class TaskXP implements ITaskTickable
 	@Override
 	public void resetUser(@Nullable UUID uuid)
 	{
-	    if(uuid == null)
-        {
-            completeUsers.clear();
-            userProgress.clear();
-        } else
-        {
-            completeUsers.remove(uuid);
-            userProgress.remove(uuid);
-        }
+	    ProgressUtil.resetUser(uuid, completeUsers, userProgress);
 	}
 	
 	@Override
@@ -230,7 +222,7 @@ public class TaskXP implements ITaskTickable
 	
 	private void setUserProgress(UUID uuid, long progress)
 	{
-		userProgress.put(uuid, progress);
+		ProgressUtil.setUserProgress(uuid, userProgress, progress);
 	}
 	
 	public long getUsersProgress(UUID uuid)

@@ -65,19 +65,13 @@ public class TaskLocation implements ITaskTickable
 	@Override
 	public void setComplete(UUID uuid)
 	{
-		completeUsers.add(uuid);
+		ProgressUtil.setComplete(uuid, completeUsers);
 	}
  
 	@Override
 	public void resetUser(@Nullable UUID uuid)
 	{
-	    if(uuid == null)
-        {
-		    completeUsers.clear();
-        } else
-        {
-            completeUsers.remove(uuid);
-        }
+        ProgressUtil.resetUser(uuid, completeUsers);
 	}
 	
 	@Override

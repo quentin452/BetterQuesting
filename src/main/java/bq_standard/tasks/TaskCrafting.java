@@ -18,14 +18,24 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.*;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTBase.NBTPrimitive;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagInt;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.ResourceLocation;
 import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.UUID;
 import java.util.function.IntSupplier;
 
 public class TaskCrafting implements ITask
@@ -54,7 +64,7 @@ public class TaskCrafting implements ITask
 	@Override
 	public void setComplete(UUID uuid)
 	{
-		completeUsers.add(uuid);
+        ProgressUtil.setComplete(uuid, completeUsers);
 	}
 	
 	@Override
@@ -279,15 +289,7 @@ public class TaskCrafting implements ITask
 	@Override
 	public void resetUser(@Nullable UUID uuid)
 	{
-	    if(uuid == null)
-        {
-            completeUsers.clear();
-            userProgress.clear();
-        } else
-        {
-            completeUsers.remove(uuid);
-            userProgress.remove(uuid);
-        }
+        ProgressUtil.resetUser(uuid, completeUsers, userProgress);
 	}
  
 	@Override
@@ -305,7 +307,7 @@ public class TaskCrafting implements ITask
 	
 	private void setUserProgress(UUID uuid, int[] progress)
 	{
-		userProgress.put(uuid, progress);
+        ProgressUtil.setUserProgress(uuid, userProgress, progress);
 	}
 	
 	public int[] getUsersProgress(UUID uuid)

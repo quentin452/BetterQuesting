@@ -124,21 +124,13 @@ public class TaskInteractEntity implements ITask
 	@Override
 	public void setComplete(UUID uuid)
 	{
-		completeUsers.add(uuid);
+        ProgressUtil.setComplete(uuid, completeUsers);
 	}
 
 	@Override
 	public void resetUser(@Nullable UUID uuid)
 	{
-	    if(uuid == null)
-        {
-            completeUsers.clear();
-            userProgress.clear();
-        } else
-        {
-            completeUsers.remove(uuid);
-            userProgress.remove(uuid);
-        }
+        ProgressUtil.resetUser(uuid, completeUsers, userProgress);
 	}
     
     @Override
@@ -267,7 +259,7 @@ public class TaskInteractEntity implements ITask
 	
 	private void setUserProgress(UUID uuid, int progress)
 	{
-		userProgress.put(uuid, progress);
+        ProgressUtil.setUserProgress(uuid, userProgress, progress);
 	}
 	
 	public int getUsersProgress(UUID uuid)
