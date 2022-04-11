@@ -8,6 +8,7 @@ import betterquesting.api2.utils.ParticipantInfo;
 import bq_standard.XPHelper;
 import bq_standard.client.gui.tasks.PanelTaskXP;
 import bq_standard.core.BQ_Standard;
+import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskXP;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
@@ -18,12 +19,12 @@ import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
-public class TaskXP implements ITaskTickable
+public class TaskXP extends TaskProgressableBase<Long> implements ITaskTickable
 {
-	private final Set<UUID> completeUsers = new TreeSet<>();
-	private final TreeMap<UUID, Long> userProgress = new TreeMap<>();
 	public boolean levels = true;
 	public int amount = 30;
 	public boolean consume = true;
@@ -32,18 +33,6 @@ public class TaskXP implements ITaskTickable
 	public ResourceLocation getFactoryID()
 	{
 		return FactoryTaskXP.INSTANCE.getRegistryName();
-	}
-	
-	@Override
-	public boolean isComplete(UUID uuid)
-	{
-		return completeUsers.contains(uuid);
-	}
-	
-	@Override
-	public void setComplete(UUID uuid)
-	{
-		ProgressUtil.setComplete(uuid, completeUsers);
 	}
 	
 	@Override
@@ -203,12 +192,6 @@ public class TaskXP implements ITaskTickable
 	}
 	
 	@Override
-	public void resetUser(@Nullable UUID uuid)
-	{
-	    ProgressUtil.resetUser(uuid, completeUsers, userProgress);
-	}
-	
-	@Override
 	public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest)
 	{
 	    return new PanelTaskXP(rect, this);
@@ -220,12 +203,8 @@ public class TaskXP implements ITaskTickable
 		return null;
 	}
 	
-	private void setUserProgress(UUID uuid, long progress)
-	{
-		ProgressUtil.setUserProgress(uuid, userProgress, progress);
-	}
-	
-	public long getUsersProgress(UUID uuid)
+	@Override
+	public Long getUsersProgress(UUID uuid)
 	{
         Long n = userProgress.get(uuid);
         return n == null? 0 : n;

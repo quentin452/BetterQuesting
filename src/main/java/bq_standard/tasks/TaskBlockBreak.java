@@ -1,7 +1,6 @@
 package bq_standard.tasks;
 
 import betterquesting.api.questing.IQuest;
-import betterquesting.api.questing.tasks.ITask;
 import betterquesting.api.utils.ItemComparison;
 import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.misc.IGuiRect;
@@ -12,6 +11,7 @@ import betterquesting.api2.utils.Tuple2;
 import bq_standard.NbtBlockType;
 import bq_standard.client.gui.tasks.PanelTaskBlockBreak;
 import bq_standard.core.BQ_Standard;
+import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskBlockBreak;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -35,15 +35,10 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.UUID;
 
-public class TaskBlockBreak implements ITask
+public class TaskBlockBreak extends TaskProgressableBase<int[]>
 {
-	private final Set<UUID> completeUsers = new TreeSet<>();
-	private final TreeMap<UUID, int[]> userProgress = new TreeMap<>();
 	public final List<NbtBlockType> blockTypes = new ArrayList<>();
 	
 	public TaskBlockBreak()
@@ -56,18 +51,6 @@ public class TaskBlockBreak implements ITask
 	{
 		return FactoryTaskBlockBreak.INSTANCE.getRegistryName();
 	}
-	
-	@Override
-	public boolean isComplete(UUID uuid)
-	{
-		return completeUsers.contains(uuid);
-	}
-	
-	@Override
-	public void setComplete(UUID uuid)
-	{
-        ProgressUtil.setComplete(uuid, completeUsers);
-    }
 	
 	@Override
 	public String getUnlocalisedName()
@@ -262,12 +245,6 @@ public class TaskBlockBreak implements ITask
 	}
 	
 	@Override
-	public void resetUser(@Nullable UUID uuid)
-	{
-        ProgressUtil.resetUser(uuid, completeUsers, userProgress);
-	}
-
-	@Override
 	@SideOnly(Side.CLIENT)
 	public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest)
 	{
@@ -281,11 +258,7 @@ public class TaskBlockBreak implements ITask
 		return null;
 	}
 	
-	private void setUserProgress(UUID uuid, int[] progress)
-	{
-        ProgressUtil.setUserProgress(uuid, userProgress, progress);
-	}
-	
+	@Override
 	public int[] getUsersProgress(UUID uuid)
 	{
 		int[] progress = userProgress.get(uuid);

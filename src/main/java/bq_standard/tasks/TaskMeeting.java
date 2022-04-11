@@ -9,6 +9,7 @@ import betterquesting.api2.utils.ParticipantInfo;
 import bq_standard.client.gui.editors.tasks.GuiEditTaskMeeting;
 import bq_standard.client.gui.tasks.PanelTaskMeeting;
 import bq_standard.core.BQ_Standard;
+import bq_standard.tasks.base.TaskBase;
 import bq_standard.tasks.factory.FactoryTaskMeeting;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -22,13 +23,12 @@ import net.minecraft.util.ResourceLocation;
 import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
-public class TaskMeeting implements ITaskTickable
+public class TaskMeeting extends TaskBase implements ITaskTickable
 {
-	private final Set<UUID> completeUsers = new TreeSet<>();
-	
 	public String idName = "Villager";
 	public int range = 4;
 	public int amount = 1;
@@ -50,24 +50,6 @@ public class TaskMeeting implements ITaskTickable
 	public String getUnlocalisedName()
 	{
 		return "bq_standard.task.meeting";
-	}
-	
-	@Override
-	public boolean isComplete(UUID uuid)
-	{
-		return completeUsers.contains(uuid);
-	}
-	
-	@Override
-	public void setComplete(UUID uuid)
-	{
-		ProgressUtil.setComplete(uuid, completeUsers);
-	}
-
-	@Override
-	public void resetUser(@Nullable UUID uuid)
-	{
-        ProgressUtil.resetUser(uuid, completeUsers);
 	}
 	
 	@Override
