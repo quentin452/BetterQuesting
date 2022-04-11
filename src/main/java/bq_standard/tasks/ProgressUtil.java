@@ -1,6 +1,7 @@
 package bq_standard.tasks;
 
-import bq_standard.DirtyPlayerMarker;
+
+import betterquesting.api2.utils.DirtyPlayerMarker;
 
 import javax.annotation.Nullable;
 import java.util.HashSet;

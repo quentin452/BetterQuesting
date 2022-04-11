@@ -2,6 +2,6 @@
 
 dependencies {
     compile 'com.github.GTNewHorizons:NotEnoughItems:2.2.7-GTNH:dev'
-    compile 'com.github.GTNewHorizons:BetterQuesting:3.0.355-GTNH:dev'
+    compile 'com.github.GTNewHorizons:BetterQuesting:3.0.356-GTNH:dev'
     compile 'com.github.GTNewHorizons:CodeChickenLib:1.1.5.3:dev'
 }
