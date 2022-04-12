@@ -1,7 +1,6 @@
 package bq_standard.tasks;
 
 import betterquesting.api.questing.IQuest;
-import betterquesting.api.questing.tasks.ITask;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api.utils.ItemComparison;
 import betterquesting.api.utils.JsonHelper;
@@ -13,26 +12,31 @@ import betterquesting.api2.utils.ParticipantInfo;
 import betterquesting.api2.utils.Tuple2;
 import bq_standard.client.gui.tasks.PanelTaskCrafting;
 import bq_standard.core.BQ_Standard;
+import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskCrafting;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.*;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTBase.NBTPrimitive;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagInt;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.ResourceLocation;
 import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import java.util.function.IntSupplier;
 
-public class TaskCrafting implements ITask
+public class TaskCrafting extends TaskProgressableBase<int[]>
 {
-	private final Set<UUID> completeUsers = new TreeSet<>();
 	public final List<BigItemStack> requiredItems = new ArrayList<>();
-	public final TreeMap<UUID, int[]> userProgress = new TreeMap<>();
 	public boolean partialMatch = true;
 	public boolean ignoreNBT = true;
 	public boolean allowAnvil = false;
@@ -43,18 +47,6 @@ public class TaskCrafting implements ITask
 	public ResourceLocation getFactoryID()
 	{
 		return FactoryTaskCrafting.INSTANCE.getRegistryName();
-	}
-	
-	@Override
-	public boolean isComplete(UUID uuid)
-	{
-		return completeUsers.contains(uuid);
-	}
-	
-	@Override
-	public void setComplete(UUID uuid)
-	{
-		completeUsers.add(uuid);
 	}
 	
 	@Override
@@ -277,20 +269,6 @@ public class TaskCrafting implements ITask
 	}
 
 	@Override
-	public void resetUser(@Nullable UUID uuid)
-	{
-	    if(uuid == null)
-        {
-            completeUsers.clear();
-            userProgress.clear();
-        } else
-        {
-            completeUsers.remove(uuid);
-            userProgress.remove(uuid);
-        }
-	}
- 
-	@Override
 	public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> context)
 	{
 	    return new PanelTaskCrafting(rect, this);
@@ -303,11 +281,7 @@ public class TaskCrafting implements ITask
 		return null;
 	}
 	
-	private void setUserProgress(UUID uuid, int[] progress)
-	{
-		userProgress.put(uuid, progress);
-	}
-	
+	@Override
 	public int[] getUsersProgress(UUID uuid)
 	{
 		int[] progress = userProgress.get(uuid);

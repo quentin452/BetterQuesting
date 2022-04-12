@@ -9,6 +9,7 @@ import bq_standard.ScoreboardBQ;
 import bq_standard.client.gui.editors.tasks.GuiEditTaskScoreboard;
 import bq_standard.client.gui.tasks.PanelTaskScoreboard;
 import bq_standard.core.BQ_Standard;
+import bq_standard.tasks.base.TaskBase;
 import bq_standard.tasks.factory.FactoryTaskScoreboard;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -24,12 +25,12 @@ import net.minecraft.util.ResourceLocation;
 import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
-public class TaskScoreboard implements ITaskTickable
+public class TaskScoreboard extends TaskBase implements ITaskTickable
 {
-	private final Set<UUID> completeUsers = new TreeSet<>();
 	public String scoreName = "Score";
 	public String scoreDisp = "Score";
 	public String type = "dummy";
@@ -48,30 +49,6 @@ public class TaskScoreboard implements ITaskTickable
 	public String getUnlocalisedName()
 	{
 		return "bq_standard.task.scoreboard";
-	}
-	
-	@Override
-	public boolean isComplete(UUID uuid)
-	{
-		return completeUsers.contains(uuid);
-	}
-	
-	@Override
-	public void setComplete(UUID uuid)
-	{
-		completeUsers.add(uuid);
-	}
-
-	@Override
-	public void resetUser(@Nullable UUID uuid)
-	{
-	    if(uuid == null)
-        {
-		    completeUsers.clear();
-        } else
-        {
-            completeUsers.remove(uuid);
-        }
 	}
 	
 	@Override

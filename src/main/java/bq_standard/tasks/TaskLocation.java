@@ -7,6 +7,7 @@ import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import bq_standard.client.gui.tasks.PanelTaskLocation;
 import bq_standard.core.BQ_Standard;
+import bq_standard.tasks.base.TaskBase;
 import bq_standard.tasks.factory.FactoryTaskLocation;
 import codechicken.lib.math.MathHelper;
 import net.minecraft.client.gui.GuiScreen;
@@ -26,11 +27,13 @@ import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 
-public class TaskLocation implements ITaskTickable
+public class TaskLocation extends TaskBase implements ITaskTickable
 {
-	private final Set<UUID> completeUsers = new TreeSet<>();
 	public String name = "New Location";
 	public String structure = "";
 	public int biome = -1;
@@ -55,31 +58,7 @@ public class TaskLocation implements ITaskTickable
 	{
 		return "bq_standard.task.location";
 	}
-	
-	@Override
-	public boolean isComplete(UUID uuid)
-	{
-		return completeUsers.contains(uuid);
-	}
-	
-	@Override
-	public void setComplete(UUID uuid)
-	{
-		completeUsers.add(uuid);
-	}
  
-	@Override
-	public void resetUser(@Nullable UUID uuid)
-	{
-	    if(uuid == null)
-        {
-		    completeUsers.clear();
-        } else
-        {
-            completeUsers.remove(uuid);
-        }
-	}
-	
 	@Override
 	public void tickTask(@Nonnull ParticipantInfo pInfo, DBEntry<IQuest> quest)
 	{

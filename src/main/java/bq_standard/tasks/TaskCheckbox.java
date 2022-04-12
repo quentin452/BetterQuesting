@@ -1,13 +1,13 @@
 package bq_standard.tasks;
 
 import betterquesting.api.questing.IQuest;
-import betterquesting.api.questing.tasks.ITask;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import bq_standard.client.gui.tasks.PanelTaskCheckbox;
 import bq_standard.core.BQ_Standard;
+import bq_standard.tasks.base.TaskBase;
 import bq_standard.tasks.factory.FactoryTaskCheckbox;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -20,14 +20,10 @@ import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
 
-public class TaskCheckbox implements ITask
+public class TaskCheckbox extends TaskBase
 {
-	private final Set<UUID> completeUsers = new TreeSet<>();
-	
 	@Override
 	public ResourceLocation getFactoryID()
 	{
@@ -40,33 +36,6 @@ public class TaskCheckbox implements ITask
 		return BQ_Standard.MODID + ".task.checkbox";
 	}
 	
-	@Override
-	public boolean isComplete(UUID uuid)
-	{
-		return completeUsers.contains(uuid);
-	}
-	
-	@Override
-	public void setComplete(UUID uuid)
-	{
-		if(!completeUsers.contains(uuid))
-		{
-			completeUsers.add(uuid);
-		}
-	}
-
-	@Override
-	public void resetUser(@Nullable UUID uuid)
-	{
-	    if(uuid == null)
-        {
-            completeUsers.clear();
-        } else
-        {
-            completeUsers.remove(uuid);
-        }
-	}
-
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound nbt)
 	{

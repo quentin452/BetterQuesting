@@ -1,7 +1,6 @@
 package bq_standard.tasks;
 
 import betterquesting.api.questing.IQuest;
-import betterquesting.api.questing.tasks.ITask;
 import betterquesting.api.utils.ItemComparison;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
@@ -11,6 +10,7 @@ import betterquesting.api2.utils.Tuple2;
 import bq_standard.client.gui.editors.tasks.GuiEditTaskHunt;
 import bq_standard.client.gui.tasks.PanelTaskHunt;
 import bq_standard.core.BQ_Standard;
+import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskHunt;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -27,12 +27,13 @@ import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
-public class TaskHunt implements ITask
+public class TaskHunt extends TaskProgressableBase<Integer>
 {
-	private final Set<UUID> completeUsers = new TreeSet<>();
-	private final TreeMap<UUID, Integer> userProgress = new TreeMap<>();
 	public String idName = "Zombie";
 	public String damageType = "";
 	public int required = 1;
@@ -48,18 +49,6 @@ public class TaskHunt implements ITask
 	public ResourceLocation getFactoryID()
 	{
 		return FactoryTaskHunt.INSTANCE.getRegistryName();
-	}
-	
-	@Override
-	public boolean isComplete(UUID uuid)
-	{
-		return completeUsers.contains(uuid);
-	}
-	
-	@Override
-	public void setComplete(UUID uuid)
-	{
-		completeUsers.add(uuid);
 	}
 	
 	@Override
@@ -214,20 +203,6 @@ public class TaskHunt implements ITask
 		return nbt;
 	}
 
-	@Override
-	public void resetUser(@Nullable UUID uuid)
-	{
-	    if(uuid == null)
-        {
-            completeUsers.clear();
-            userProgress.clear();
-        } else
-        {
-            completeUsers.remove(uuid);
-            userProgress.remove(uuid);
-        }
-	}
-	
 	/**
 	 * Returns a new editor screen for this Reward type to edit the given data
 	 */
@@ -245,12 +220,8 @@ public class TaskHunt implements ITask
 	    return new PanelTaskHunt(rect, this);
 	}
 	
-	private void setUserProgress(UUID uuid, int progress)
-	{
-		userProgress.put(uuid, progress);
-	}
-	
-	public int getUsersProgress(UUID uuid)
+	@Override
+	public Integer getUsersProgress(UUID uuid)
 	{
         Integer n = userProgress.get(uuid);
         return n == null? 0 : n;

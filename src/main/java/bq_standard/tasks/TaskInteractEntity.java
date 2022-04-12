@@ -1,7 +1,6 @@
 package bq_standard.tasks;
 
 import betterquesting.api.questing.IQuest;
-import betterquesting.api.questing.tasks.ITask;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api.utils.ItemComparison;
 import betterquesting.api2.client.gui.misc.IGuiRect;
@@ -11,6 +10,7 @@ import betterquesting.api2.utils.ParticipantInfo;
 import betterquesting.api2.utils.Tuple2;
 import bq_standard.client.gui.tasks.PanelTaskInteractEntity;
 import bq_standard.core.BQ_Standard;
+import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskInteractEntity;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -26,13 +26,13 @@ import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
-public class TaskInteractEntity implements ITask
+public class TaskInteractEntity extends TaskProgressableBase<Integer>
 {
-	private final Set<UUID> completeUsers = new TreeSet<>();
-	private final TreeMap<UUID, Integer> userProgress = new TreeMap<>();
-	
 	@Nullable
     public BigItemStack targetItem = null;
 	public boolean ignoreItemNBT = false;
@@ -114,32 +114,6 @@ public class TaskInteractEntity implements ITask
         
 		pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
     }
-	
-	@Override
-	public boolean isComplete(UUID uuid)
-	{
-		return completeUsers.contains(uuid);
-	}
-	
-	@Override
-	public void setComplete(UUID uuid)
-	{
-		completeUsers.add(uuid);
-	}
-
-	@Override
-	public void resetUser(@Nullable UUID uuid)
-	{
-	    if(uuid == null)
-        {
-            completeUsers.clear();
-            userProgress.clear();
-        } else
-        {
-            completeUsers.remove(uuid);
-            userProgress.remove(uuid);
-        }
-	}
     
     @Override
 	@SideOnly(Side.CLIENT)
@@ -265,12 +239,8 @@ public class TaskInteractEntity implements ITask
         onHit = nbt.getBoolean("onHit");
     }
 	
-	private void setUserProgress(UUID uuid, int progress)
-	{
-		userProgress.put(uuid, progress);
-	}
-	
-	public int getUsersProgress(UUID uuid)
+	@Override
+	public Integer getUsersProgress(UUID uuid)
 	{
         Integer n = userProgress.get(uuid);
         return n == null? 0 : n;

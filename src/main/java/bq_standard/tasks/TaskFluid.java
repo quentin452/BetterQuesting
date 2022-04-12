@@ -12,14 +12,19 @@ import betterquesting.api2.utils.ParticipantInfo;
 import betterquesting.api2.utils.Tuple2;
 import bq_standard.client.gui.tasks.PanelTaskFluid;
 import bq_standard.core.BQ_Standard;
+import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskFluid;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.*;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTBase.NBTPrimitive;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagInt;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidStack;
@@ -28,13 +33,15 @@ import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
-public class TaskFluid implements ITaskInventory, IFluidTask, IItemTask
+public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInventory, IFluidTask, IItemTask
 {
-	private final Set<UUID> completeUsers = new TreeSet<>();
 	public final List<FluidStack> requiredFluids = new ArrayList<>();
-	public final TreeMap<UUID, int[]> userProgress = new TreeMap<>();
 	//public boolean partialMatch = true; // Not many ideal ways of implementing this with fluid handlers
 	public boolean ignoreNbt = true;
 	public boolean consume = true;
@@ -51,18 +58,6 @@ public class TaskFluid implements ITaskInventory, IFluidTask, IItemTask
 	public String getUnlocalisedName()
 	{
 		return "bq_standard.task.fluid";
-	}
-	
-	@Override
-	public boolean isComplete(UUID uuid)
-	{
-		return completeUsers.contains(uuid);
-	}
-	
-	@Override
-	public void setComplete(UUID uuid)
-	{
-		completeUsers.add(uuid);
 	}
 	
 	@Override
@@ -366,20 +361,6 @@ public class TaskFluid implements ITaskInventory, IFluidTask, IItemTask
 	}
 
 	@Override
-	public void resetUser(@Nullable UUID uuid)
-	{
-	    if(uuid == null)
-        {
-            completeUsers.clear();
-            userProgress.clear();
-        } else
-        {
-            completeUsers.remove(uuid);
-            userProgress.remove(uuid);
-        }
-	}
- 
-	@Override
 	@SideOnly(Side.CLIENT)
 	public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest)
 	{
@@ -497,11 +478,7 @@ public class TaskFluid implements ITaskInventory, IFluidTask, IItemTask
 		return item;
 	}
  
-	private void setUserProgress(UUID uuid, int[] progress)
-	{
-		userProgress.put(uuid, progress);
-	}
- 
+	@Override
 	public int[] getUsersProgress(UUID uuid)
 	{
 		int[] progress = userProgress.get(uuid);
