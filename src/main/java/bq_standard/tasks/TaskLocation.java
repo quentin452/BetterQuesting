@@ -226,4 +226,9 @@ public class TaskLocation extends TaskBase implements ITaskTickable
             return "" + dim;
         }
 	}
+
+	@Override
+	public List<String> getTextsForSearch() {
+		return Collections.singletonList(getDimName(dim));
+	}
 }

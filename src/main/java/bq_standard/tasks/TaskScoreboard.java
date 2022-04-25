@@ -25,6 +25,7 @@ import net.minecraft.util.ResourceLocation;
 import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -207,5 +208,13 @@ public class TaskScoreboard extends TaskBase implements ITaskTickable
 	public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest)
 	{
 	    return new GuiEditTaskScoreboard(parent, quest, this);
+	}
+
+	@Override
+	public List<String> getTextsForSearch() {
+		List<String> texts = new ArrayList<>();
+		texts.add(scoreName);
+		texts.add(scoreDisp);
+		return texts;
 	}
 }

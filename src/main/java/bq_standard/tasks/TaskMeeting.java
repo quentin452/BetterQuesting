@@ -175,4 +175,9 @@ public class TaskMeeting extends TaskBase implements ITaskTickable
 	{
 	    return new PanelTaskMeeting(rect, this);
 	}
+
+	@Override
+	public List<String> getTextsForSearch() {
+		return Collections.singletonList(idName);
+	}
 }

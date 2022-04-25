@@ -497,4 +497,14 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
     {
         list.forEach((entry) -> setUserProgress(entry.getFirst(), entry.getSecond()));
     }
+
+	@Override
+	public List<String> getTextsForSearch() {
+		List<String> texts = new ArrayList<>();
+		for (FluidStack fluid : requiredFluids) {
+			texts.add(fluid.getLocalizedName());
+			texts.add(fluid.getUnlocalizedName());
+		}
+		return texts;
+	}
 }
