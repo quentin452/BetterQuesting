@@ -277,4 +277,15 @@ public class TaskBlockBreak extends TaskProgressableBase<int[]>
     {
         list.forEach((entry) -> setUserProgress(entry.getFirst(), entry.getSecond()));
     }
+
+	@Override
+	public List<String> getTextsForSearch() {
+		List<String> texts = new ArrayList<>();
+		for (NbtBlockType block : blockTypes) {
+			if (block.getItemStack() != null) {
+				texts.add(block.getItemStack().getBaseStack().getDisplayName());
+			}
+		}
+		return texts;
+	}
 }

@@ -234,4 +234,9 @@ public class TaskHunt extends TaskProgressableBase<Integer>
         uuids.forEach((key) -> list.add(new Tuple2<>(key, getUsersProgress(key))));
         return list;
     }
+
+	@Override
+	public List<String> getTextsForSearch() {
+		return Collections.singletonList(idName);
+	}
 }

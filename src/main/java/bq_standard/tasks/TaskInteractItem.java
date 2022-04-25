@@ -244,4 +244,16 @@ public class TaskInteractItem extends TaskProgressableBase<Integer>
         uuids.forEach((key) -> list.add(new Tuple2<>(key, getUsersProgress(key))));
         return list;
     }
+
+    @Override
+    public List<String> getTextsForSearch() {
+        List<String> texts = new ArrayList<>();
+        if (targetBlock.getItemStack() != null) {
+            texts.add(targetBlock.getItemStack().getBaseStack().getDisplayName());
+        }
+        if (targetItem != null) {
+            texts.add(targetItem.getBaseStack().getDisplayName());
+        }
+        return texts;
+    }
 }

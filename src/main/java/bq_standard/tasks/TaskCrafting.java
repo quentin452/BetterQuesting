@@ -300,4 +300,17 @@ public class TaskCrafting extends TaskProgressableBase<int[]>
     {
         list.forEach((entry) -> setUserProgress(entry.getFirst(), entry.getSecond()));
     }
+
+	@Override
+	public List<String> getTextsForSearch() {
+		List<String> texts = new ArrayList<>();
+		for (BigItemStack bigStack : requiredItems) {
+			ItemStack stack = bigStack.getBaseStack();
+			texts.add(stack.getDisplayName());
+			if (bigStack.hasOreDict()) {
+				texts.add(bigStack.getOreDict());
+			}
+		}
+		return texts;
+	}
 }

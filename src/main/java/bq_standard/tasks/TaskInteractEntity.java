@@ -253,4 +253,14 @@ public class TaskInteractEntity extends TaskProgressableBase<Integer>
         uuids.forEach((key) -> list.add(new Tuple2<>(key, getUsersProgress(key))));
         return list;
     }
+
+    @Override
+    public List<String> getTextsForSearch() {
+        List<String> texts = new ArrayList<>();
+        texts.add(entityID);
+        if (targetItem != null) {
+            texts.add(targetItem.getBaseStack().getDisplayName());
+        }
+        return texts;
+    }
 }
