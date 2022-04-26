@@ -71,7 +71,8 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
 	public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest)
 	{
 		if(isComplete(pInfo.UUID)) return;
-		
+
+		// List of (player uuid, [progress per required item])
         final List<Tuple2<UUID, int[]>> progress = getBulkProgress(consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
 		boolean updated = false;
 		
@@ -152,12 +153,11 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
         }
 		
 		if(updated) setBulkProgress(progress);
-		checkAndComplete(pInfo, quest, updated);
+		checkAndComplete(pInfo, quest, updated, progress);
 	}
 	
-	private void checkAndComplete(ParticipantInfo pInfo, DBEntry<IQuest> quest, boolean resync)
+	private void checkAndComplete(ParticipantInfo pInfo, DBEntry<IQuest> quest, boolean resync, List<Tuple2<UUID, int[]>> progress)
     {
-        final List<Tuple2<UUID, int[]>> progress = getBulkProgress(consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
         boolean updated = resync;
         
         topLoop:

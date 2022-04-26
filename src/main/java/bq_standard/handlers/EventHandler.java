@@ -40,6 +40,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import org.apache.commons.lang3.Validate;
 
 import java.util.ArrayDeque;
+import java.util.HashSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 import java.util.function.IntSupplier;
@@ -262,6 +263,18 @@ public class EventHandler
 	
 	private static final ArrayDeque<FutureTask> serverTasks = new ArrayDeque<>();
 	private static Thread serverThread = null;
+
+    private static HashSet<EntityPlayer> playerInventoryUpdates = new HashSet<>();
+
+    /**
+     * Schedules checking player's inventory on the next server tick.
+     * Deduplicates requests to avoid scanning it multiple times per tick.
+     */
+    public static void schedulePlayerInventoryCheck(EntityPlayer player) {
+        synchronized (playerInventoryUpdates) {
+            playerInventoryUpdates.add(player);
+        }
+    }
 	
 	// NOTE: This is slightly different to the version in the base mod. This one will not immediately run tasks even if it's from the same thread.
     public static <T> ListenableFuture<T> scheduleServerTask(Callable<T> task)
@@ -286,6 +299,24 @@ public class EventHandler
         synchronized(serverTasks)
         {
             while(!serverTasks.isEmpty()) serverTasks.poll().run();
+        }
+
+        synchronized (playerInventoryUpdates) {
+            for (EntityPlayer player : playerInventoryUpdates) {
+                if (player == null || player.inventory == null) {
+                    continue;
+                }
+                ParticipantInfo pInfo = new ParticipantInfo(player);
+
+                for(DBEntry<IQuest> entry : QuestingAPI.getAPI(ApiReference.QUEST_DB).bulkLookup(pInfo.getSharedQuests()))
+                {
+                    for(DBEntry<ITask> task : entry.getValue().getTasks().getEntries())
+                    {
+                        if(task.getValue() instanceof ITaskInventory) ((ITaskInventory)task.getValue()).onInventoryChange(entry, pInfo);
+                    }
+                }
+            }
+            playerInventoryUpdates.clear();
         }
     }
 }
