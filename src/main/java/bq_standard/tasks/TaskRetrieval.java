@@ -104,10 +104,11 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
             invoList = Collections.singletonList(pInfo.PLAYER.inventory);
         } else
         {
-            invoList = new ArrayList<>();
+            invoList = new ArrayList<>(pInfo.ACTIVE_PLAYERS.size());
             pInfo.ACTIVE_PLAYERS.forEach((p) -> invoList.add(p.inventory));
         }
-		
+
+		int[] remCounts = new int[progress.size()];
 		for(InventoryPlayer invo : invoList)
         {
             for(int i = 0; i < invo.getSizeInventory(); i++)
@@ -115,7 +116,6 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
                 ItemStack stack = invo.getStackInSlot(i);
                 if(stack == null || stack.stackSize <= 0) continue;
                 // Allows the stack detection to split across multiple requirements. Counts may vary per person
-                int[] remCounts = new int[progress.size()];
                 Arrays.fill(remCounts, stack.stackSize);
                 
                 for(int j = 0; j < requiredItems.size(); j++)
@@ -403,7 +403,7 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
 	private List<Tuple2<UUID, int[]>> getBulkProgress(@Nonnull List<UUID> uuids)
     {
         if(uuids.size() <= 0) return Collections.emptyList();
-        List<Tuple2<UUID, int[]>> list = new ArrayList<>();
+        List<Tuple2<UUID, int[]>> list = new ArrayList<>(uuids.size());
         uuids.forEach((key) -> list.add(new Tuple2<>(key, getUsersProgress(key))));
         return list;
     }
