@@ -385,7 +385,62 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
 		
 		return stack;
 	}
-	
+
+    @Override
+    public void retrieveItems(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack[] stacks) {
+        if (consume || isComplete(pInfo.UUID)) return;
+
+        final List<Tuple2<UUID, int[]>> progress = getBulkProgress(consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
+        boolean updated = false;
+
+        if (groupDetect) // Reset all detect progress
+        {
+            progress.forEach((value) -> Arrays.fill(value.getSecond(), 0));
+        } else {
+            for (int i = 0; i < requiredItems.size(); i++) {
+                final int r = requiredItems.get(i).stackSize;
+                for (Tuple2<UUID, int[]> value : progress) {
+                    int n = value.getSecond()[i];
+                    if (n != 0 && n < r) {
+                        value.getSecond()[i] = 0;
+                        updated = true;
+                    }
+                }
+            }
+        }
+
+        for (ItemStack stack : stacks) {
+            if (stack == null || stack.stackSize <= 0) continue;
+            // Allows the stack detection to split across multiple requirements. Counts may vary per person
+            int[] remCounts = new int[progress.size()];
+            Arrays.fill(remCounts, stack.stackSize);
+
+            for (int j = 0; j < requiredItems.size(); j++) {
+                BigItemStack rStack = requiredItems.get(j);
+
+                if (!ItemComparison.StackMatch(rStack.getBaseStack(), stack, !ignoreNBT, partialMatch) && !ItemComparison.OreDictionaryMatch(rStack.getOreIngredient(), rStack.GetTagCompound(), stack, !ignoreNBT, partialMatch)) {
+                    continue;
+                }
+
+                for (int n = 0; n < progress.size(); n++) {
+                    Tuple2<UUID, int[]> value = progress.get(n);
+                    if (value.getSecond()[j] >= rStack.stackSize) continue;
+
+                    int remaining = rStack.stackSize - value.getSecond()[j];
+
+                    int temp = Math.min(remaining, remCounts[n]);
+                    remCounts[n] -= temp;
+                    value.getSecond()[j] += temp;
+
+                    updated = true;
+                }
+            }
+        }
+
+        if (updated) setBulkProgress(progress);
+        checkAndComplete(pInfo, quest, updated, progress);
+    }
+
 	@Override
 	@SideOnly(Side.CLIENT)
 	public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest)

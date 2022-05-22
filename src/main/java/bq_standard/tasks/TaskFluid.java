@@ -237,6 +237,32 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
 			return fluid;
 		}
 	}
+
+    private FluidStack getFluid(ItemStack stack)
+    {
+        if(stack == null || stack.stackSize <= 0)
+        {
+            return null;
+        }
+
+        if(stack.getItem() instanceof IFluidContainerItem)
+        {
+            return ((IFluidContainerItem)stack.getItem()).getFluid(stack);
+        } else
+        {
+            // TODO: Revise this math later
+            FluidStack fluid = FluidContainerRegistry.getFluidForFilledItem(stack);
+            int tmp1 = fluid.amount;
+            int tmp2 = 1;
+            while(tmp2 < stack.stackSize)
+            {
+                tmp2++;
+                fluid.amount += tmp1;
+            }
+
+            return fluid;
+        }
+    }
 	
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound nbt)
@@ -453,8 +479,78 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
 		return fluid;
 	}
 
-	@Override
-	public ItemStack submitItem(UUID owner, DBEntry<IQuest> quest, ItemStack input)
+    @Override
+    public void retrieveFluids(ParticipantInfo pInfo, DBEntry<IQuest> quest, FluidStack[] fluids) {
+        if(consume || isComplete(pInfo.UUID)) return;
+
+        // Removing the consume check here would make the task cheaper on groups and for that reason sharing is restricted to detect only
+        final List<Tuple2<UUID, int[]>> progress = getBulkProgress(consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
+        boolean updated = false;
+
+        if(!consume)
+        {
+            if(groupDetect) // Reset all detect progress
+            {
+                progress.forEach((value) -> Arrays.fill(value.getSecond(), 0));
+            } else
+            {
+                for(int i = 0; i < requiredFluids.size(); i++)
+                {
+                    final int r = requiredFluids.get(i).amount;
+                    for(Tuple2<UUID, int[]> value : progress)
+                    {
+                        int n = value.getSecond()[i];
+                        if(n != 0 && n < r)
+                        {
+                            value.getSecond()[i] = 0;
+                            updated = true;
+                        }
+                    }
+                }
+            }
+        }
+
+
+            for(FluidStack fluid : fluids)
+            {
+                if(fluid == null || fluid.amount <= 0) continue;
+
+                for(int j = 0; j < requiredFluids.size(); j++)
+                {
+                    final FluidStack rStack = requiredFluids.get(j);
+                    FluidStack drainOG = rStack.copy();
+                    if(ignoreNbt) drainOG.tag = null;
+
+                    // Pre-check
+                    if(!drainOG.isFluidEqual(fluid)) continue;
+
+                    for(Tuple2<UUID, int[]> value : progress)
+                    {
+                        if(value.getSecond()[j] >= rStack.amount) continue;
+                        int remaining = rStack.amount - value.getSecond()[j];
+
+                        FluidStack drain = rStack.copy();
+                        drain.amount = remaining; //drain.amount = remaining / stack.stackSize;
+                        if(ignoreNbt) drain.tag = null;
+                        if(drain.amount <= 0) continue;
+
+                        FluidStack tFluid = fluid.copy();
+                        tFluid.amount = Math.min(tFluid.amount, drain.amount);
+                        if(tFluid == null || tFluid.amount <= 0) continue;
+
+                        value.getSecond()[j] += tFluid.amount;
+                        updated = true;
+                    }
+                }
+        }
+
+        if(updated) setBulkProgress(progress);
+        checkAndComplete(pInfo, quest, updated);
+    }
+
+
+    @Override
+    public ItemStack submitItem(UUID owner, DBEntry<IQuest> quest, ItemStack input)
 	{
 		if(owner == null || input == null || !consume || isComplete(owner)) return input;
 		
@@ -477,13 +573,75 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
 		
 		return item;
 	}
- 
-	@Override
-	public int[] getUsersProgress(UUID uuid)
-	{
-		int[] progress = userProgress.get(uuid);
-		return progress == null || progress.length != requiredFluids.size()? new int[requiredFluids.size()] : progress;
-	}
+
+    @Override
+    public void retrieveItems(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack[] stacks) {
+        if (consume || isComplete(pInfo.UUID)) return;
+
+        // Removing the consume check here would make the task cheaper on groups and for that reason sharing is restricted to detect only
+        final List<Tuple2<UUID, int[]>> progress = getBulkProgress(consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
+        boolean updated = false;
+
+        if (groupDetect) // Reset all detect progress
+        {
+            progress.forEach((value) -> Arrays.fill(value.getSecond(), 0));
+        } else {
+            for (int i = 0; i < requiredFluids.size(); i++) {
+                final int r = requiredFluids.get(i).amount;
+                for (Tuple2<UUID, int[]> value : progress) {
+                    int n = value.getSecond()[i];
+                    if (n != 0 && n < r) {
+                        value.getSecond()[i] = 0;
+                        updated = true;
+                    }
+                }
+            }
+        }
+
+
+        for (ItemStack stack : stacks) {
+            if (stack == null || stack.stackSize <= 0) continue;
+            if (!(stack.getItem() instanceof IFluidContainerItem || FluidContainerRegistry.isFilledContainer(stack)))
+                continue;
+
+            for (int j = 0; j < requiredFluids.size(); j++) {
+                final FluidStack rStack = requiredFluids.get(j);
+                FluidStack drainOG = rStack.copy();
+                if (ignoreNbt) drainOG.tag = null;
+
+                // Pre-check
+                FluidStack sample = getFluid(stack);
+                if (!drainOG.isFluidEqual(sample)) continue;
+
+                for (Tuple2<UUID, int[]> value : progress) {
+                    if (value.getSecond()[j] >= rStack.amount) continue;
+                    int remaining = rStack.amount - value.getSecond()[j];
+
+                    FluidStack drain = rStack.copy();
+                    drain.amount = remaining; //drain.amount = remaining / stack.stackSize;
+                    if (ignoreNbt) drain.tag = null;
+                    if (drain.amount <= 0) continue;
+
+                    FluidStack fluid = getFluid(stack).copy();
+                    fluid.amount = Math.min(fluid.amount, drain.amount);
+                    if (fluid == null || fluid.amount <= 0) continue;
+
+                    value.getSecond()[j] += fluid.amount * stack.stackSize;
+                    updated = true;
+                }
+            }
+        }
+
+        if (updated) setBulkProgress(progress);
+        checkAndComplete(pInfo, quest, updated);
+    }
+
+    @Override
+    public int[] getUsersProgress(UUID uuid)
+    {
+        int[] progress = userProgress.get(uuid);
+        return progress == null || progress.length != requiredFluids.size()? new int[requiredFluids.size()] : progress;
+    }
 	
 	private List<Tuple2<UUID, int[]>> getBulkProgress(@Nonnull List<UUID> uuids)
     {
