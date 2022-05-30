@@ -36,6 +36,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.IntFunction;
+import java.util.stream.IntStream;
 
 public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskInventory, IItemTask
 {
@@ -67,94 +69,31 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
         }
     }
     
-	@Override
-	public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest)
-	{
-		if(isComplete(pInfo.UUID)) return;
 
-		// List of (player uuid, [progress per required item])
-        final List<Tuple2<UUID, int[]>> progress = getBulkProgress(consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
-		boolean updated = false;
-		
-		if(!consume)
-        {
-            if(groupDetect) // Reset all detect progress
-            {
-                progress.forEach((value) -> Arrays.fill(value.getSecond(), 0));
-            } else
-            {
-                for(int i = 0; i < requiredItems.size(); i++)
-                {
-                    final int r = requiredItems.get(i).stackSize;
-                    for(Tuple2<UUID, int[]> value : progress)
-                    {
-                        int n = value.getSecond()[i];
-                        if(n != 0 && n < r)
-                        {
-                            value.getSecond()[i] = 0;
-                            updated = true;
-                        }
-                    }
-                }
-            }
-        }
-		
-		final List<InventoryPlayer> invoList;
-		if(consume)
-        {
+    @Override
+    public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {
+        if (isComplete(pInfo.UUID)) return;
+
+        Detector detector = new Detector(this, consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
+
+        final List<InventoryPlayer> invoList;
+        if (consume) {
             invoList = Collections.singletonList(pInfo.PLAYER.inventory);
-        } else
-        {
+        } else {
             invoList = new ArrayList<>(pInfo.ACTIVE_PLAYERS.size());
             pInfo.ACTIVE_PLAYERS.forEach((p) -> invoList.add(p.inventory));
         }
 
-		int[] remCounts = new int[progress.size()];
-		for(InventoryPlayer invo : invoList)
-        {
-            for(int i = 0; i < invo.getSizeInventory(); i++)
-            {
+        for (InventoryPlayer invo : invoList) {
+            IntStream.range(0, invo.getSizeInventory()).forEachOrdered(i -> {
                 ItemStack stack = invo.getStackInSlot(i);
-                if(stack == null || stack.stackSize <= 0) continue;
-                // Allows the stack detection to split across multiple requirements. Counts may vary per person
-                Arrays.fill(remCounts, stack.stackSize);
-                
-                for(int j = 0; j < requiredItems.size(); j++)
-                {
-                    BigItemStack rStack = requiredItems.get(j);
-        
-                    if(!ItemComparison.StackMatch(rStack.getBaseStack(), stack, !ignoreNBT, partialMatch) && !ItemComparison.OreDictionaryMatch(rStack.getOreIngredient(), rStack.GetTagCompound(), stack, !ignoreNBT, partialMatch))
-                    {
-                        continue;
-                    }
-                    
-                    for(int n = 0; n < progress.size(); n++)
-                    {
-                        Tuple2<UUID, int[]> value = progress.get(n);
-                        if(value.getSecond()[j] >= rStack.stackSize) continue;
-                        
-                        int remaining = rStack.stackSize - value.getSecond()[j];
-                        
-                        if(consume)
-                        {
-                            ItemStack removed = invo.decrStackSize(i, remaining);
-                            value.getSecond()[j] += removed.stackSize;
-                        } else
-                        {
-                            int temp = Math.min(remaining, remCounts[n]);
-                            remCounts[n] -= temp;
-                            value.getSecond()[j] += temp;
-                        }
-        
-                        updated = true;
-                    }
-                }
-            }
+                detector.run(stack, remaining -> invo.decrStackSize(i, remaining));
+            });
         }
-		
-		if(updated) setBulkProgress(progress);
-		checkAndComplete(pInfo, quest, updated, progress);
-	}
+
+        if (detector.updated) setBulkProgress(detector.progress);
+        checkAndComplete(pInfo, quest, detector.updated, detector.progress);
+    }
 	
 	private void checkAndComplete(ParticipantInfo pInfo, DBEntry<IQuest> quest, boolean resync, List<Tuple2<UUID, int[]>> progress)
     {
@@ -345,47 +284,41 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
 		
 		return false;
 	}
-	
-	@Override
-	public ItemStack submitItem(UUID owner, DBEntry<IQuest> quest, ItemStack input)
-	{
-		if(owner == null || input == null || !consume || isComplete(owner)) return input;
-		
-		ItemStack stack = input.copy();
-		
-		int[] progress = getUsersProgress(owner);
-		boolean updated = false;
-		
-		for(int j = 0; j < requiredItems.size(); j++)
-		{
-			BigItemStack rStack = requiredItems.get(j);
-			
-			if(progress[j] >= rStack.stackSize) continue;
 
-			int remaining = rStack.stackSize - progress[j];
-			
-			if(ItemComparison.StackMatch(rStack.getBaseStack(), stack, !ignoreNBT, partialMatch) || ItemComparison.OreDictionaryMatch(rStack.getOreIngredient(), rStack.GetTagCompound(), stack, !ignoreNBT, partialMatch))
-			{
-				int removed = Math.min(stack.stackSize, remaining);
-				stack.stackSize -= removed;
-				progress[j] += removed;
-				updated = true;
-				if(stack.stackSize <= 0)
-                {
-                    stack = null;
-                    break;
-                }
-			}
-		}
-		
-		if(updated)
-        {
-            setUserProgress(owner, progress);
+    @Override
+    public ItemStack submitItem(UUID owner, DBEntry<IQuest> quest, ItemStack input) {
+        if (owner == null || input == null || !consume || isComplete(owner)) return input;
+
+        Detector detector = new Detector(this, Collections.singletonList(owner));
+
+        final ItemStack stack = input.copy();
+
+        detector.run(stack, (remaining) -> {
+            int removed = Math.min(stack.stackSize, remaining);
+            return stack.splitStack(removed);
+        });
+
+        if (detector.updated) {
+            setBulkProgress(detector.progress);
         }
-		
-		return stack;
-	}
-	
+
+        return 0 < stack.stackSize ? stack : null;
+    }
+
+    @Override
+    public void retrieveItems(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack[] stacks) {
+        if (consume || isComplete(pInfo.UUID)) return;
+
+        Detector detector = new Detector(this, consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
+
+        for (ItemStack stack : stacks) {
+            detector.run(stack, (remaining) -> null); // Never execute consumer
+        }
+
+        if (detector.updated) setBulkProgress(detector.progress);
+        checkAndComplete(pInfo, quest, detector.updated, detector.progress);
+    }
+
 	@Override
 	@SideOnly(Side.CLIENT)
 	public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest)
@@ -425,4 +358,73 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
 		}
 		return texts;
 	}
+
+    static class Detector {
+        public boolean updated = false;
+        public final TaskRetrieval task;
+        /**
+         * List of (player uuid, [progress per required item])
+         */
+        public final List<Tuple2<UUID, int[]>> progress;
+        private final int[] remCounts;
+
+        public Detector(TaskRetrieval task, @Nonnull List<UUID> uuids) {
+            this.task = task;
+            this.progress = task.getBulkProgress(uuids);
+            this.remCounts = new int[progress.size()];
+            if (!task.consume) {
+                if (task.groupDetect) {
+                    // Reset all detect progress
+                    progress.forEach((value) -> Arrays.fill(value.getSecond(), 0));
+                } else {
+                    for (int i = 0; i < task.requiredItems.size(); i++) {
+                        final int r = task.requiredItems.get(i).stackSize;
+                        for (Tuple2<UUID, int[]> value : progress) {
+                            int n = value.getSecond()[i];
+                            if (n != 0 && n < r) {
+                                value.getSecond()[i] = 0;
+                                this.updated = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * @param consumer
+         *     Args: (remaining)
+         */
+        public void run(ItemStack stack, IntFunction<ItemStack> consumer) {
+            if (stack == null || stack.stackSize <= 0) return;
+            // Allows the stack detection to split across multiple requirements. Counts may vary per person
+            Arrays.fill(remCounts, stack.stackSize);
+
+            for (int i = 0; i < task.requiredItems.size(); i++) {
+                BigItemStack rStack = task.requiredItems.get(i);
+
+                if (!ItemComparison.StackMatch(rStack.getBaseStack(), stack, !task.ignoreNBT, task.partialMatch)
+                    && !ItemComparison.OreDictionaryMatch(rStack.getOreIngredient(), rStack.GetTagCompound(), stack, !task.ignoreNBT, task.partialMatch)) {
+                    continue;
+                }
+
+                for (int n = 0; n < progress.size(); n++) {
+                    Tuple2<UUID, int[]> value = progress.get(n);
+                    if (value.getSecond()[i] >= rStack.stackSize) continue;
+
+                    int remaining = rStack.stackSize - value.getSecond()[i];
+
+                    if (task.consume) {
+                        ItemStack removed = consumer.apply(remaining);
+                        value.getSecond()[i] += removed.stackSize;
+                    } else {
+                        int temp = Math.min(remaining, remCounts[n]);
+                        remCounts[n] -= temp;
+                        value.getSecond()[i] += temp;
+                    }
+                    updated = true;
+                }
+            }
+        }
+    }
 }

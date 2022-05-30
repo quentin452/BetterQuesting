@@ -38,6 +38,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.BiFunction;
+import java.util.function.IntFunction;
+import java.util.stream.IntStream;
 
 public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInventory, IFluidTask, IItemTask
 {
@@ -70,90 +73,31 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
 	}
 
 	@Override
-	public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest)
-	{
-	    if(isComplete(pInfo.UUID)) return;
-	    
-	    // Removing the consume check here would make the task cheaper on groups and for that reason sharing is restricted to detect only
-        final List<Tuple2<UUID, int[]>> progress = getBulkProgress(consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
-		boolean updated = false;
-		
-        if(!consume)
-        {
-            if(groupDetect) // Reset all detect progress
-            {
-                progress.forEach((value) -> Arrays.fill(value.getSecond(), 0));
-            } else
-            {
-                for(int i = 0; i < requiredFluids.size(); i++)
-                {
-                    final int r = requiredFluids.get(i).amount;
-                    for(Tuple2<UUID, int[]> value : progress)
-                    {
-                        int n = value.getSecond()[i];
-                        if(n != 0 && n < r)
-                        {
-                            value.getSecond()[i] = 0;
-                            updated = true;
-                        }
-                    }
-                }
-            }
-        }
-		
-		final List<InventoryPlayer> invoList;
-		if(consume)
-        {
+    public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {
+        if (isComplete(pInfo.UUID)) return;
+
+        Detector detector = new Detector(this, consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
+
+        final List<InventoryPlayer> invoList;
+        if (consume) {
             // We do not support consuming resources from other member's invetories.
             // This could otherwise be abused to siphon items/fluids unknowingly
             invoList = Collections.singletonList(pInfo.PLAYER.inventory);
-        } else
-        {
+        } else {
             invoList = new ArrayList<>();
             pInfo.ACTIVE_PLAYERS.forEach((p) -> invoList.add(p.inventory));
         }
-		
-		for(InventoryPlayer invo : invoList)
-        {
-            for(int i = 0; i < invo.getSizeInventory(); i++)
-            {
+
+        for (InventoryPlayer invo : invoList) {
+            IntStream.range(0, invo.getSizeInventory()).forEachOrdered(i -> {
                 ItemStack stack = invo.getStackInSlot(i);
-                if(stack == null || stack.stackSize <= 0) continue;
-                if(!(stack.getItem() instanceof IFluidContainerItem || FluidContainerRegistry.isFilledContainer(stack))) continue;
-                
-                for(int j = 0; j < requiredFluids.size(); j++)
-                {
-                    final FluidStack rStack = requiredFluids.get(j);
-                    FluidStack drainOG = rStack.copy();
-                    if(ignoreNbt) drainOG.tag = null;
-                    
-                    // Pre-check
-                    FluidStack sample = getFluid(invo, i, false, drainOG.amount);
-                    if(!drainOG.isFluidEqual(sample)) continue;
-                    
-                    for(Tuple2<UUID, int[]> value : progress)
-                    {
-                        if(value.getSecond()[j] >= rStack.amount) continue;
-                        int remaining = rStack.amount - value.getSecond()[j];
-                        
-                        FluidStack drain = rStack.copy();
-                        drain.amount = remaining; //drain.amount = remaining / stack.stackSize;
-                        if(ignoreNbt) drain.tag = null;
-                        if(drain.amount <= 0) continue;
-                        
-                        FluidStack fluid = getFluid(invo, i, consume, drain.amount);
-                        if(fluid == null || fluid.amount <= 0) continue;
-            
-                        value.getSecond()[j] += fluid.amount * stack.stackSize;
-                        updated = true;
-                    }
-                }
-            }
+                detector.run(stack, (drain, drainAmount) -> getFluid(invo, i, drain, drainAmount));
+            });
         }
-		
-		if(updated) setBulkProgress(progress);
-		checkAndComplete(pInfo, quest, updated);
-	}
+
+        if (detector.updated) setBulkProgress(detector.progress);
+        checkAndComplete(pInfo, quest, detector.updated);
+    }
 	
 	private void checkAndComplete(ParticipantInfo pInfo, DBEntry<IQuest> quest, boolean resync)
     {
@@ -196,47 +140,56 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
 	/**
 	 * Returns the fluid drained (or can be drained) up to the specified amount
 	 */
-	private FluidStack getFluid(InventoryPlayer invo, int slot, boolean drain, int amount)
-	{
-		ItemStack stack = invo.getStackInSlot(slot);
-		
-		if(stack == null || amount <= 0)
-		{
-			return null;
-		}
-		
-		if(stack.getItem() instanceof IFluidContainerItem)
-		{
-			return ((IFluidContainerItem)stack.getItem()).drain(stack, amount, drain);
-		} else
-		{
-		    // TODO: Revise this math later
-			FluidStack fluid = FluidContainerRegistry.getFluidForFilledItem(stack);
-			int tmp1 = fluid.amount;
-			int tmp2 = 1;
-			while(fluid.amount < amount && tmp2 < stack.stackSize)
-			{
-				tmp2++;
-				fluid.amount += tmp1;
-			}
-			
-			if(drain)
-			{
-				for(; tmp2 > 0; tmp2--)
-				{
-					ItemStack empty = FluidContainerRegistry.drainFluidContainer(stack);
-					invo.decrStackSize(slot, 1);
-					
-					if(!invo.addItemStackToInventory(empty))
-					{
-						invo.player.dropPlayerItemWithRandomChoice(empty, false);
-					}
-				}
-			}
-			
-			return fluid;
-		}
-	}
+    private FluidStack getFluid(InventoryPlayer invo, int slot, boolean drain, int amount) {
+        ItemStack stack = invo.getStackInSlot(slot);
+        if (stack == null || stack.stackSize <= 0 || amount <= 0) return null;
+        stack = stack.copy();
+
+        if (stack.getItem() instanceof IFluidContainerItem) {
+            final IFluidContainerItem fluidContainerItem = (IFluidContainerItem) stack.getItem();
+            if (fluidContainerItem.getFluid(stack) == null) return null;
+            FluidStack fluid = fluidContainerItem.getFluid(stack).copy();
+            fluid.amount = 0;
+            while (0 < stack.stackSize && 0 < amount) {
+                ItemStack oneSizedStack = stack.copy();
+                oneSizedStack.stackSize = 1;
+                FluidStack removed = fluidContainerItem.drain(oneSizedStack, amount, drain);
+                if (removed != null && 0 < removed.amount) {
+                    fluid.amount += removed.amount;
+                    amount -= removed.amount;
+                    stack.stackSize--;
+                    if (drain) {
+                        invo.decrStackSize(slot, 1);
+                        if (!invo.addItemStackToInventory(oneSizedStack)) {
+                            invo.player.dropPlayerItemWithRandomChoice(oneSizedStack, false);
+                        }
+                    }
+                } else break;
+            }
+            return fluid;
+        } else {
+            FluidStack fluid = FluidContainerRegistry.getFluidForFilledItem(stack);
+            int unitFluidAmount = fluid.amount;
+            int emptyContainerCount = 1;
+            while (fluid.amount < amount && emptyContainerCount < stack.stackSize) {
+                emptyContainerCount++;
+                fluid.amount += unitFluidAmount;
+            }
+
+            if (drain) {
+                for (; emptyContainerCount > 0; emptyContainerCount--) {
+                    ItemStack emptyContainer = FluidContainerRegistry.drainFluidContainer(stack);
+                    invo.decrStackSize(slot, 1);
+
+                    if (!invo.addItemStackToInventory(emptyContainer)) {
+                        invo.player.dropPlayerItemWithRandomChoice(emptyContainer, false);
+                    }
+                }
+            }
+
+            return fluid;
+        }
+    }
 	
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound nbt)
@@ -413,77 +366,114 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
 		return false;
 	}
 
-	@Override
-	public FluidStack submitFluid(UUID owner, DBEntry<IQuest> quest, FluidStack fluid)
-	{
-		if(owner == null || fluid == null || fluid.amount <= 0 || !consume || isComplete(owner) || requiredFluids.size() <= 0)
-		{
-			return fluid;
-		}
-		
-		int[] progress = getUsersProgress(owner);
-		
-		for(int j = 0; j < requiredFluids.size(); j++)
-		{
-			FluidStack rStack = requiredFluids.get(j);
-			
-			if(progress[j] >= rStack.amount) continue;
-			
-			int remaining = rStack.amount - progress[j];
-			
-			if(rStack.isFluidEqual(fluid))
-			{
-				int removed = Math.min(fluid.amount, remaining);
-				progress[j] += removed;
-				fluid.amount -= removed;
-				
-				if(fluid.amount <= 0)
-				{
-					fluid = null;
-					break;
-				}
-			}
-		}
-		
-		if(consume)
-		{
-			setUserProgress(owner, progress);
-		}
-		
-		return fluid;
-	}
-
-	@Override
-	public ItemStack submitItem(UUID owner, DBEntry<IQuest> quest, ItemStack input)
-	{
-		if(owner == null || input == null || !consume || isComplete(owner)) return input;
-		
-		ItemStack item = input.splitStack(1); // Prevents issues with stack filling/draining
-        
-        if(item.getItem() instanceof IFluidContainerItem)
-        {
-            IFluidContainerItem container = (IFluidContainerItem)item.getItem();
-            FluidStack fluid = container.drain(item, container.getCapacity(item), false);
-            int amount = fluid.amount;
-            fluid = submitFluid(owner, quest, fluid.copy());
-            container.drain(item, fluid == null ? amount : amount - fluid.amount, true);
-            return item;
-        } else if(FluidContainerRegistry.isFilledContainer(item))
-        {
-            FluidStack fluid = FluidContainerRegistry.getFluidForFilledItem(item);
-            submitFluid(owner, quest, fluid);
-            return FluidContainerRegistry.drainFluidContainer(item);
+    @Override
+    public FluidStack submitFluid(UUID owner, DBEntry<IQuest> quest, FluidStack input) {
+        if (owner == null || input == null || input.amount <= 0 || !consume || isComplete(owner) || requiredFluids.size() <= 0) {
+            return input;
         }
-		
-		return item;
-	}
- 
-	@Override
-	public int[] getUsersProgress(UUID uuid)
-	{
-		int[] progress = userProgress.get(uuid);
-		return progress == null || progress.length != requiredFluids.size()? new int[requiredFluids.size()] : progress;
-	}
+
+        Detector detector = new Detector(this, Collections.singletonList(owner));
+        
+        final FluidStack fluid = input.copy();
+
+        detector.run(fluid, (remaining) -> {
+            int removed = Math.min(fluid.amount, remaining);
+            FluidStack removedFluid = fluid.copy();
+            removedFluid.amount = removed;
+            fluid.amount -= removed;
+            return removedFluid;
+        });
+
+        if (detector.updated) {
+            setBulkProgress(detector.progress);
+        }
+
+        return 0 < fluid.amount ? fluid : null;
+    }
+
+    @Override
+    public void retrieveFluids(ParticipantInfo pInfo, DBEntry<IQuest> quest, FluidStack[] fluids) {
+        if (consume || isComplete(pInfo.UUID)) return;
+
+        Detector detector = new Detector(this, consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
+
+        for (FluidStack fluid : fluids) {
+            detector.run(fluid, (remaining) -> null); // Never execute consumer
+        }
+
+        if (detector.updated) {
+            setBulkProgress(detector.progress);
+        }
+        checkAndComplete(pInfo, quest, detector.updated);
+    }
+
+
+    @Override
+    public ItemStack submitItem(UUID owner, DBEntry<IQuest> quest, ItemStack input) {
+        if (owner == null || input == null || input.stackSize != 1 || !consume || isComplete(owner)) return input;
+
+        Detector detector = new Detector(this, Collections.singletonList(owner));
+        
+        final ItemStack[] wrapper =new ItemStack[] {input.copy()};
+        
+        detector.run(wrapper[0], (drain, drainAmount) -> {
+            if (wrapper[0].getItem() instanceof IFluidContainerItem) {
+                return ((IFluidContainerItem) wrapper[0].getItem()).drain(wrapper[0], drainAmount, drain);
+            } else  {
+                FluidStack fluid = FluidContainerRegistry.getFluidForFilledItem(wrapper[0]);
+                if (drain && fluid != null) {
+                    wrapper[0] = FluidContainerRegistry.drainFluidContainer(wrapper[0]);
+                }
+                return fluid;
+            }
+        });
+
+        if (detector.updated) {
+            setBulkProgress(detector.progress);
+        }
+
+        return wrapper[0];
+    }
+
+    @Override
+    public void retrieveItems(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack[] stacks) {
+        if (consume || isComplete(pInfo.UUID)) return;
+
+        Detector detector = new Detector(this, consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
+
+        IntStream.range(0, stacks.length).forEachOrdered(i -> {
+            final ItemStack stack = stacks[i];
+            detector.run(stack, (drain, drainAmount) -> {
+                final FluidStack fluid;
+                if (stack.getItem() instanceof IFluidContainerItem) {
+                    final ItemStack oneSizedStack = stack.copy();
+                    fluid = ((IFluidContainerItem) stack.getItem()).getFluid(oneSizedStack);
+                } else {
+                    fluid = FluidContainerRegistry.getFluidForFilledItem(stack);
+                }
+                if (fluid == null) return null;
+                int unitFluidAmount = fluid.amount;
+                int stackSize = stack.stackSize;
+                for (int j = 0; j < stackSize; j++) {
+                    if (drainAmount <= fluid.amount) break;
+                    fluid.amount += Math.min(drainAmount - fluid.amount, unitFluidAmount);
+                }
+                return fluid;
+            });
+        });
+
+        if (detector.updated) {
+            setBulkProgress(detector.progress);
+        }
+        checkAndComplete(pInfo, quest, detector.updated);
+    }
+
+    @Override
+    public int[] getUsersProgress(UUID uuid)
+    {
+        int[] progress = userProgress.get(uuid);
+        return progress == null || progress.length != requiredFluids.size()? new int[requiredFluids.size()] : progress;
+    }
 	
 	private List<Tuple2<UUID, int[]>> getBulkProgress(@Nonnull List<UUID> uuids)
     {
@@ -507,4 +497,114 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
 		}
 		return texts;
 	}
-}
+
+    static class Detector {
+        public boolean updated = false;
+        public final TaskFluid task;
+        /**
+         * List of (player uuid, [progress per required item])
+         */
+        public final List<Tuple2<UUID, int[]>> progress;
+
+        public Detector(TaskFluid task, @Nonnull List<UUID> uuids) {
+            this.task = task;
+            // Removing the consume check here would make the task cheaper on groups and for that reason sharing is restricted to detect only
+            this.progress = task.getBulkProgress(uuids);
+            if (!task.consume) {
+                if (task.groupDetect) // Reset all detect progress
+                {
+                    progress.forEach((value) -> Arrays.fill(value.getSecond(), 0));
+                } else {
+                    for (int i = 0; i < task.requiredFluids.size(); i++) {
+                        final int r = task.requiredFluids.get(i).amount;
+                        for (Tuple2<UUID, int[]> value : progress) {
+                            int n = value.getSecond()[i];
+                            if (n != 0 && n < r) {
+                                value.getSecond()[i] = 0;
+                                updated = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * @param fluidGetter
+         *     Args: (drain, drainAmount)
+         */
+        public void run(ItemStack stack, BiFunction<Boolean, Integer, FluidStack> fluidGetter) {
+            if (stack == null || stack.stackSize <= 0) return;
+            if (!(stack.getItem() instanceof IFluidContainerItem || FluidContainerRegistry.isFilledContainer(stack)))
+                return;
+
+            for (int i = 0; i < task.requiredFluids.size(); i++) {
+                final FluidStack rStack = task.requiredFluids.get(i);
+                FluidStack drainOG = rStack.copy();
+                if (task.ignoreNbt) drainOG.tag = null;
+
+                // Pre-check
+                FluidStack sample = fluidGetter.apply(false, drainOG.amount);
+                if (!drainOG.isFluidEqual(sample)) continue;
+
+                for (Tuple2<UUID, int[]> value : progress) {
+                    if (value.getSecond()[i] >= rStack.amount) continue;
+                    int remaining = rStack.amount - value.getSecond()[i];
+
+                    FluidStack drain = rStack.copy();
+                    drain.amount = remaining; //drain.amount = remaining / stack.stackSize;
+                    if (task.ignoreNbt) drain.tag = null;
+                    if (drain.amount <= 0) continue;
+
+                    FluidStack fluid = fluidGetter.apply(task.consume, drain.amount);
+                    if (fluid == null || fluid.amount <= 0) continue;
+
+                    value.getSecond()[i] += fluid.amount;
+                    updated = true;
+                }
+            }
+        }
+
+        /**
+         * @param consumer
+         *     Args: (remaining)
+         */
+        public void run(FluidStack fluid, IntFunction<FluidStack> consumer) {
+            if (fluid == null || fluid.amount <= 0) return;
+
+            for (int i = 0; i < task.requiredFluids.size(); i++) {
+                final FluidStack rStack = task.requiredFluids.get(i);
+                FluidStack drainOG = rStack.copy();
+                if (task.ignoreNbt) drainOG.tag = null;
+
+                // Pre-check
+                if (!drainOG.isFluidEqual(fluid)) continue;
+
+                for (Tuple2<UUID, int[]> value : progress) {
+                    if (value.getSecond()[i] >= rStack.amount) continue;
+                    int remaining = rStack.amount - value.getSecond()[i];
+
+                    if (task.consume) {
+                        FluidStack removed = consumer.apply(remaining);
+                        if (removed != null && removed.amount > 0) {
+                            value.getSecond()[i] += removed.amount;
+                            updated = true;
+                        }
+                    }else {
+                        FluidStack drain = rStack.copy();
+                        drain.amount = remaining; //drain.amount = remaining / stack.stackSize;
+                        if (task.ignoreNbt) drain.tag = null;
+                        if (drain.amount <= 0) continue;
+
+                        FluidStack tFluid = fluid.copy();
+                        tFluid.amount = Math.min(tFluid.amount, drain.amount);
+                        if (tFluid.amount <= 0) continue;
+
+                        value.getSecond()[i] += tFluid.amount;
+                        updated = true;
+                    }
+                }
+            }
+        }
+    }
+} 
