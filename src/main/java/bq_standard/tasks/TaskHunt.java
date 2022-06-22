@@ -26,120 +26,67 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-public class TaskHunt extends TaskProgressableBase<Integer>
-{
-	public String idName = "Zombie";
-	public String damageType = "";
-	public int required = 1;
-	public boolean ignoreNBT = true;
-	public boolean subtypes = true;
-	
-	/**
-	 * NBT representation of the intended target. Used only for NBT comparison checks
-	 */
-	public NBTTagCompound targetTags = new NBTTagCompound();
-	
-	@Override
-	public ResourceLocation getFactoryID()
-	{
-		return FactoryTaskHunt.INSTANCE.getRegistryName();
-	}
-	
-	@Override
-	public String getUnlocalisedName()
-	{
-		return BQ_Standard.MODID + ".task.hunt";
-	}
-	
-	@Override
-	public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest)
-	{
-        final List<Tuple2<UUID, Integer>> progress = getBulkProgress(pInfo.ALL_UUIDS);
-        
-        progress.forEach((value) -> {
-            if(value.getSecond() >= required) setComplete(value.getFirst());
-        });
-        
-		pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
-	}
-	
-	@SuppressWarnings("unchecked")
-	public void onKilledByPlayer(ParticipantInfo pInfo, DBEntry<IQuest> quest, EntityLivingBase entity, DamageSource source)
-	{
-		if(damageType.length() > 0 && (source == null || !damageType.equalsIgnoreCase(source.damageType))) return;
-		
-		Class<? extends Entity> subject = entity.getClass();
-		Class<? extends Entity> target = (Class<? extends Entity>)EntityList.stringToClassMapping.get(idName);
-		String subjectID = EntityList.getEntityString(entity);
-		
-		if(subjectID == null || target == null)
-		{
-			return; // Missing necessary data
-		} else if(subtypes && !target.isAssignableFrom(subject))
-		{
-			return; // This is not the intended target or sub-type
-		} else if(!subtypes && !subjectID.equals(idName))
-		{
-			return; // This isn't the exact target required
-		}
-		
-		NBTTagCompound subjectTags = new NBTTagCompound();
-		entity.writeToNBTOptional(subjectTags);
-		if(!ignoreNBT && !ItemComparison.CompareNBTTag(targetTags, subjectTags, true)) return;
-		
-		final List<Tuple2<UUID, Integer>> progress = getBulkProgress(pInfo.ALL_UUIDS);
-        
-        progress.forEach((value) -> {
-            if(isComplete(value.getFirst())) return;
-            int np = Math.min(required, value.getSecond() + 1);
-            setUserProgress(value.getFirst(), np);
-            if(np >= required) setComplete(value.getFirst());
-        });
-        
-		pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
-	}
-	
-	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound nbt)
-	{
-		nbt.setString("target", idName);
-		nbt.setInteger("required", required);
-		nbt.setBoolean("subtypes", subtypes);
-		nbt.setBoolean("ignoreNBT", ignoreNBT);
-		nbt.setTag("targetNBT", targetTags);
-		nbt.setString("damageType", damageType);
-		
-		return nbt;
-	}
-	
-	@Override
-	public void readFromNBT(NBTTagCompound nbt)
-	{
-		idName = nbt.getString("target");
-		required = nbt.getInteger("required");
-		subtypes = nbt.getBoolean("subtypes");
-		ignoreNBT = nbt.getBoolean("ignoreNBT");
-		targetTags = nbt.getCompoundTag("targetNBT");
-		damageType = nbt.getString("damageType");
-	}
+public class TaskHunt extends TaskProgressableBase<Integer> {
+    // region Properties
+    public String idName = "Zombie";
+    public String damageType = "";
+    public int required = 1;
+    public boolean ignoreNBT = true;
+    public boolean subtypes = true;
 
-	/**
-	 * Returns a new editor screen for this Reward type to edit the given data
-	 */
-	@Override
-	@SideOnly(Side.CLIENT)
-	public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest)
-	{
-	    return new GuiEditTaskHunt(parent, quest, this);
-	}
- 
-	@Override
-	@SideOnly(Side.CLIENT)
-	public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest)
-	{
-	    return new PanelTaskHunt(rect, this);
-	}
+    /**
+     * NBT representation of the intended target. Used only for NBT comparison checks
+     */
+    public NBTTagCompound targetTags = new NBTTagCompound();
 
+    @Override
+    public void readFromNBT(NBTTagCompound nbt) {
+        idName = nbt.getString("target");
+        required = nbt.getInteger("required");
+        subtypes = nbt.getBoolean("subtypes");
+        ignoreNBT = nbt.getBoolean("ignoreNBT");
+        targetTags = nbt.getCompoundTag("targetNBT");
+        damageType = nbt.getString("damageType");
+    }
+
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+        nbt.setString("target", idName);
+        nbt.setInteger("required", required);
+        nbt.setBoolean("subtypes", subtypes);
+        nbt.setBoolean("ignoreNBT", ignoreNBT);
+        nbt.setTag("targetNBT", targetTags);
+        nbt.setString("damageType", damageType);
+
+        return nbt;
+    }
+    // endregion Properties
+
+    // region Basic
+    @Override
+    public String getUnlocalisedName() {
+        return BQ_Standard.MODID + ".task.hunt";
+    }
+
+    @Override
+    public ResourceLocation getFactoryID() {
+        return FactoryTaskHunt.INSTANCE.getRegistryName();
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest) {
+        return new PanelTaskHunt(rect, this);
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest) {
+        return new GuiEditTaskHunt(parent, quest, this);
+    }
+    // endregion Basic
+
+    // region Progress
     @Override
     public Integer getUsersProgress(UUID uuid) {
         Integer n = userProgress.get(uuid);
@@ -155,9 +102,54 @@ public class TaskHunt extends TaskProgressableBase<Integer>
     public void writeUserProgressToNBT(NBTTagCompound nbt, Integer progress) {
         nbt.setInteger("value", progress);
     }
+    // endregion Progress
 
-	@Override
-	public List<String> getTextsForSearch() {
-		return Collections.singletonList(idName);
-	}
+
+    @Override
+    public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {
+        final List<Tuple2<UUID, Integer>> progress = getBulkProgress(pInfo.ALL_UUIDS);
+
+        progress.forEach((value) -> {
+            if (value.getSecond() >= required) setComplete(value.getFirst());
+        });
+
+        pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
+    }
+
+    @SuppressWarnings({"unchecked", "DuplicatedCode"})
+    public void onKilledByPlayer(ParticipantInfo pInfo, DBEntry<IQuest> quest, EntityLivingBase entity, DamageSource source) {
+        if (damageType.length() > 0 && (source == null || !damageType.equalsIgnoreCase(source.damageType))) return;
+
+        Class<? extends Entity> subject = entity.getClass();
+        Class<? extends Entity> target = (Class<? extends Entity>) EntityList.stringToClassMapping.get(idName);
+        String subjectID = EntityList.getEntityString(entity);
+
+        if (subjectID == null || target == null) {
+            return; // Missing necessary data
+        } else if (subtypes && !target.isAssignableFrom(subject)) {
+            return; // This is not the intended target or sub-type
+        } else if (!subtypes && !subjectID.equals(idName)) {
+            return; // This isn't the exact target required
+        }
+
+        NBTTagCompound subjectTags = new NBTTagCompound();
+        entity.writeToNBTOptional(subjectTags);
+        if (!ignoreNBT && !ItemComparison.CompareNBTTag(targetTags, subjectTags, true)) return;
+
+        final List<Tuple2<UUID, Integer>> progress = getBulkProgress(pInfo.ALL_UUIDS);
+
+        progress.forEach((value) -> {
+            if (isComplete(value.getFirst())) return;
+            int np = Math.min(required, value.getSecond() + 1);
+            setUserProgress(value.getFirst(), np);
+            if (np >= required) setComplete(value.getFirst());
+        });
+
+        pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
+    }
+
+    @Override
+    public List<String> getTextsForSearch() {
+        return Collections.singletonList(idName);
+    }
 }

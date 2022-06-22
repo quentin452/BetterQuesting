@@ -15,47 +15,43 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
-public class TaskCheckbox extends TaskBase
-{
-	@Override
-	public ResourceLocation getFactoryID()
-	{
-		return FactoryTaskCheckbox.INSTANCE.getRegistryName();
-	}
-	
-	@Override
-	public String getUnlocalisedName()
-	{
-		return BQ_Standard.MODID + ".task.checkbox";
-	}
-	
-	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound nbt)
-	{
-		return nbt;
-	}
+public class TaskCheckbox extends TaskBase {
+    // region Properties
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+        return nbt;
+    }
 
-	@Override
-	public void readFromNBT(NBTTagCompound nbt)
-	{
-	}
+    @Override
+    public void readFromNBT(NBTTagCompound nbt) {
+    }
+    // endregion Properties
 
-	@Override
-	public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest)
-	{
-	}
+    // region Basic
+    @Override
+    public ResourceLocation getFactoryID() {
+        return FactoryTaskCheckbox.INSTANCE.getRegistryName();
+    }
 
-	@Override
-	@SideOnly(Side.CLIENT)
-	public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest)
-	{
-	    return new PanelTaskCheckbox(rect, quest, this);
-	}
+    @Override
+    public String getUnlocalisedName() {
+        return BQ_Standard.MODID + ".task.checkbox";
+    }
 
-	@Override
-	@SideOnly(Side.CLIENT)
-	public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest)
-	{
-		return null;
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest) {
+        return new PanelTaskCheckbox(rect, quest, this);
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest) {
+        return null;
+    }
+    // endregion Basic
+
+    @Override
+    public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {
+    }
 }

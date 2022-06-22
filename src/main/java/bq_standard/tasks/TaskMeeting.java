@@ -22,126 +22,113 @@ import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
 
-public class TaskMeeting extends TaskBase implements ITaskTickable
-{
-	public String idName = "Villager";
-	public int range = 4;
-	public int amount = 1;
-	public boolean ignoreNBT = true;
-	public boolean subtypes = true;
-	
-	/**
-	 * NBT representation of the intended target. Used only for NBT comparison checks
-	 */
-	public NBTTagCompound targetTags = new NBTTagCompound();
-	
-	@Override
-	public ResourceLocation getFactoryID()
-	{
-		return FactoryTaskMeeting.INSTANCE.getRegistryName();
-	}
-	
-	@Override
-	public String getUnlocalisedName()
-	{
-		return "bq_standard.task.meeting";
-	}
-	
-	@Override
-	public void tickTask(@Nonnull ParticipantInfo pInfo, DBEntry<IQuest> quest)
-	{
-		if(pInfo.PLAYER.ticksExisted%60 == 0) detect(pInfo, quest);
-	}
-	
-	@Override
-	public void detect(@Nonnull ParticipantInfo pInfo, DBEntry<IQuest> quest)
-	{
-		if(!pInfo.PLAYER.isEntityAlive()) return;
-        
+public class TaskMeeting extends TaskBase implements ITaskTickable {
+    // region Properties
+    public String idName = "Villager";
+    public int range = 4;
+    public int amount = 1;
+    public boolean ignoreNBT = true;
+    public boolean subtypes = true;
+
+    /**
+     * NBT representation of the intended target. Used only for NBT comparison checks
+     */
+    public NBTTagCompound targetTags = new NBTTagCompound();
+
+    @Override
+    public void readFromNBT(NBTTagCompound json) {
+        idName = json.hasKey("target", 8) ? json.getString("target") : "Villager";
+        range = json.getInteger("range");
+        amount = json.getInteger("amount");
+        subtypes = json.getBoolean("subtypes");
+        ignoreNBT = json.getBoolean("ignoreNBT");
+        targetTags = json.getCompoundTag("targetNBT");
+    }
+
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound json) {
+        json.setString("target", idName);
+        json.setInteger("range", range);
+        json.setInteger("amount", amount);
+        json.setBoolean("subtypes", subtypes);
+        json.setBoolean("ignoreNBT", ignoreNBT);
+        json.setTag("targetNBT", targetTags);
+
+        return json;
+    }
+    // endregion Properties
+
+    // region Basic
+    @Override
+    public String getUnlocalisedName() {
+        return "bq_standard.task.meeting";
+    }
+
+    @Override
+    public ResourceLocation getFactoryID() {
+        return FactoryTaskMeeting.INSTANCE.getRegistryName();
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest) {
+        return new GuiEditTaskMeeting(parent, quest, this);
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest) {
+        return new PanelTaskMeeting(rect, this);
+    }
+    // endregion Basic
+
+    @Override
+    public void detect(@Nonnull ParticipantInfo pInfo, DBEntry<IQuest> quest) {
+        if (!pInfo.PLAYER.isEntityAlive()) return;
+
         //noinspection unchecked
         List<Entity> list = pInfo.PLAYER.worldObj.getEntitiesWithinAABBExcludingEntity(pInfo.PLAYER, pInfo.PLAYER.boundingBox.expand(range, range, range));
         //noinspection unchecked
-        Class<? extends Entity> target = (Class<? extends Entity>)EntityList.stringToClassMapping.get(idName);
-		if(target == null) return;
-		
-		int n = 0;
-		
-		for(Entity entity : list)
-		{
-			Class<? extends Entity> subject = entity.getClass();
-			String subjectID = EntityList.getEntityString(entity);
-			
-			if(subjectID == null)
-			{
-				continue;
-			} else if(subtypes && !target.isAssignableFrom(subject))
-			{
-				continue; // This is not the intended target or sub-type
-			} else if(!subtypes && !subjectID.equals(idName))
-			{
-				continue; // This isn't the exact target required
-			}
-			
-			if(!ignoreNBT)
-			{
-			    NBTTagCompound subjectTags = new NBTTagCompound();
-			    entity.writeToNBTOptional(subjectTags);
-				if(!ItemComparison.CompareNBTTag(targetTags, subjectTags, true)) continue;
-			}
-			
-			if(++n >= amount)
-			{
-			    pInfo.ALL_UUIDS.forEach((uuid) -> {
-			        if(!isComplete(uuid)) setComplete(uuid);
+        Class<? extends Entity> target = (Class<? extends Entity>) EntityList.stringToClassMapping.get(idName);
+        if (target == null) return;
+
+        int n = 0;
+
+        for (Entity entity : list) {
+            Class<? extends Entity> subject = entity.getClass();
+            String subjectID = EntityList.getEntityString(entity);
+
+            if (subjectID == null) {
+                continue;
+            } else if (subtypes && !target.isAssignableFrom(subject)) {
+                continue; // This is not the intended target or sub-type
+            } else if (!subtypes && !subjectID.equals(idName)) {
+                continue; // This isn't the exact target required
+            }
+
+            if (!ignoreNBT) {
+                NBTTagCompound subjectTags = new NBTTagCompound();
+                entity.writeToNBTOptional(subjectTags);
+                if (!ItemComparison.CompareNBTTag(targetTags, subjectTags, true)) continue;
+            }
+
+            if (++n >= amount) {
+                pInfo.ALL_UUIDS.forEach((uuid) -> {
+                    if (!isComplete(uuid)) setComplete(uuid);
                 });
-			    pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
-				return;
-			}
-		}
-	}
-	
-	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound json)
-	{
-		json.setString("target", idName);
-		json.setInteger("range", range);
-		json.setInteger("amount", amount);
-		json.setBoolean("subtypes", subtypes);
-		json.setBoolean("ignoreNBT", ignoreNBT);
-		json.setTag("targetNBT", targetTags);
-		
-		return json;
-	}
-	
-	@Override
-	public void readFromNBT(NBTTagCompound json)
-	{
-		idName = json.hasKey("target", 8) ? json.getString("target") : "Villager";
-		range = json.getInteger("range");
-		amount = json.getInteger("amount");
-		subtypes = json.getBoolean("subtypes");
-		ignoreNBT = json.getBoolean("ignoreNBT");
-		targetTags = json.getCompoundTag("targetNBT");
-	}
+                pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
+                return;
+            }
+        }
+    }
 
-	/**
-	 * Returns a new editor screen for this Reward type to edit the given data
-	 */
-	@Override
-	@SideOnly(Side.CLIENT)
-	public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest)
-	{
-	    return new GuiEditTaskMeeting(parent, quest, this);
-	}
+    @Override
+    public void tickTask(@Nonnull ParticipantInfo pInfo, @Nonnull DBEntry<IQuest> quest) {
+        if (pInfo.PLAYER.ticksExisted % 60 == 0) detect(pInfo, quest);
+    }
 
-	@Override
-	public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest)
-	{
-	    return new PanelTaskMeeting(rect, this);
-	}
-
-	@Override
-	public List<String> getTextsForSearch() {
-		return Collections.singletonList(idName);
-	}
+    @Override
+    public List<String> getTextsForSearch() {
+        return Collections.singletonList(idName);
+    }
 }

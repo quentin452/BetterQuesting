@@ -36,36 +36,104 @@ import java.util.UUID;
 import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 
-public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskInventory, IItemTask
-{
-	public final List<BigItemStack> requiredItems = new ArrayList<>();
-	public boolean partialMatch = true;
-	public boolean ignoreNBT = true;
-	public boolean consume = false;
-	public boolean groupDetect = false;
-	public boolean autoConsume = false;
-	
-	@Override
-	public String getUnlocalisedName()
-	{
-		return BQ_Standard.MODID + ".task.retrieval";
-	}
-	
-	@Override
-	public ResourceLocation getFactoryID()
-	{
-		return FactoryTaskRetrieval.INSTANCE.getRegistryName();
-	}
-	
-	@Override
-	public void onInventoryChange(@Nonnull DBEntry<IQuest> quest, @Nonnull ParticipantInfo pInfo)
-    {
-        if(!consume || autoConsume)
-        {
-            detect(pInfo, quest);
+public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskInventory, IItemTask {
+    // region Properties
+    public final List<BigItemStack> requiredItems = new ArrayList<>();
+    public boolean partialMatch = true;
+    public boolean ignoreNBT = true;
+    public boolean consume = false;
+    public boolean groupDetect = false;
+    public boolean autoConsume = false;
+
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+        nbt.setBoolean("partialMatch", partialMatch);
+        nbt.setBoolean("ignoreNBT", ignoreNBT);
+        nbt.setBoolean("consume", consume);
+        nbt.setBoolean("groupDetect", groupDetect);
+        nbt.setBoolean("autoConsume", autoConsume);
+
+        NBTTagList itemArray = new NBTTagList();
+        for (BigItemStack stack : this.requiredItems) {
+            itemArray.appendTag(JsonHelper.ItemStackToJson(stack, new NBTTagCompound()));
+        }
+        nbt.setTag("requiredItems", itemArray);
+
+        return nbt;
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound nbt) {
+        partialMatch = nbt.getBoolean("partialMatch");
+        ignoreNBT = nbt.getBoolean("ignoreNBT");
+        consume = nbt.getBoolean("consume");
+        groupDetect = nbt.getBoolean("groupDetect");
+        autoConsume = nbt.getBoolean("autoConsume");
+
+        requiredItems.clear();
+        NBTTagList iList = nbt.getTagList("requiredItems", Constants.NBT.TAG_COMPOUND);
+        for (int i = 0; i < iList.tagCount(); i++) {
+            requiredItems.add(JsonHelper.JsonToItemStack(iList.getCompoundTagAt(i)));
         }
     }
-    
+    // endregion Properties
+
+    // region Basic
+    @Override
+    public String getUnlocalisedName() {
+        return BQ_Standard.MODID + ".task.retrieval";
+    }
+
+    @Override
+    public ResourceLocation getFactoryID() {
+        return FactoryTaskRetrieval.INSTANCE.getRegistryName();
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest) {
+        return new PanelTaskRetrieval(rect, this);
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest) {
+        return null;
+    }
+    // endregion Basic
+
+    // region Progress
+    @Override
+    public int[] getUsersProgress(UUID uuid) {
+        int[] progress = userProgress.get(uuid);
+        return progress == null || progress.length != requiredItems.size() ? new int[requiredItems.size()] : progress;
+    }
+
+    @SuppressWarnings("DuplicatedCode")
+    @Override
+    public int[] readUserProgressFromNBT(NBTTagCompound nbt) {
+        // region Legacy
+        if (nbt.hasKey("data", Constants.NBT.TAG_LIST)) {
+            int[] data = new int[requiredItems.size()];
+            List<NBTBase> dNbt = NBTConverter.getTagList(nbt.getTagList("data", Constants.NBT.TAG_INT));
+            for (int i = 0; i < data.length && i < dNbt.size(); i++) {
+                data[i] = ((NBTPrimitive) dNbt.get(i)).func_150287_d();
+            }
+            return data;
+        }
+        // endregion Legacy
+        final int[] data = nbt.getIntArray("data");
+        final int[] progress = new int[requiredItems.size()];
+        System.arraycopy(data, 0, progress, 0, Math.min(data.length, progress.length));
+        return progress;
+    }
+
+    @Override
+    public void writeUserProgressToNBT(NBTTagCompound nbt, int[] progress) {
+        nbt.setIntArray("data", progress);
+    }
+    // endregion Progress
+
 
     @Override
     public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {
@@ -91,110 +159,57 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
         if (detector.updated) setBulkProgress(detector.progress);
         checkAndComplete(pInfo, quest, detector.updated, detector.progress);
     }
-	
-	private void checkAndComplete(ParticipantInfo pInfo, DBEntry<IQuest> quest, boolean resync, List<Tuple2<UUID, int[]>> progress)
-    {
+
+    private void checkAndComplete(ParticipantInfo pInfo, DBEntry<IQuest> quest, boolean resync, List<Tuple2<UUID, int[]>> progress) {
         boolean updated = resync;
-        
+
         topLoop:
-        for(Tuple2<UUID, int[]> value : progress)
-        {
-            for(int j = 0; j < requiredItems.size(); j++)
-            {
-                if(value.getSecond()[j] >= requiredItems.get(j).stackSize) continue;
+        for (Tuple2<UUID, int[]> value : progress) {
+            for (int j = 0; j < requiredItems.size(); j++) {
+                if (value.getSecond()[j] >= requiredItems.get(j).stackSize) continue;
                 continue topLoop;
             }
-            
+
             updated = true;
-            
-            if(consume)
-            {
+
+            if (consume) {
                 setComplete(value.getFirst());
-            } else
-            {
+            } else {
                 progress.forEach((pair) -> setComplete(pair.getFirst()));
                 break;
             }
         }
-		
-		if(updated)
-        {
-            if(consume)
-            {
+
+        if (updated) {
+            if (consume) {
                 pInfo.markDirty(Collections.singletonList(quest.getID()));
-            } else
-            {
+            } else {
                 pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
             }
         }
     }
 
-	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound nbt)
-	{
-		nbt.setBoolean("partialMatch", partialMatch);
-		nbt.setBoolean("ignoreNBT", ignoreNBT);
-		nbt.setBoolean("consume", consume);
-		nbt.setBoolean("groupDetect", groupDetect);
-		nbt.setBoolean("autoConsume", autoConsume);
-		
-		NBTTagList itemArray = new NBTTagList();
-		for(BigItemStack stack : this.requiredItems)
-		{
-			itemArray.appendTag(JsonHelper.ItemStackToJson(stack, new NBTTagCompound()));
-		}
-		nbt.setTag("requiredItems", itemArray);
-		
-		return nbt;
-	}
+    // region IItemTask
+    @Override
+    public boolean canAcceptItem(UUID owner, DBEntry<IQuest> quest, ItemStack stack) {
+        if (owner == null || stack == null || stack.stackSize <= 0 || !consume || isComplete(owner) || requiredItems.size() <= 0) {
+            return false;
+        }
 
-	@Override
-	public void readFromNBT(NBTTagCompound nbt)
-	{
-		partialMatch = nbt.getBoolean("partialMatch");
-		ignoreNBT = nbt.getBoolean("ignoreNBT");
-		consume = nbt.getBoolean("consume");
-		groupDetect = nbt.getBoolean("groupDetect");
-		autoConsume = nbt.getBoolean("autoConsume");
-		
-		requiredItems.clear();
-		NBTTagList iList = nbt.getTagList("requiredItems", 10);
-		for(int i = 0; i < iList.tagCount(); i++)
-		{
-			requiredItems.add(JsonHelper.JsonToItemStack(iList.getCompoundTagAt(i)));
-		}
-	}
+        int[] progress = getUsersProgress(owner);
 
-	@Override
-	public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest)
-	{
-	    return new PanelTaskRetrieval(rect, this);
-	}
-	
-	@Override
-	public boolean canAcceptItem(UUID owner, DBEntry<IQuest> quest, ItemStack stack)
-	{
-		if(owner == null || stack == null || stack.stackSize <= 0 || !consume || isComplete(owner) || requiredItems.size() <= 0)
-		{
-			return false;
-		}
-		
-		int[] progress = getUsersProgress(owner);
-		
-		for(int j = 0; j < requiredItems.size(); j++)
-		{
-			BigItemStack rStack = requiredItems.get(j);
-			
-			if(progress[j] >= rStack.stackSize) continue;
-			
-			if(ItemComparison.StackMatch(rStack.getBaseStack(), stack, !ignoreNBT, partialMatch) || ItemComparison.OreDictionaryMatch(rStack.getOreIngredient(), rStack.GetTagCompound(), stack, !ignoreNBT, partialMatch))
-			{
-				return true;
-			}
-		}
-		
-		return false;
-	}
+        for (int j = 0; j < requiredItems.size(); j++) {
+            BigItemStack rStack = requiredItems.get(j);
+
+            if (progress[j] >= rStack.stackSize) continue;
+
+            if (ItemComparison.StackMatch(rStack.getBaseStack(), stack, !ignoreNBT, partialMatch) || ItemComparison.OreDictionaryMatch(rStack.getOreIngredient(), rStack.GetTagCompound(), stack, !ignoreNBT, partialMatch)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     @Override
     public ItemStack submitItem(UUID owner, DBEntry<IQuest> quest, ItemStack input) {
@@ -229,56 +244,28 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
         if (detector.updated) setBulkProgress(detector.progress);
         checkAndComplete(pInfo, quest, detector.updated, detector.progress);
     }
-
-	@Override
-	@SideOnly(Side.CLIENT)
-	public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest)
-	{
-		return null;
-	}
+    // endregion IItemTask
 
     @Override
-    public int[] getUsersProgress(UUID uuid) {
-        int[] progress = userProgress.get(uuid);
-        return progress == null || progress.length != requiredItems.size() ? new int[requiredItems.size()] : progress;
+    public void onInventoryChange(@Nonnull DBEntry<IQuest> quest, @Nonnull ParticipantInfo pInfo) {
+        if (!consume || autoConsume) {
+            detect(pInfo, quest);
+        }
     }
 
     @SuppressWarnings("DuplicatedCode")
     @Override
-    public int[] readUserProgressFromNBT(NBTTagCompound nbt) {
-        // region Legacy
-        if (nbt.hasKey("data", Constants.NBT.TAG_LIST)) {
-            int[] data = new int[requiredItems.size()];
-            List<NBTBase> dNbt = NBTConverter.getTagList(nbt.getTagList("data", Constants.NBT.TAG_INT));
-            for (int i = 0; i < data.length && i < dNbt.size(); i++) {
-                data[i] = ((NBTPrimitive) dNbt.get(i)).func_150287_d();
+    public List<String> getTextsForSearch() {
+        List<String> texts = new ArrayList<>();
+        for (BigItemStack bigStack : requiredItems) {
+            ItemStack stack = bigStack.getBaseStack();
+            texts.add(stack.getDisplayName());
+            if (bigStack.hasOreDict()) {
+                texts.add(bigStack.getOreDict());
             }
-            return data;
         }
-        // endregion
-        final int[] data = nbt.getIntArray("data");
-        final int[] progress = new int[requiredItems.size()];
-        System.arraycopy(data, 0, progress, 0, Math.min(data.length, progress.length));
-        return progress;
+        return texts;
     }
-
-    @Override
-    public void writeUserProgressToNBT(NBTTagCompound nbt, int[] progress) {
-        nbt.setIntArray("data", progress);
-    }
-
-	@Override
-	public List<String> getTextsForSearch() {
-		List<String> texts = new ArrayList<>();
-		for (BigItemStack bigStack : requiredItems) {
-			ItemStack stack = bigStack.getBaseStack();
-			texts.add(stack.getDisplayName());
-			if (bigStack.hasOreDict()) {
-				texts.add(bigStack.getOreDict());
-			}
-		}
-		return texts;
-	}
 
     static class Detector {
         public boolean updated = false;
