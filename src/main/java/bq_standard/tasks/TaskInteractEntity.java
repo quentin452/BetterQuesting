@@ -24,7 +24,6 @@ import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.ResourceLocation;
 import org.apache.logging.log4j.Level;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -238,20 +237,21 @@ public class TaskInteractEntity extends TaskProgressableBase<Integer>
         onInteract = nbt.getBoolean("onInteract");
         onHit = nbt.getBoolean("onHit");
     }
-	
-	@Override
-	public Integer getUsersProgress(UUID uuid)
-	{
+
+    @Override
+    public Integer getUsersProgress(UUID uuid) {
         Integer n = userProgress.get(uuid);
-        return n == null? 0 : n;
-	}
-	
-	private List<Tuple2<UUID, Integer>> getBulkProgress(@Nonnull List<UUID> uuids)
-    {
-        if(uuids.size() <= 0) return Collections.emptyList();
-        List<Tuple2<UUID, Integer>> list = new ArrayList<>();
-        uuids.forEach((key) -> list.add(new Tuple2<>(key, getUsersProgress(key))));
-        return list;
+        return n == null ? 0 : n;
+    }
+
+    @Override
+    public Integer readUserProgressFromNBT(NBTTagCompound nbt) {
+        return nbt.getInteger("value");
+    }
+
+    @Override
+    public void writeUserProgressToNBT(NBTTagCompound nbt, Integer progress) {
+        nbt.setInteger("value", progress);
     }
 
     @Override

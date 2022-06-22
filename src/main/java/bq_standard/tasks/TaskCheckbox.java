@@ -13,14 +13,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.ResourceLocation;
-import org.apache.logging.log4j.Level;
-
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.UUID;
 
 public class TaskCheckbox extends TaskBase
 {
@@ -45,37 +38,6 @@ public class TaskCheckbox extends TaskBase
 	@Override
 	public void readFromNBT(NBTTagCompound nbt)
 	{
-	}
-	
-	@Override
-	public NBTTagCompound writeProgressToNBT(NBTTagCompound nbt, @Nullable List<UUID> users)
-	{
-		NBTTagList jArray = new NBTTagList();
-		
-		completeUsers.forEach((uuid) -> {
-		    if(users == null || users.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
-		});
-		
-		nbt.setTag("completeUsers", jArray);
-		
-		return nbt;
-	}
-	
-	@Override
-	public void readProgressFromNBT(NBTTagCompound json, boolean merge)
-	{
-		if(!merge) completeUsers.clear();
-		NBTTagList cList = json.getTagList("completeUsers", 8);
-		for(int i = 0; i < cList.tagCount(); i++)
-		{
-			try
-			{
-				completeUsers.add(UUID.fromString(cList.getStringTagAt(i)));
-			} catch(Exception e)
-			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load UUID for task", e);
-			}
-		}
 	}
 
 	@Override

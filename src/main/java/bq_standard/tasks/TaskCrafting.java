@@ -25,9 +25,9 @@ import net.minecraft.nbt.NBTTagInt;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.util.Constants;
 import org.apache.logging.log4j.Level;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -280,28 +280,42 @@ public class TaskCrafting extends TaskProgressableBase<int[]>
 	{
 		return null;
 	}
-	
-	@Override
-	public int[] getUsersProgress(UUID uuid)
-	{
-		int[] progress = userProgress.get(uuid);
-		return progress == null || progress.length != requiredItems.size()? new int[requiredItems.size()] : progress;
-	}
-	
-	private List<Tuple2<UUID, int[]>> getBulkProgress(@Nonnull List<UUID> uuids)
-    {
-        if(uuids.size() <= 0) return Collections.emptyList();
-        List<Tuple2<UUID, int[]>> list = new ArrayList<>();
-        uuids.forEach((key) -> list.add(new Tuple2<>(key, getUsersProgress(key))));
-        return list;
-    }
-    
-    private void setBulkProgress(@Nonnull List<Tuple2<UUID, int[]>> list)
-    {
-        list.forEach((entry) -> setUserProgress(entry.getFirst(), entry.getSecond()));
+
+    @Override
+    public int[] getUsersProgress(UUID uuid) {
+        int[] progress = userProgress.get(uuid);
+        return progress == null || progress.length != requiredItems.size() ? new int[requiredItems.size()] : progress;
     }
 
-	@Override
+    @Override
+    public int[] readUserProgressFromNBT(NBTTagCompound nbt) {
+        // region Legacy
+        if (nbt.hasKey("data", Constants.NBT.TAG_LIST)) {
+            int[] data = new int[requiredItems.size()];
+            List<NBTBase> dJson = NBTConverter.getTagList(nbt.getTagList("data", Constants.NBT.TAG_INT));
+            for (int i = 0; i < data.length && i < dJson.size(); i++) {
+                try {
+                    data[i] = ((NBTPrimitive) dJson.get(i)).func_150287_d();
+                } catch (Exception e) {
+                    BQ_Standard.logger.log(Level.ERROR, "Incorrect task progress format", e);
+                }
+            }
+            return data;
+        }
+        // endregion
+        final int[] data = nbt.getIntArray("data");
+        final int[] progress = new int[requiredItems.size()];
+        System.arraycopy(data, 0, progress, 0, Math.min(data.length, progress.length));
+        return progress;
+    }
+
+    @Override
+    public void writeUserProgressToNBT(NBTTagCompound nbt, int[] progress) {
+        nbt.setIntArray("data", progress);
+    }
+
+	@SuppressWarnings("DuplicatedCode")
+    @Override
 	public List<String> getTextsForSearch() {
 		List<String> texts = new ArrayList<>();
 		for (BigItemStack bigStack : requiredItems) {

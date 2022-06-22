@@ -15,8 +15,6 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
 import net.minecraft.scoreboard.IScoreObjectiveCriteria;
 import net.minecraft.scoreboard.ScoreDummyCriteria;
 import net.minecraft.scoreboard.ScoreObjective;
@@ -28,7 +26,6 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 public class TaskScoreboard extends TaskBase implements ITaskTickable
 {
@@ -121,38 +118,7 @@ public class TaskScoreboard extends TaskBase implements ITaskTickable
             operation = ScoreOperation.MORE_OR_EQUAL;
         }
 	}
-	
-	@Override
-	public NBTTagCompound writeProgressToNBT(NBTTagCompound nbt, List<UUID> users)
-	{
-		NBTTagList jArray = new NBTTagList();
-		
-		completeUsers.forEach((uuid) -> {
-		    if(users == null || users.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
-		});
-		
-		nbt.setTag("completeUsers", jArray);
-		
-		return nbt;
-	}
- 
-	@Override
-	public void readProgressFromNBT(NBTTagCompound nbt, boolean merge)
-	{
-		if(!merge) completeUsers.clear();
-		NBTTagList cList = nbt.getTagList("completeUsers", 8);
-		for(int i = 0; i < cList.tagCount(); i++)
-		{
-			try
-			{
-				completeUsers.add(UUID.fromString(cList.getStringTagAt(i)));
-			} catch(Exception e)
-			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load UUID for task", e);
-			}
-		}
-	}
-	
+
 	public enum ScoreOperation
 	{
 		EQUAL("="),

@@ -7,20 +7,14 @@ import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import bq_standard.XPHelper;
 import bq_standard.client.gui.tasks.PanelTaskXP;
-import bq_standard.core.BQ_Standard;
 import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskXP;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.ResourceLocation;
-import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 public class TaskXP extends TaskProgressableBase<Long> implements ITaskTickable
@@ -116,80 +110,16 @@ public class TaskXP extends TaskProgressableBase<Long> implements ITaskTickable
 		levels = nbt.getBoolean("isLevels");
 		consume = nbt.getBoolean("consume");
 	}
-	
-	@Override
-	public void readProgressFromNBT(NBTTagCompound nbt, boolean merge)
-	{
-		if(!merge)
-        {
-            completeUsers.clear();
-            userProgress.clear();
-        }
-		
-		NBTTagList cList = nbt.getTagList("completeUsers", 8);
-		for(int i = 0; i < cList.tagCount(); i++)
-		{
-			try
-			{
-				completeUsers.add(UUID.fromString(cList.getStringTagAt(i)));
-			} catch(Exception e)
-			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load UUID for task", e);
-			}
-		}
-		
-		NBTTagList pList = nbt.getTagList("userProgress", 10);
-		for(int n = 0; n < pList.tagCount(); n++)
-		{
-			try
-			{
-                NBTTagCompound pTag = pList.getCompoundTagAt(n);
-                UUID uuid = UUID.fromString(pTag.getString("uuid"));
-                userProgress.put(uuid, pTag.getLong("value"));
-			} catch(Exception e)
-			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load user progress for task", e);
-			}
-		}
-	}
-	
-	@Override
-	public NBTTagCompound writeProgressToNBT(NBTTagCompound nbt, @Nullable List<UUID> users)
-	{
-		NBTTagList jArray = new NBTTagList();
-		NBTTagList progArray = new NBTTagList();
-		
-		if(users != null)
-        {
-            users.forEach((uuid) -> {
-                if(completeUsers.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
-                
-                Long data = userProgress.get(uuid);
-                if(data != null)
-                {
-                    NBTTagCompound pJson = new NBTTagCompound();
-                    pJson.setString("uuid", uuid.toString());
-                    pJson.setLong("value", data);
-                    progArray.appendTag(pJson);
-                }
-            });
-        } else
-        {
-            completeUsers.forEach((uuid) -> jArray.appendTag(new NBTTagString(uuid.toString())));
-            
-            userProgress.forEach((uuid, data) -> {
-                NBTTagCompound pJson = new NBTTagCompound();
-			    pJson.setString("uuid", uuid.toString());
-                pJson.setLong("value", data);
-                progArray.appendTag(pJson);
-            });
-        }
-		
-		nbt.setTag("completeUsers", jArray);
-		nbt.setTag("userProgress", progArray);
-		
-		return nbt;
-	}
+
+    @Override
+    public Long readUserProgressFromNBT(NBTTagCompound nbt) {
+        return nbt.getLong("value");
+    }
+
+    @Override
+    public void writeUserProgressToNBT(NBTTagCompound nbt, Long progress) {
+        nbt.setLong("value", progress);
+    }
 	
 	@Override
 	public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest)

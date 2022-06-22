@@ -19,15 +19,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
-import org.apache.logging.log4j.Level;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -128,80 +122,6 @@ public class TaskHunt extends TaskProgressableBase<Integer>
 		targetTags = nbt.getCompoundTag("targetNBT");
 		damageType = nbt.getString("damageType");
 	}
-	
-	@Override
-	public void readProgressFromNBT(NBTTagCompound nbt, boolean merge)
-	{
-		if(!merge)
-        {
-            completeUsers.clear();
-            userProgress.clear();
-        }
-		
-		NBTTagList cList = nbt.getTagList("completeUsers", 8);
-		for(int i = 0; i < cList.tagCount(); i++)
-		{
-			try
-			{
-				completeUsers.add(UUID.fromString(cList.getStringTagAt(i)));
-			} catch(Exception e)
-			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load UUID for task", e);
-			}
-		}
-		
-		NBTTagList pList = nbt.getTagList("userProgress", 10);
-		for(int n = 0; n < pList.tagCount(); n++)
-		{
-			try
-			{
-                NBTTagCompound pTag = pList.getCompoundTagAt(n);
-                UUID uuid = UUID.fromString(pTag.getString("uuid"));
-                userProgress.put(uuid, pTag.getInteger("value"));
-			} catch(Exception e)
-			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load user progress for task", e);
-			}
-		}
-	}
-	
-	@Override
-	public NBTTagCompound writeProgressToNBT(NBTTagCompound nbt, @Nullable List<UUID> users)
-	{
-		NBTTagList jArray = new NBTTagList();
-		NBTTagList progArray = new NBTTagList();
-		
-		if(users != null)
-        {
-            users.forEach((uuid) -> {
-                if(completeUsers.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
-                
-                Integer data = userProgress.get(uuid);
-                if(data != null)
-                {
-                    NBTTagCompound pJson = new NBTTagCompound();
-                    pJson.setString("uuid", uuid.toString());
-                    pJson.setInteger("value", data);
-                    progArray.appendTag(pJson);
-                }
-            });
-        } else
-        {
-            completeUsers.forEach((uuid) -> jArray.appendTag(new NBTTagString(uuid.toString())));
-            
-            userProgress.forEach((uuid, data) -> {
-                NBTTagCompound pJson = new NBTTagCompound();
-			    pJson.setString("uuid", uuid.toString());
-                pJson.setInteger("value", data);
-                progArray.appendTag(pJson);
-            });
-        }
-		
-		nbt.setTag("completeUsers", jArray);
-		nbt.setTag("userProgress", progArray);
-		
-		return nbt;
-	}
 
 	/**
 	 * Returns a new editor screen for this Reward type to edit the given data
@@ -219,20 +139,21 @@ public class TaskHunt extends TaskProgressableBase<Integer>
 	{
 	    return new PanelTaskHunt(rect, this);
 	}
-	
-	@Override
-	public Integer getUsersProgress(UUID uuid)
-	{
+
+    @Override
+    public Integer getUsersProgress(UUID uuid) {
         Integer n = userProgress.get(uuid);
-        return n == null? 0 : n;
-	}
-	
-	private List<Tuple2<UUID, Integer>> getBulkProgress(@Nonnull List<UUID> uuids)
-    {
-        if(uuids.size() <= 0) return Collections.emptyList();
-        List<Tuple2<UUID, Integer>> list = new ArrayList<>();
-        uuids.forEach((key) -> list.add(new Tuple2<>(key, getUsersProgress(key))));
-        return list;
+        return n == null ? 0 : n;
+    }
+
+    @Override
+    public Integer readUserProgressFromNBT(NBTTagCompound nbt) {
+        return nbt.getInteger("value");
+    }
+
+    @Override
+    public void writeUserProgressToNBT(NBTTagCompound nbt, Integer progress) {
+        nbt.setInteger("value", progress);
     }
 
 	@Override

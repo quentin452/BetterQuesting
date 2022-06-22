@@ -6,7 +6,6 @@ import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import bq_standard.client.gui.tasks.PanelTaskLocation;
-import bq_standard.core.BQ_Standard;
 import bq_standard.tasks.base.TaskBase;
 import bq_standard.tasks.factory.FactoryTaskLocation;
 import codechicken.lib.math.MathHelper;
@@ -14,8 +13,6 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.util.ResourceLocation;
@@ -23,14 +20,11 @@ import net.minecraft.util.StringUtils;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.WorldProvider;
 import net.minecraftforge.common.DimensionManager;
-import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 
 public class TaskLocation extends TaskBase implements ITaskTickable
 {
@@ -156,37 +150,6 @@ public class TaskLocation extends TaskBase implements ITaskTickable
 		taxiCab = nbt.getBoolean("taxiCabDist");
 	}
 	
-	@Override
-	public NBTTagCompound writeProgressToNBT(NBTTagCompound nbt, @Nullable List<UUID> users)
-	{
-		NBTTagList jArray = new NBTTagList();
-		
-		completeUsers.forEach((uuid) -> {
-		    if(users == null || users.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
-		});
-		
-		nbt.setTag("completeUsers", jArray);
-		
-		return nbt;
-	}
- 
-	@Override
-	public void readProgressFromNBT(NBTTagCompound nbt, boolean merge)
-	{
-		if(!merge) completeUsers.clear();
-		NBTTagList cList = nbt.getTagList("completeUsers", 8);
-		for(int i = 0; i < cList.tagCount(); i++)
-		{
-			try
-			{
-				completeUsers.add(UUID.fromString(cList.getStringTagAt(i)));
-			} catch(Exception e)
-			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load UUID for task", e);
-			}
-		}
-	}
- 
 	@Override
 	public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest)
 	{
