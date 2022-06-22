@@ -10,7 +10,6 @@ import betterquesting.api2.utils.ParticipantInfo;
 import betterquesting.api2.utils.Tuple2;
 import bq_standard.NbtBlockType;
 import bq_standard.client.gui.tasks.PanelTaskBlockBreak;
-import bq_standard.core.BQ_Standard;
 import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskBlockBreak;
 import cpw.mods.fml.relauncher.Side;
@@ -22,270 +21,178 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTBase.NBTPrimitive;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagInt;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.oredict.OreDictionary;
-import org.apache.logging.log4j.Level;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-public class TaskBlockBreak extends TaskProgressableBase<int[]>
-{
-	public final List<NbtBlockType> blockTypes = new ArrayList<>();
-	
-	public TaskBlockBreak()
-	{
-		blockTypes.add(new NbtBlockType());
-	}
-	
-	@Override
-	public ResourceLocation getFactoryID()
-	{
-		return FactoryTaskBlockBreak.INSTANCE.getRegistryName();
-	}
-	
-	@Override
-	public String getUnlocalisedName()
-	{
-		return "bq_standard.task.block_break";
-	}
-	
-	@Override
-	public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest)
-	{
-	    pInfo.ALL_UUIDS.forEach((uuid) -> {
-            if(isComplete(uuid)) return;
-            
+public class TaskBlockBreak extends TaskProgressableBase<int[]> {
+    // region Properties
+    public final List<NbtBlockType> blockTypes = new ArrayList<>();
+
+    public TaskBlockBreak() {
+        blockTypes.add(new NbtBlockType());
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound nbt) {
+        blockTypes.clear();
+        NBTTagList bList = nbt.getTagList("blocks", Constants.NBT.TAG_COMPOUND);
+        for (int i = 0; i < bList.tagCount(); i++) {
+            NbtBlockType block = new NbtBlockType();
+            block.readFromNBT(bList.getCompoundTagAt(i));
+            blockTypes.add(block);
+        }
+
+        if (nbt.hasKey("blockID", Constants.NBT.TAG_STRING)) {
+            Block targetBlock = (Block) Block.blockRegistry.getObject(nbt.getString("blockID"));
+            targetBlock = targetBlock != Blocks.air ? targetBlock : Blocks.log;
+            int targetMeta = nbt.getInteger("blockMeta");
+            NBTTagCompound targetNbt = nbt.getCompoundTag("blockNBT");
+            int targetNum = nbt.getInteger("amount");
+
+            NbtBlockType leg = new NbtBlockType();
+            leg.b = targetBlock;
+            leg.m = targetMeta;
+            leg.tags = targetNbt;
+            leg.n = targetNum;
+
+            blockTypes.add(leg);
+        }
+    }
+
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+        NBTTagList bAry = new NBTTagList();
+        for (NbtBlockType block : blockTypes) {
+            bAry.appendTag(block.writeToNBT(new NBTTagCompound()));
+        }
+        nbt.setTag("blocks", bAry);
+
+        return nbt;
+    }
+    // endregion Properties
+
+    // region Basic
+    @Override
+    public String getUnlocalisedName() {
+        return "bq_standard.task.block_break";
+    }
+
+    @Override
+    public ResourceLocation getFactoryID() {
+        return FactoryTaskBlockBreak.INSTANCE.getRegistryName();
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest) {
+        return new PanelTaskBlockBreak(rect, this);
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public GuiScreen getTaskEditor(GuiScreen screen, DBEntry<IQuest> quest) {
+        return null;
+    }
+    // endregion Basic
+
+    // region Progress
+    @Override
+    public int[] getUsersProgress(UUID uuid) {
+        int[] progress = userProgress.get(uuid);
+        return progress == null || progress.length != blockTypes.size() ? new int[blockTypes.size()] : progress;
+    }
+
+    @SuppressWarnings("DuplicatedCode")
+    @Override
+    public int[] readUserProgressFromNBT(NBTTagCompound nbt) {
+        // region Legacy
+        if (nbt.hasKey("data", Constants.NBT.TAG_LIST)) {
+            int[] data = new int[blockTypes.size()];
+            List<NBTBase> dNbt = NBTConverter.getTagList(nbt.getTagList("data", Constants.NBT.TAG_INT));
+            for (int i = 0; i < data.length && i < dNbt.size(); i++) {
+                data[i] = ((NBTPrimitive) dNbt.get(i)).func_150287_d();
+            }
+            return data;
+        }
+        // endregion Legacy
+        final int[] data = nbt.getIntArray("data");
+        final int[] progress = new int[blockTypes.size()];
+        System.arraycopy(data, 0, progress, 0, Math.min(data.length, progress.length));
+        return progress;
+    }
+
+    @Override
+    public void writeUserProgressToNBT(NBTTagCompound nbt, int[] progress) {
+        nbt.setIntArray("data", progress);
+    }
+    // endregion Progress
+
+    @Override
+    public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {
+        pInfo.ALL_UUIDS.forEach((uuid) -> {
+            if (isComplete(uuid)) return;
+
             int[] tmp = getUsersProgress(uuid);
-            for(int i = 0; i < blockTypes.size(); i++)
-            {
+            for (int i = 0; i < blockTypes.size(); i++) {
                 NbtBlockType block = blockTypes.get(i);
-                if(block != null && tmp[i] < block.n) return;
+                if (block != null && tmp[i] < block.n) return;
             }
             setComplete(uuid);
         });
-	    
-	    pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
-	}
-	
-	public void onBlockBreak(ParticipantInfo pInfo, DBEntry<IQuest> quest, Block block, int meta, int x, int y, int z)
-	{
-		TileEntity tile = block.hasTileEntity(meta) ? pInfo.PLAYER.worldObj.getTileEntity(x, y, z) : null;
-		NBTTagCompound tags = null;
-		if(tile != null)
-        {
+
+        pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
+    }
+
+    public void onBlockBreak(ParticipantInfo pInfo, DBEntry<IQuest> quest, Block block, int meta, int x, int y, int z) {
+        TileEntity tile = block.hasTileEntity(meta) ? pInfo.PLAYER.worldObj.getTileEntity(x, y, z) : null;
+        NBTTagCompound tags = null;
+        if (tile != null) {
             tags = new NBTTagCompound();
             tile.writeToNBT(tags);
         }
-		
-		final List<Tuple2<UUID, int[]>> progress = getBulkProgress(pInfo.ALL_UUIDS);
-		boolean changed = false;
-		
-		for(int i = 0; i < blockTypes.size(); i++)
-		{
-			NbtBlockType targetBlock = blockTypes.get(i);
-			
-			int tmpMeta = (targetBlock.m < 0 || targetBlock.m == OreDictionary.WILDCARD_VALUE)? OreDictionary.WILDCARD_VALUE : meta;
-			boolean oreMatch = targetBlock.oreDict.length() > 0 && OreDictionary.getOres(targetBlock.oreDict).contains(new ItemStack(block, 1, tmpMeta));
-			final int index = i;
-			
-			if((oreMatch || (block == targetBlock.b && (targetBlock.m < 0 || meta == targetBlock.m))) && ItemComparison.CompareNBTTag(targetBlock.tags, tags, true))
-			{
-			    progress.forEach((entry) -> {
-			        if(entry.getSecond()[index] >= targetBlock.n) return;
-			        entry.getSecond()[index]++;
+
+        final List<Tuple2<UUID, int[]>> progress = getBulkProgress(pInfo.ALL_UUIDS);
+        boolean changed = false;
+
+        for (int i = 0; i < blockTypes.size(); i++) {
+            NbtBlockType targetBlock = blockTypes.get(i);
+
+            int tmpMeta = (targetBlock.m < 0 || targetBlock.m == OreDictionary.WILDCARD_VALUE) ? OreDictionary.WILDCARD_VALUE : meta;
+            boolean oreMatch = targetBlock.oreDict.length() > 0 && OreDictionary.getOres(targetBlock.oreDict).contains(new ItemStack(block, 1, tmpMeta));
+            final int index = i;
+
+            if ((oreMatch || (block == targetBlock.b && (targetBlock.m < 0 || meta == targetBlock.m))) && ItemComparison.CompareNBTTag(targetBlock.tags, tags, true)) {
+                progress.forEach((entry) -> {
+                    if (entry.getSecond()[index] >= targetBlock.n) return;
+                    entry.getSecond()[index]++;
                 });
-			    changed = true;
-				break; // NOTE: We're only tracking one break at a time so doing all the progress setting above is fine
-			}
-		}
-		
-		if(changed)
-        {
+                changed = true;
+                break; // NOTE: We're only tracking one break at a time so doing all the progress setting above is fine
+            }
+        }
+
+        if (changed) {
             setBulkProgress(progress);
             detect(pInfo, quest);
         }
-	}
-	
-	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound nbt)
-	{
-		NBTTagList bAry = new NBTTagList();
-		for(NbtBlockType block : blockTypes)
-		{
-			bAry.appendTag(block.writeToNBT(new NBTTagCompound()));
-		}
-		nbt.setTag("blocks", bAry);
-		
-		return nbt;
-	}
-	
-	@Override
-	public void readFromNBT(NBTTagCompound nbt)
-	{
-		blockTypes.clear();
-		NBTTagList bList = nbt.getTagList("blocks", 10);
-		for(int i = 0; i < bList.tagCount(); i++)
-		{
-			NbtBlockType block = new NbtBlockType();
-			block.readFromNBT(bList.getCompoundTagAt(i));
-			blockTypes.add(block);
-		}
-		
-		if(nbt.hasKey("blockID", 8))
-		{
-			Block targetBlock = (Block)Block.blockRegistry.getObject(nbt.getString("blockID"));
-			targetBlock = targetBlock != Blocks.air ? targetBlock : Blocks.log;
-			int targetMeta = nbt.getInteger("blockMeta");
-			NBTTagCompound targetNbt = nbt.getCompoundTag("blockNBT");
-			int targetNum = nbt.getInteger("amount");
-			
-			NbtBlockType leg = new NbtBlockType();
-			leg.b = targetBlock;
-			leg.m = targetMeta;
-			leg.tags = targetNbt;
-			leg.n = targetNum;
-			
-			blockTypes.add(leg);
-		}
-	}
-	
-	@Override
-	public void readProgressFromNBT(NBTTagCompound nbt, boolean merge)
-	{
-		if(!merge)
-        {
-            completeUsers.clear();
-            userProgress.clear();
-        }
-		
-		NBTTagList cList = nbt.getTagList("completeUsers", 8);
-		for(int i = 0; i < cList.tagCount(); i++)
-		{
-			try
-			{
-				completeUsers.add(UUID.fromString(cList.getStringTagAt(i)));
-			} catch(Exception e)
-			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load UUID for task", e);
-			}
-		}
-		
-		NBTTagList pList = nbt.getTagList("userProgress", 10);
-		for(int n = 0; n < pList.tagCount(); n++)
-		{
-			try
-			{
-                NBTTagCompound pTag = pList.getCompoundTagAt(n);
-                UUID uuid = UUID.fromString(pTag.getString("uuid"));
-                
-                int[] data = new int[blockTypes.size()];
-                List<NBTBase> dNbt = NBTConverter.getTagList(pTag.getTagList("data", 3));
-                for(int i = 0; i < data.length && i < dNbt.size(); i++) // TODO: Change this to an int array. This is dumb...
-                {
-                    data[i] = ((NBTPrimitive)dNbt.get(i)).func_150287_d();
-                }
-                
-			    userProgress.put(uuid, data);
-			} catch(Exception e)
-			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load user progress for task", e);
-			}
-		}
-	}
-	
-	@Override
-	public NBTTagCompound writeProgressToNBT(NBTTagCompound nbt, @Nullable List<UUID> users)
-	{
-		NBTTagList jArray = new NBTTagList();
-		NBTTagList progArray = new NBTTagList();
-		
-		if(users != null)
-        {
-            users.forEach((uuid) -> {
-                if(completeUsers.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
-                
-                int[] data = userProgress.get(uuid);
-                if(data != null)
-                {
-                    NBTTagCompound pJson = new NBTTagCompound();
-                    pJson.setString("uuid", uuid.toString());
-                    NBTTagList pArray = new NBTTagList(); // TODO: Why the heck isn't this just an int array?!
-                    for(int i : data) pArray.appendTag(new NBTTagInt(i));
-                    pJson.setTag("data", pArray);
-                    progArray.appendTag(pJson);
-                }
-            });
-        } else
-        {
-            completeUsers.forEach((uuid) -> jArray.appendTag(new NBTTagString(uuid.toString())));
-            
-            userProgress.forEach((uuid, data) -> {
-                NBTTagCompound pJson = new NBTTagCompound();
-			    pJson.setString("uuid", uuid.toString());
-                NBTTagList pArray = new NBTTagList(); // TODO: Why the heck isn't this just an int array?!
-                for(int i : data) pArray.appendTag(new NBTTagInt(i));
-                pJson.setTag("data", pArray);
-                progArray.appendTag(pJson);
-            });
-        }
-		
-		nbt.setTag("completeUsers", jArray);
-		nbt.setTag("userProgress", progArray);
-		
-		return nbt;
-	}
-	
-	@Override
-	@SideOnly(Side.CLIENT)
-	public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest)
-	{
-	    return new PanelTaskBlockBreak(rect, this);
-	}
-	
-	@Override
-	@SideOnly(Side.CLIENT)
-	public GuiScreen getTaskEditor(GuiScreen screen, DBEntry<IQuest> quest)
-	{
-		return null;
-	}
-	
-	@Override
-	public int[] getUsersProgress(UUID uuid)
-	{
-		int[] progress = userProgress.get(uuid);
-		return progress == null || progress.length != blockTypes.size()? new int[blockTypes.size()] : progress;
-	}
-	
-	private List<Tuple2<UUID, int[]>> getBulkProgress(@Nonnull List<UUID> uuids)
-    {
-        if(uuids.size() <= 0) return Collections.emptyList();
-        List<Tuple2<UUID, int[]>> list = new ArrayList<>();
-        uuids.forEach((key) -> list.add(new Tuple2<>(key, getUsersProgress(key))));
-        return list;
-    }
-    
-    private void setBulkProgress(@Nonnull List<Tuple2<UUID, int[]>> list)
-    {
-        list.forEach((entry) -> setUserProgress(entry.getFirst(), entry.getSecond()));
     }
 
-	@Override
-	public List<String> getTextsForSearch() {
-		List<String> texts = new ArrayList<>();
-		for (NbtBlockType block : blockTypes) {
-			if (block.getItemStack() != null) {
-				texts.add(block.getItemStack().getBaseStack().getDisplayName());
-			}
-		}
-		return texts;
-	}
+    @Override
+    public List<String> getTextsForSearch() {
+        List<String> texts = new ArrayList<>();
+        for (NbtBlockType block : blockTypes) {
+            if (block.getItemStack() != null) {
+                texts.add(block.getItemStack().getBaseStack().getDisplayName());
+            }
+        }
+        return texts;
+    }
 }

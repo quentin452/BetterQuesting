@@ -13,87 +13,45 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.ResourceLocation;
-import org.apache.logging.log4j.Level;
 
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.UUID;
+public class TaskCheckbox extends TaskBase {
+    // region Properties
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+        return nbt;
+    }
 
-public class TaskCheckbox extends TaskBase
-{
-	@Override
-	public ResourceLocation getFactoryID()
-	{
-		return FactoryTaskCheckbox.INSTANCE.getRegistryName();
-	}
-	
-	@Override
-	public String getUnlocalisedName()
-	{
-		return BQ_Standard.MODID + ".task.checkbox";
-	}
-	
-	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound nbt)
-	{
-		return nbt;
-	}
+    @Override
+    public void readFromNBT(NBTTagCompound nbt) {
+    }
+    // endregion Properties
 
-	@Override
-	public void readFromNBT(NBTTagCompound nbt)
-	{
-	}
-	
-	@Override
-	public NBTTagCompound writeProgressToNBT(NBTTagCompound nbt, @Nullable List<UUID> users)
-	{
-		NBTTagList jArray = new NBTTagList();
-		
-		completeUsers.forEach((uuid) -> {
-		    if(users == null || users.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
-		});
-		
-		nbt.setTag("completeUsers", jArray);
-		
-		return nbt;
-	}
-	
-	@Override
-	public void readProgressFromNBT(NBTTagCompound json, boolean merge)
-	{
-		if(!merge) completeUsers.clear();
-		NBTTagList cList = json.getTagList("completeUsers", 8);
-		for(int i = 0; i < cList.tagCount(); i++)
-		{
-			try
-			{
-				completeUsers.add(UUID.fromString(cList.getStringTagAt(i)));
-			} catch(Exception e)
-			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load UUID for task", e);
-			}
-		}
-	}
+    // region Basic
+    @Override
+    public ResourceLocation getFactoryID() {
+        return FactoryTaskCheckbox.INSTANCE.getRegistryName();
+    }
 
-	@Override
-	public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest)
-	{
-	}
+    @Override
+    public String getUnlocalisedName() {
+        return BQ_Standard.MODID + ".task.checkbox";
+    }
 
-	@Override
-	@SideOnly(Side.CLIENT)
-	public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest)
-	{
-	    return new PanelTaskCheckbox(rect, quest, this);
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest) {
+        return new PanelTaskCheckbox(rect, quest, this);
+    }
 
-	@Override
-	@SideOnly(Side.CLIENT)
-	public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest)
-	{
-		return null;
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest) {
+        return null;
+    }
+    // endregion Basic
+
+    @Override
+    public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {
+    }
 }
