@@ -6,8 +6,6 @@ import betterquesting.api2.client.gui.panels.content.PanelItemSlot;
 import codechicken.nei.api.ShortcutInputHandler;
 import net.minecraft.item.ItemStack;
 
-import java.util.List;
-
 /**
  * NEI compatible ItemSlot
  * <p>
@@ -41,9 +39,9 @@ public class PanelInteractiveItemSlot extends PanelItemSlot {
     }
 
     @Override
-    public List<String> getTooltip(int mx, int my) {
-        isMouseHovered = getTransform().contains(mx, my);
-        return super.getTooltip(mx, my);
+    public void drawPanel(int mx, int my, float partialTick) {
+        isMouseHovered = isActive() && getTransform().contains(mx, my);
+        super.drawPanel(mx, my, partialTick);
     }
 
     private ItemStack getBaseStackOfSameSize() {
