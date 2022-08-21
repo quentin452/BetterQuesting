@@ -15,11 +15,15 @@ import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.utils.QuestTranslation;
 import bq_standard.core.BQ_Standard;
 import bq_standard.tasks.TaskRetrieval;
+import codechicken.nei.ItemPanels;
 import codechicken.nei.recipe.GuiCraftingRecipe;
 import cpw.mods.fml.common.Optional.Method;
+import joptsimple.internal.Strings;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.UUID;
 
@@ -88,6 +92,10 @@ public class PanelTaskRetrieval extends CanvasMinimum
     @Method(modid = "NotEnoughItems")
     private void lookupRecipe(ItemStack stack)
     {
-        GuiCraftingRecipe.openRecipeGui("item", stack);
+        if (GuiScreen.isShiftKeyDown()) {
+            ItemPanels.bookmarkPanel.addOrRemoveItem(stack, StringUtils.EMPTY, null, false, true);
+        } else {
+            GuiCraftingRecipe.openRecipeGui("item", stack);
+        }
     }
 }

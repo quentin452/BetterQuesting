@@ -18,6 +18,7 @@ import betterquesting.api2.utils.QuestTranslation;
 import bq_standard.client.gui.GuiContainerFake;
 import bq_standard.core.BQ_Standard;
 import bq_standard.tasks.TaskCrafting;
+import codechicken.nei.ItemPanels;
 import codechicken.nei.recipe.GuiCraftingRecipe;
 import cpw.mods.fml.common.Optional.Method;
 import net.minecraft.client.Minecraft;
@@ -25,6 +26,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.UUID;
 
@@ -98,13 +100,17 @@ public class PanelTaskCrafting extends CanvasMinimum
     @Method(modid = "NotEnoughItems")
     private void lookupRecipe(ItemStack stack)
     {
-        GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;
-        GuiContainerFake guiContainerFake = new GuiContainerFake();
-        Minecraft.getMinecraft().displayGuiScreen(guiContainerFake);
+        if (GuiScreen.isShiftKeyDown()) {
+            ItemPanels.bookmarkPanel.addOrRemoveItem(stack, StringUtils.EMPTY, null, false, true);
+        } else {
+            GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;
+            GuiContainerFake guiContainerFake = new GuiContainerFake();
+            Minecraft.getMinecraft().displayGuiScreen(guiContainerFake);
 
-        GuiCraftingRecipe.openRecipeGui("item", stack);
-        guiContainerFake.setOnInitCallback(o -> {
-            Minecraft.getMinecraft().displayGuiScreen(currentScreen);
-        });
+            GuiCraftingRecipe.openRecipeGui("item", stack);
+            guiContainerFake.setOnInitCallback(o -> {
+                Minecraft.getMinecraft().displayGuiScreen(currentScreen);
+            });
+        }
     }
 }
