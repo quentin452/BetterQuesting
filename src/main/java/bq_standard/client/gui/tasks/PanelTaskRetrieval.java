@@ -8,6 +8,8 @@ import betterquesting.api2.client.gui.panels.content.PanelItemSlot;
 import betterquesting.api2.client.gui.panels.content.PanelTextBox;
 import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.utils.QuestTranslation;
+import bq_standard.client.gui.panels.content.PanelInteractiveItemSlot;
+import bq_standard.client.gui.panels.content.PanelItemSlotBuilder;
 import bq_standard.core.BQ_Standard;
 import bq_standard.tasks.TaskRetrieval;
 import net.minecraft.client.Minecraft;
@@ -49,8 +51,10 @@ public class PanelTaskRetrieval extends CanvasMinimum
                 continue;
             }
 
-            PanelItemSlot slot = new PanelItemSlot(new GuiRectangle(0, i * 32 + 16, 28, 28, 0), -1, stack, false, true);
-            if(BQ_Standard.hasNEI) slot.setCallback(NEIUtils::processItemSlotCallback);
+            GuiRectangle guiRectangle = new GuiRectangle(0, i * 32 + 16, 28, 28, 0);
+            PanelItemSlot slot = PanelItemSlotBuilder.forValue(stack, guiRectangle)
+                    .oreDict(true)
+                    .build();
             this.addPanel(slot);
 
             StringBuilder sb = new StringBuilder();

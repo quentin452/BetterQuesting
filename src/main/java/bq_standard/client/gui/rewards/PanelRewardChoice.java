@@ -4,14 +4,12 @@ import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api2.client.gui.misc.*;
-import betterquesting.api2.client.gui.panels.CanvasEmpty;
 import betterquesting.api2.client.gui.panels.CanvasMinimum;
-import betterquesting.api2.client.gui.panels.bars.PanelVScrollBar;
 import betterquesting.api2.client.gui.panels.content.PanelItemSlot;
 import betterquesting.api2.client.gui.panels.content.PanelTextBox;
-import betterquesting.api2.client.gui.panels.lists.CanvasScrolling;
 import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.storage.DBEntry;
+import bq_standard.client.gui.panels.content.PanelItemSlotBuilder;
 import bq_standard.network.handlers.NetRewardChoice;
 import bq_standard.rewards.RewardChoice;
 import net.minecraft.client.Minecraft;
@@ -40,7 +38,9 @@ public class PanelRewardChoice extends CanvasMinimum
 
         UUID uuid = QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer);
         int sel = reward.getSelecton(uuid);
-        PanelItemSlot slot = new PanelItemSlot(new GuiTransform(new Vector4f(0F, 0F, 0F, 0F), 0, 0, 32, 32, 0), -1, sel < 0 ? null : reward.choices.get(sel));
+
+        GuiTransform guiTransform = new GuiTransform(new Vector4f(0F, 0F, 0F, 0F), 0, 0, 32, 32, 0);
+        PanelItemSlot slot = PanelItemSlotBuilder.forValue(sel < 0 ? null : reward.choices.get(sel), guiTransform).build();
         this.addPanel(slot);
 
         final int qID = quest.getID();
@@ -50,7 +50,10 @@ public class PanelRewardChoice extends CanvasMinimum
         for(int i = 0; i < reward.choices.size(); i++)
         {
             BigItemStack stack = reward.choices.get(i);
-            PanelItemSlot is = new PanelItemSlot(new GuiRectangle(40, i * 18, 18, 18, 0), -1, stack, true);
+            GuiRectangle guiRectangle = new GuiRectangle(40, i * 18, 18, 18, 0);
+            PanelItemSlot is = PanelItemSlotBuilder.forValue(stack, guiRectangle)
+                    .showCount(true)
+                    .build();
             this.addPanel(is);
             
             this.addPanel(new PanelTextBox(new GuiRectangle(62, i * 18 + 4, listWidth - 22, 14, 0), stack.stackSize + " " + stack.getBaseStack().getDisplayName()).setColor(PresetColor.TEXT_MAIN.getColor()));
