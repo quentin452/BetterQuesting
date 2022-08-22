@@ -16,6 +16,7 @@ import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.client.gui.themes.presets.PresetIcon;
 import betterquesting.api2.utils.QuestTranslation;
 import bq_standard.client.gui.panels.content.PanelInteractiveItemSlot;
+import bq_standard.client.gui.panels.content.PanelItemSlotBuilder;
 import bq_standard.core.BQ_Standard;
 import bq_standard.tasks.TaskCrafting;
 import net.minecraft.client.Minecraft;
@@ -64,9 +65,9 @@ public class PanelTaskCrafting extends CanvasMinimum
             BigItemStack stack = task.requiredItems.get(i);
 
             GuiRectangle guiRectangle = new GuiRectangle(0, i * 28 + 24, 28, 28, 0);
-            PanelItemSlot slot;
-            if (BQ_Standard.hasNEI) slot = new PanelInteractiveItemSlot(guiRectangle, -1, stack, false, true);
-            else slot = new PanelItemSlot(guiRectangle, -1, stack, false, true);
+            PanelItemSlot slot = PanelItemSlotBuilder.forValue(stack, guiRectangle)
+                    .oreDict(true)
+                    .build();
             this.addPanel(slot);
 
             StringBuilder sb = new StringBuilder();

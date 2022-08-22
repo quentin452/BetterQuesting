@@ -31,11 +31,11 @@ public class PanelInteractiveItemSlot extends PanelItemSlot {
 
     @Override
     public boolean onMouseClick(int mx, int my, int click) {
-        if (isMouseHovered) {
+        if (isMouseHovered && getCallback() == null) {
             return ShortcutInputHandler.handleMouseClick(getBaseStackOfSameSize());
         }
 
-        return false;
+        return super.onMouseClick(mx, my, click);
     }
 
     @Override
