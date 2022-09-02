@@ -23,7 +23,7 @@ import org.apache.logging.log4j.Level;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RewardItem implements IReward
+public class RewardItem implements IReward, IRewardItemOutput
 {
 	public final List<BigItemStack> items = new ArrayList<>();
 	
@@ -108,5 +108,10 @@ public class RewardItem implements IReward
 	public GuiScreen getRewardEditor(GuiScreen screen, DBEntry<IQuest> quest)
 	{
 		return null;
+	}
+
+	@Override
+	public List<BigItemStack> getItemOutputs() {
+		return items;
 	}
 }

@@ -24,7 +24,7 @@ import org.apache.logging.log4j.Level;
 
 import java.util.*;
 
-public class RewardChoice implements IReward
+public class RewardChoice implements IReward, IRewardItemOutput
 {
 	/**
 	 * The selected reward index to be claimed.<br>
@@ -149,5 +149,10 @@ public class RewardChoice implements IReward
 	public GuiScreen getRewardEditor(GuiScreen screen, DBEntry<IQuest> quest)
 	{
 		return null;
+	}
+
+	@Override
+	public List<BigItemStack> getItemOutputs() {
+		return choices;
 	}
 }
