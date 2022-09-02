@@ -4,7 +4,10 @@ import betterquesting.api.utils.BigItemStack;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.content.PanelItemSlot;
 import codechicken.nei.api.ShortcutInputHandler;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 
 /**
  * NEI compatible ItemSlot
@@ -16,6 +19,8 @@ public class PanelInteractiveItemSlot extends PanelItemSlot {
 
     private boolean isMouseHovered;
 
+    private static final ResourceLocation CLICK_SND = new ResourceLocation("gui.button.press");
+
     public PanelInteractiveItemSlot(IGuiRect rect, int id, BigItemStack value, boolean showCount, boolean oreDict) {
         super(rect, id, value, showCount, oreDict);
     }
@@ -23,7 +28,10 @@ public class PanelInteractiveItemSlot extends PanelItemSlot {
     @Override
     public boolean onKeyTyped(char c, int keycode) {
         if (isMouseHovered) {
-            return ShortcutInputHandler.handleKeyEvent(getBaseStackOfSameSize());
+            if (ShortcutInputHandler.handleKeyEvent(getBaseStackOfSameSize())) {
+                playClickSound();
+                return true;
+            }
         }
 
         return false;
@@ -32,7 +40,10 @@ public class PanelInteractiveItemSlot extends PanelItemSlot {
     @Override
     public boolean onMouseClick(int mx, int my, int click) {
         if (isMouseHovered && getCallback() == null) {
-            return ShortcutInputHandler.handleMouseClick(getBaseStackOfSameSize());
+            if (ShortcutInputHandler.handleMouseClick(getBaseStackOfSameSize())) {
+                playClickSound();
+                return true;
+            }
         }
 
         return super.onMouseClick(mx, my, click);
@@ -51,5 +62,9 @@ public class PanelInteractiveItemSlot extends PanelItemSlot {
         itemStack.stackSize = bigItemStack.stackSize;
 
         return itemStack;
+    }
+
+    private void playClickSound() {
+        Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.func_147674_a(CLICK_SND, 1.0F));
     }
 }
