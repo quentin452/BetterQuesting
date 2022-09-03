@@ -7,6 +7,7 @@ import bq_standard.importers.NativeFileImporter;
 import bq_standard.importers.ftbq.FTBQQuestImporter;
 import bq_standard.importers.hqm.HQMBagImporter;
 import bq_standard.importers.hqm.HQMQuestImporter;
+import bq_standard.integration.nei.IMCForNEI;
 
 public class ClientProxy extends CommonProxy
 {
@@ -20,6 +21,8 @@ public class ClientProxy extends CommonProxy
 	public void registerHandlers()
 	{
 		super.registerHandlers();
+
+		IMCForNEI.IMCSender();
 	}
 	
 	@Override

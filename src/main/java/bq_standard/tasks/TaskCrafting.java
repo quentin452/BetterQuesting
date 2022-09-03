@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.IntSupplier;
 
-public class TaskCrafting extends TaskProgressableBase<int[]> {
+public class TaskCrafting extends TaskProgressableBase<int[]> implements ITaskItemInput {
     // region Properties
     public final List<BigItemStack> requiredItems = new ArrayList<>();
     public boolean partialMatch = true;
@@ -217,5 +217,10 @@ public class TaskCrafting extends TaskProgressableBase<int[]> {
             }
         }
         return texts;
+    }
+
+    @Override
+    public List<BigItemStack> getItemInputs() {
+        return requiredItems;
     }
 }

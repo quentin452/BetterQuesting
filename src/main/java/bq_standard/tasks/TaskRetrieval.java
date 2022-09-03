@@ -36,7 +36,7 @@ import java.util.UUID;
 import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 
-public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskInventory, IItemTask {
+public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskInventory, IItemTask, ITaskItemInput {
     // region Properties
     public final List<BigItemStack> requiredItems = new ArrayList<>();
     public boolean partialMatch = true;
@@ -265,6 +265,11 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
             }
         }
         return texts;
+    }
+
+    @Override
+    public List<BigItemStack> getItemInputs() {
+        return requiredItems;
     }
 
     static class Detector {
