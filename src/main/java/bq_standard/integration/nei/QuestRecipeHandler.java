@@ -150,7 +150,7 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
     public void drawBackground(int recipe) {
         GL11.glColor4f(1, 1, 1, 1);
         changeTexture(getGuiTexture());
-        drawTexturedModalRect(0, 0, 0, 0, GUI_WIDTH, 95);
+        drawTexturedModalRect(0, 0, 0, 0, GUI_WIDTH, 105);
     }
 
     @Override
