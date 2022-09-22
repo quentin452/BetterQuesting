@@ -7,12 +7,10 @@ import bq_standard.tasks.TaskLocation;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 
-public class FtbqTaskDimension
-{
-    public ITask[] converTask(NBTTagCompound tag)
-    {
+public class FtbqTaskDimension {
+    public ITask[] converTask(NBTTagCompound tag) {
         TaskLocation task = new TaskLocation();
-        
+
         task.range = -1;
         task.dim = tag.getInteger("dim");
         task.x = 0;
@@ -20,9 +18,9 @@ public class FtbqTaskDimension
         task.z = 0;
         task.visible = true;
         task.name = tag.hasKey("title", 8) ? tag.getString("title") : TaskLocation.getDimName(task.dim);
-    
+
         FTBQQuestImporter.provideIcon(new BigItemStack(Blocks.portal));
-        
-        return new ITask[]{task};
+
+        return new ITask[] {task};
     }
 }

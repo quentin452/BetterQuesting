@@ -17,6 +17,14 @@ import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskRetrieval;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.IntFunction;
+import java.util.stream.IntStream;
+import javax.annotation.Nonnull;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
@@ -26,15 +34,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
-
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.function.IntFunction;
-import java.util.stream.IntStream;
 
 public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskInventory, IItemTask, ITaskItemInput {
     // region Properties
@@ -134,7 +133,6 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
     }
     // endregion Progress
 
-
     @Override
     public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {
         if (isComplete(pInfo.UUID)) return;
@@ -160,7 +158,8 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
         checkAndComplete(pInfo, quest, detector.updated, detector.progress);
     }
 
-    private void checkAndComplete(ParticipantInfo pInfo, DBEntry<IQuest> quest, boolean resync, List<Tuple2<UUID, int[]>> progress) {
+    private void checkAndComplete(
+            ParticipantInfo pInfo, DBEntry<IQuest> quest, boolean resync, List<Tuple2<UUID, int[]>> progress) {
         boolean updated = resync;
 
         topLoop:
@@ -192,7 +191,12 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
     // region IItemTask
     @Override
     public boolean canAcceptItem(UUID owner, DBEntry<IQuest> quest, ItemStack stack) {
-        if (owner == null || stack == null || stack.stackSize <= 0 || !consume || isComplete(owner) || requiredItems.size() <= 0) {
+        if (owner == null
+                || stack == null
+                || stack.stackSize <= 0
+                || !consume
+                || isComplete(owner)
+                || requiredItems.size() <= 0) {
             return false;
         }
 
@@ -203,7 +207,9 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
 
             if (progress[j] >= rStack.stackSize) continue;
 
-            if (ItemComparison.StackMatch(rStack.getBaseStack(), stack, !ignoreNBT, partialMatch) || ItemComparison.OreDictionaryMatch(rStack.getOreIngredient(), rStack.GetTagCompound(), stack, !ignoreNBT, partialMatch)) {
+            if (ItemComparison.StackMatch(rStack.getBaseStack(), stack, !ignoreNBT, partialMatch)
+                    || ItemComparison.OreDictionaryMatch(
+                            rStack.getOreIngredient(), rStack.GetTagCompound(), stack, !ignoreNBT, partialMatch)) {
                 return true;
             }
         }
@@ -279,6 +285,7 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
          * List of (player uuid, [progress per required item])
          */
         public final List<Tuple2<UUID, int[]>> progress;
+
         private final int[] remCounts;
 
         public Detector(TaskRetrieval task, @Nonnull List<UUID> uuids) {
@@ -317,7 +324,12 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
                 BigItemStack rStack = task.requiredItems.get(i);
 
                 if (!ItemComparison.StackMatch(rStack.getBaseStack(), stack, !task.ignoreNBT, task.partialMatch)
-                    && !ItemComparison.OreDictionaryMatch(rStack.getOreIngredient(), rStack.GetTagCompound(), stack, !task.ignoreNBT, task.partialMatch)) {
+                        && !ItemComparison.OreDictionaryMatch(
+                                rStack.getOreIngredient(),
+                                rStack.GetTagCompound(),
+                                stack,
+                                !task.ignoreNBT,
+                                task.partialMatch)) {
                     continue;
                 }
 

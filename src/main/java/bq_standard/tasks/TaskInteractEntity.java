@@ -14,6 +14,11 @@ import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskInteractEntity;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import javax.annotation.Nullable;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
@@ -21,16 +26,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
 public class TaskInteractEntity extends TaskProgressableBase<Integer> {
     // region Properties
     @Nullable
     public BigItemStack targetItem = null;
+
     public boolean ignoreItemNBT = false;
     public boolean partialItemMatch = true;
 
@@ -120,7 +120,6 @@ public class TaskInteractEntity extends TaskProgressableBase<Integer> {
     }
     // endregion Progress
 
-
     @Override
     public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {
         final List<Tuple2<UUID, Integer>> progress = getBulkProgress(pInfo.ALL_UUIDS);
@@ -152,7 +151,13 @@ public class TaskInteractEntity extends TaskProgressableBase<Integer> {
         }
 
         if (targetItem != null) {
-            if (targetItem.hasOreDict() && !ItemComparison.OreDictionaryMatch(targetItem.getOreIngredient(), targetItem.GetTagCompound(), item, !ignoreItemNBT, partialItemMatch)) {
+            if (targetItem.hasOreDict()
+                    && !ItemComparison.OreDictionaryMatch(
+                            targetItem.getOreIngredient(),
+                            targetItem.GetTagCompound(),
+                            item,
+                            !ignoreItemNBT,
+                            partialItemMatch)) {
                 return;
             } else if (!ItemComparison.StackMatch(targetItem.getBaseStack(), item, !ignoreItemNBT, partialItemMatch)) {
                 return;

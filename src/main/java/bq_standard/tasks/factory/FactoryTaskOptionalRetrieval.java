@@ -12,23 +12,19 @@ public class FactoryTaskOptionalRetrieval implements IFactoryData<ITask, NBTTagC
     public static final FactoryTaskOptionalRetrieval INSTANCE = new FactoryTaskOptionalRetrieval();
 
     @Override
-    public ResourceLocation getRegistryName()
-    {
+    public ResourceLocation getRegistryName() {
         return new ResourceLocation(BQ_Standard.MODID + ":optional_retrieval");
     }
 
     @Override
-    public TaskOptionalRetrieval createNew()
-    {
+    public TaskOptionalRetrieval createNew() {
         return new TaskOptionalRetrieval();
     }
 
     @Override
-    public TaskOptionalRetrieval loadFromData(NBTTagCompound json)
-    {
+    public TaskOptionalRetrieval loadFromData(NBTTagCompound json) {
         TaskOptionalRetrieval task = new TaskOptionalRetrieval();
         task.readFromNBT(json);
         return task;
     }
-
 }

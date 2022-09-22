@@ -16,6 +16,11 @@ import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskCrafting;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.IntSupplier;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
@@ -25,12 +30,6 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
 import org.apache.logging.log4j.Level;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.function.IntSupplier;
 
 public class TaskCrafting extends TaskProgressableBase<int[]> implements ITaskItemInput {
     // region Properties
@@ -149,7 +148,8 @@ public class TaskCrafting extends TaskProgressableBase<int[]> implements ITaskIt
         pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
     }
 
-    public void onItemCraft(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack, IntSupplier realStackSizeSupplier) {
+    public void onItemCraft(
+            ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack, IntSupplier realStackSizeSupplier) {
         if (!allowCraft) return;
         onItemInternal(pInfo, quest, stack, realStackSizeSupplier);
     }
@@ -168,7 +168,8 @@ public class TaskCrafting extends TaskProgressableBase<int[]> implements ITaskIt
         onItemInternal(pInfo, quest, stack, null);
     }
 
-    private void onItemInternal(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack, IntSupplier realStackSizeSupplier) {
+    private void onItemInternal(
+            ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack, IntSupplier realStackSizeSupplier) {
         // ignore null stack
         // ignore negatively sized stack only if it's indeed the real stack size
         if (stack == null || (stack.stackSize <= 0 && realStackSizeSupplier == null)) return;
@@ -181,7 +182,9 @@ public class TaskCrafting extends TaskProgressableBase<int[]> implements ITaskIt
             final BigItemStack rStack = requiredItems.get(i);
             final int index = i;
 
-            if (ItemComparison.StackMatch(rStack.getBaseStack(), stack, !ignoreNBT, partialMatch) || ItemComparison.OreDictionaryMatch(rStack.getOreIngredient(), rStack.GetTagCompound(), stack, !ignoreNBT, partialMatch)) {
+            if (ItemComparison.StackMatch(rStack.getBaseStack(), stack, !ignoreNBT, partialMatch)
+                    || ItemComparison.OreDictionaryMatch(
+                            rStack.getOreIngredient(), rStack.GetTagCompound(), stack, !ignoreNBT, partialMatch)) {
                 int realStackSize;
                 if (realStackSizeCache < 0) {
                     realStackSize = realStackSizeSupplier.getAsInt();
@@ -193,8 +196,9 @@ public class TaskCrafting extends TaskProgressableBase<int[]> implements ITaskIt
                     realStackSize = realStackSizeCache;
                 }
                 progress.stream()
-                    .filter(e -> e.getSecond()[index] < rStack.stackSize)
-                    .forEach(e -> e.getSecond()[index] = Math.min(e.getSecond()[index] + realStackSize, rStack.stackSize));
+                        .filter(e -> e.getSecond()[index] < rStack.stackSize)
+                        .forEach(e -> e.getSecond()[index] =
+                                Math.min(e.getSecond()[index] + realStackSize, rStack.stackSize));
                 changed = true;
             }
         }

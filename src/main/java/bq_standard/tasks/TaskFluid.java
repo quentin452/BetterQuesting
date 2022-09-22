@@ -15,6 +15,15 @@ import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskFluid;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.BiFunction;
+import java.util.function.IntFunction;
+import java.util.stream.IntStream;
+import javax.annotation.Nonnull;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
@@ -28,20 +37,10 @@ import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidContainerItem;
 
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.function.BiFunction;
-import java.util.function.IntFunction;
-import java.util.stream.IntStream;
-
 public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInventory, IFluidTask, IItemTask {
     // region Properties
     public final List<FluidStack> requiredFluids = new ArrayList<>();
-    //public boolean partialMatch = true; // Not many ideal ways of implementing this with fluid handlers
+    // public boolean partialMatch = true; // Not many ideal ways of implementing this with fluid handlers
     public boolean ignoreNbt = true;
     public boolean consume = true;
     public boolean groupDetect = false;
@@ -49,7 +48,7 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
 
     @Override
     public void readFromNBT(NBTTagCompound nbt) {
-        //partialMatch = json.getBoolean("partialMatch");
+        // partialMatch = json.getBoolean("partialMatch");
         ignoreNbt = nbt.getBoolean("ignoreNBT");
         consume = nbt.getBoolean("consume");
         groupDetect = nbt.getBoolean("groupDetect");
@@ -64,7 +63,7 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
 
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
-        //json.setBoolean("partialMatch", partialMatch);
+        // json.setBoolean("partialMatch", partialMatch);
         nbt.setBoolean("ignoreNBT", ignoreNbt);
         nbt.setBoolean("consume", consume);
         nbt.setBoolean("groupDetect", groupDetect);
@@ -164,7 +163,8 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
     }
 
     private void checkAndComplete(ParticipantInfo pInfo, DBEntry<IQuest> quest, boolean resync) {
-        final List<Tuple2<UUID, int[]>> progress = getBulkProgress(consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
+        final List<Tuple2<UUID, int[]>> progress =
+                getBulkProgress(consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
         boolean updated = resync;
 
         topLoop:
@@ -250,7 +250,12 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
     // region IFluidTask
     @Override
     public boolean canAcceptFluid(UUID owner, DBEntry<IQuest> quest, FluidStack fluid) {
-        if (owner == null || fluid == null || fluid.getFluid() == null || !consume || isComplete(owner) || requiredFluids.size() <= 0) {
+        if (owner == null
+                || fluid == null
+                || fluid.getFluid() == null
+                || !consume
+                || isComplete(owner)
+                || requiredFluids.size() <= 0) {
             return false;
         }
 
@@ -267,7 +272,12 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
 
     @Override
     public FluidStack submitFluid(UUID owner, DBEntry<IQuest> quest, FluidStack input) {
-        if (owner == null || input == null || input.amount <= 0 || !consume || isComplete(owner) || requiredFluids.size() <= 0) {
+        if (owner == null
+                || input == null
+                || input.amount <= 0
+                || !consume
+                || isComplete(owner)
+                || requiredFluids.size() <= 0) {
             return input;
         }
 
@@ -329,7 +339,7 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
 
         Detector detector = new Detector(this, Collections.singletonList(owner));
 
-        final ItemStack[] wrapper = new ItemStack[]{input.copy()};
+        final ItemStack[] wrapper = new ItemStack[] {input.copy()};
 
         detector.run(wrapper[0], (drain, drainAmount) -> {
             if (wrapper[0].getItem() instanceof IFluidContainerItem) {
@@ -401,7 +411,8 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
 
         public Detector(TaskFluid task, @Nonnull List<UUID> uuids) {
             this.task = task;
-            // Removing the consume check here would make the task cheaper on groups and for that reason sharing is restricted to detect only
+            // Removing the consume check here would make the task cheaper on groups and for that reason sharing is
+            // restricted to detect only
             this.progress = task.getBulkProgress(uuids);
             if (!task.consume) {
                 if (task.groupDetect) // Reset all detect progress
@@ -445,7 +456,7 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
                     int remaining = rStack.amount - value.getSecond()[i];
 
                     FluidStack drain = rStack.copy();
-                    drain.amount = remaining; //drain.amount = remaining / stack.stackSize;
+                    drain.amount = remaining; // drain.amount = remaining / stack.stackSize;
                     if (task.ignoreNbt) drain.tag = null;
                     if (drain.amount <= 0) continue;
 
@@ -485,7 +496,7 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
                         }
                     } else {
                         FluidStack drain = rStack.copy();
-                        drain.amount = remaining; //drain.amount = remaining / stack.stackSize;
+                        drain.amount = remaining; // drain.amount = remaining / stack.stackSize;
                         if (task.ignoreNbt) drain.tag = null;
                         if (drain.amount <= 0) continue;
 

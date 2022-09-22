@@ -1,5 +1,9 @@
 package bq_standard.integration.nei;
 
+import static codechicken.lib.gui.GuiDraw.changeTexture;
+import static codechicken.lib.gui.GuiDraw.drawTexturedModalRect;
+import static net.minecraft.util.EnumChatFormatting.*;
+
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
@@ -30,12 +34,6 @@ import codechicken.nei.PositionedStack;
 import codechicken.nei.recipe.GuiRecipe;
 import codechicken.nei.recipe.TemplateRecipeHandler;
 import com.google.common.base.Stopwatch;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import org.lwjgl.opengl.GL11;
-
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,10 +41,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static codechicken.lib.gui.GuiDraw.changeTexture;
-import static codechicken.lib.gui.GuiDraw.drawTexturedModalRect;
-import static net.minecraft.util.EnumChatFormatting.*;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import org.lwjgl.opengl.GL11;
 
 @SuppressWarnings("UnstableApiUsage")
 public class QuestRecipeHandler extends TemplateRecipeHandler {
@@ -70,13 +69,15 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
         if (outputId.equals(getOverlayIdentifier())) {
             Stopwatch stopwatch = Stopwatch.createStarted();
             for (DBEntry<IQuest> quest : getVisibleQuests()) {
-                if (getTaskItemInputs(getTasks(quest.getValue())).isEmpty() && getRewardItemOutputs(getRewards(quest.getValue())).isEmpty()) {
+                if (getTaskItemInputs(getTasks(quest.getValue())).isEmpty()
+                        && getRewardItemOutputs(getRewards(quest.getValue())).isEmpty()) {
                     continue;
                 }
                 this.arecipes.add(new CachedQuestRecipe(quest.getValue(), quest.getID()));
             }
             if (debug) {
-                BQ_Standard.logger.debug(String.format("took %s: loadCraftingRecipes(String, Object...)", stopwatch.stop()));
+                BQ_Standard.logger.debug(
+                        String.format("took %s: loadCraftingRecipes(String, Object...)", stopwatch.stop()));
             }
         } else {
             super.loadCraftingRecipes(outputId, results);
@@ -281,7 +282,10 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
         String questTitle = UNDERLINE + recipe.questName;
         //noinspection unchecked
         List<String> titleArray = GuiDraw.fontRenderer.listFormattedStringToWidth(questTitle, GUI_WIDTH);
-        int titleWidth = titleArray.stream().map(GuiDraw::getStringWidth).max(Comparator.naturalOrder()).orElse(0);
+        int titleWidth = titleArray.stream()
+                .map(GuiDraw::getStringWidth)
+                .max(Comparator.naturalOrder())
+                .orElse(0);
         int titleHeight = GuiDraw.fontRenderer.FONT_HEIGHT + (titleArray.size() - 1) * LINE_SPACE;
 
         Point offset = gui.getRecipePosition(recipeIndex);
@@ -320,7 +324,13 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
                     int x = xOffset + (index % GRID_X_COUNT) * SLOT_SIZE;
                     int y = yOffset + (index / GRID_Y_COUNT) * SLOT_SIZE;
                     if (task instanceof TaskOptionalRetrieval) {
-                        inputs.add(new CustomPositionedStack(extractStacks(stack), x, y, DARK_GRAY.toString() + ITALIC + QuestTranslation.translate("bq_standard.task.optional_retrieval")));
+                        inputs.add(new CustomPositionedStack(
+                                extractStacks(stack),
+                                x,
+                                y,
+                                DARK_GRAY.toString()
+                                        + ITALIC
+                                        + QuestTranslation.translate("bq_standard.task.optional_retrieval")));
                     } else {
                         inputs.add(new PositionedStack(extractStacks(stack), x, y));
                     }
@@ -338,7 +348,13 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
                     int x = xOffset + (index % GRID_X_COUNT) * SLOT_SIZE;
                     int y = yOffset + (index / GRID_Y_COUNT) * SLOT_SIZE;
                     if (reward instanceof RewardChoice) {
-                        inputs.add(new CustomPositionedStack(extractStacks(stack), x, y, DARK_GRAY.toString() + ITALIC + QuestTranslation.translate("bq_standard.reward.choice")));
+                        inputs.add(new CustomPositionedStack(
+                                extractStacks(stack),
+                                x,
+                                y,
+                                DARK_GRAY.toString()
+                                        + ITALIC
+                                        + QuestTranslation.translate("bq_standard.reward.choice")));
                     } else {
                         inputs.add(new PositionedStack(extractStacks(stack), x, y));
                     }

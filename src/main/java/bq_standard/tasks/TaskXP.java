@@ -11,14 +11,13 @@ import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskXP;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.Collections;
+import java.util.UUID;
+import javax.annotation.Nonnull;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
-
-import javax.annotation.Nonnull;
-import java.util.Collections;
-import java.util.UUID;
 
 public class TaskXP extends TaskProgressableBase<Long> implements ITaskTickable {
     // region Properties
@@ -84,7 +83,6 @@ public class TaskXP extends TaskProgressableBase<Long> implements ITaskTickable 
     }
     // endregion Progress
 
-
     @Override
     public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {
         if (isComplete(pInfo.UUID)) return;
@@ -114,7 +112,8 @@ public class TaskXP extends TaskProgressableBase<Long> implements ITaskTickable 
             changed = true;
         }
 
-        if (changed) // Needs to be here because even if no additional progress was added, a party memeber may have completed the task anyway
+        if (changed) // Needs to be here because even if no additional progress was added, a party memeber may have
+        // completed the task anyway
         {
             pInfo.markDirty(Collections.singletonList(quest.getID()));
         }

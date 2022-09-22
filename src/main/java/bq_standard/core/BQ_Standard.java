@@ -22,75 +22,73 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.config.Configuration;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = BQ_Standard.MODID, name = BQ_Standard.NAME, version = BQ_Standard.VERSION, guiFactory = "bq_standard.handlers.ConfigGuiFactory")
-public class BQ_Standard
-{
+@Mod(
+        modid = BQ_Standard.MODID,
+        name = BQ_Standard.NAME,
+        version = BQ_Standard.VERSION,
+        guiFactory = "bq_standard.handlers.ConfigGuiFactory")
+public class BQ_Standard {
     public static final String MODID = "bq_standard";
     public static final String NAME = "Standard Expansion";
     public static final String VERSION = "GRADLETOKEN_VERSION";
     public static final String PROXY = "bq_standard.core.proxies";
     public static final String CHANNEL = "BQ_STANDARD";
-    
+
     public static boolean hasNEI = false;
-	
-	@Instance(MODID)
-	public static BQ_Standard instance;
-	
-	@SidedProxy(clientSide = PROXY + ".ClientProxy", serverSide = PROXY + ".CommonProxy")
-	public static CommonProxy proxy;
-	public SimpleNetworkWrapper network;
-	public static Logger logger;
-	
-	public static Item lootChest = new ItemLootChest();
-    
+
+    @Instance(MODID)
+    public static BQ_Standard instance;
+
+    @SidedProxy(clientSide = PROXY + ".ClientProxy", serverSide = PROXY + ".CommonProxy")
+    public static CommonProxy proxy;
+
+    public SimpleNetworkWrapper network;
+    public static Logger logger;
+
+    public static Item lootChest = new ItemLootChest();
+
     @EventHandler
-    public void preInit(FMLPreInitializationEvent event)
-    {
-    	logger = event.getModLog();
-    	network = NetworkRegistry.INSTANCE.newSimpleChannel(CHANNEL);
-    	
-    	ConfigHandler.config = new Configuration(event.getSuggestedConfigurationFile(), true);
-    	ConfigHandler.initConfigs();
-    	
-    	proxy.registerHandlers();
-    	
-    	NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());
+    public void preInit(FMLPreInitializationEvent event) {
+        logger = event.getModLog();
+        network = NetworkRegistry.INSTANCE.newSimpleChannel(CHANNEL);
+
+        ConfigHandler.config = new Configuration(event.getSuggestedConfigurationFile(), true);
+        ConfigHandler.initConfigs();
+
+        proxy.registerHandlers();
+
+        NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());
     }
-    
+
     @EventHandler
-    public void init(FMLInitializationEvent event)
-    {
-    	GameRegistry.registerItem(lootChest, "loot_chest");
-    	
-    	proxy.registerRenderers();
+    public void init(FMLInitializationEvent event) {
+        GameRegistry.registerItem(lootChest, "loot_chest");
+
+        proxy.registerRenderers();
     }
-    
+
     @EventHandler
-    public void postInit(FMLPostInitializationEvent event)
-    {
-        if(Loader.isModLoaded("betterquesting"))
-        {
+    public void postInit(FMLPostInitializationEvent event) {
+        if (Loader.isModLoaded("betterquesting")) {
             proxy.registerExpansion();
         }
-        
+
         hasNEI = Loader.isModLoaded("NotEnoughItems");
     }
-	
-	@EventHandler
-	public void serverStart(FMLServerStartingEvent event)
-	{
-		MinecraftServer server = event.getServer();
-		ICommandManager command = server.getCommandManager();
-		ServerCommandManager manager = (ServerCommandManager) command;
-		
-		manager.registerCommand(new BQS_Commands());
-		
-		LootSaveLoad.INSTANCE.LoadLoot(event.getServer());
-	}
-	
-	@EventHandler
-    public void serverStopped(FMLServerStoppedEvent event)
-    {
+
+    @EventHandler
+    public void serverStart(FMLServerStartingEvent event) {
+        MinecraftServer server = event.getServer();
+        ICommandManager command = server.getCommandManager();
+        ServerCommandManager manager = (ServerCommandManager) command;
+
+        manager.registerCommand(new BQS_Commands());
+
+        LootSaveLoad.INSTANCE.LoadLoot(event.getServer());
+    }
+
+    @EventHandler
+    public void serverStopped(FMLServerStoppedEvent event) {
         LootSaveLoad.INSTANCE.UnloadLoot();
     }
 }
