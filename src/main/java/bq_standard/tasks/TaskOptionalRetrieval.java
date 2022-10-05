@@ -2,9 +2,8 @@ package bq_standard.tasks;
 
 import bq_standard.core.BQ_Standard;
 import bq_standard.tasks.factory.FactoryTaskOptionalRetrieval;
-import net.minecraft.util.ResourceLocation;
-
 import java.util.UUID;
+import net.minecraft.util.ResourceLocation;
 
 public class TaskOptionalRetrieval extends TaskRetrieval {
 

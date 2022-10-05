@@ -13,6 +13,10 @@ import bq_standard.tasks.base.TaskBase;
 import bq_standard.tasks.factory.FactoryTaskScoreboard;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import javax.annotation.Nonnull;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.scoreboard.IScoreObjectiveCriteria;
@@ -22,11 +26,6 @@ import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
 import org.apache.logging.log4j.Level;
-
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 public class TaskScoreboard extends TaskBase implements ITaskTickable {
     // region Properties
@@ -48,7 +47,8 @@ public class TaskScoreboard extends TaskBase implements ITaskTickable {
         conversion = nbt.getFloat("unitConversion");
         suffix = nbt.getString("unitSuffix");
         try {
-            operation = ScoreOperation.valueOf(nbt.hasKey("operation", Constants.NBT.TAG_STRING) ? nbt.getString("operation") : "MORE_OR_EQUAL");
+            operation = ScoreOperation.valueOf(
+                    nbt.hasKey("operation", Constants.NBT.TAG_STRING) ? nbt.getString("operation") : "MORE_OR_EQUAL");
         } catch (Exception e) {
             operation = ScoreOperation.MORE_OR_EQUAL;
         }
@@ -99,7 +99,8 @@ public class TaskScoreboard extends TaskBase implements ITaskTickable {
 
         if (scoreObj == null) {
             try {
-                IScoreObjectiveCriteria criteria = (IScoreObjectiveCriteria) IScoreObjectiveCriteria.field_96643_a.get(type);
+                IScoreObjectiveCriteria criteria =
+                        (IScoreObjectiveCriteria) IScoreObjectiveCriteria.field_96643_a.get(type);
                 criteria = criteria != null ? criteria : new ScoreDummyCriteria(scoreName);
                 scoreObj = board.addScoreObjective(scoreName, criteria);
                 scoreObj.setDisplayName(scoreDisp);
@@ -109,7 +110,8 @@ public class TaskScoreboard extends TaskBase implements ITaskTickable {
             }
         }
 
-        int points = board.func_96529_a(pInfo.PLAYER.getCommandSenderName(), scoreObj).getScorePoints();
+        int points = board.func_96529_a(pInfo.PLAYER.getCommandSenderName(), scoreObj)
+                .getScorePoints();
         ScoreboardBQ.INSTANCE.setScore(pInfo.UUID, scoreName, points);
 
         if (operation.checkValues(points, target)) {

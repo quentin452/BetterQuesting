@@ -1,5 +1,6 @@
 package bq_standard.tasks;
 
+import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api.utils.ItemComparison;
@@ -16,21 +17,24 @@ import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskCrafting;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTBase.NBTPrimitive;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.util.Constants;
-import org.apache.logging.log4j.Level;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.IntSupplier;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTBase.NBTPrimitive;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.stats.StatList;
+import net.minecraft.stats.StatisticsFile;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.util.Constants;
+import org.apache.logging.log4j.Level;
 
 public class TaskCrafting extends TaskProgressableBase<int[]> implements ITaskItemInput {
     // region Properties
@@ -40,12 +44,15 @@ public class TaskCrafting extends TaskProgressableBase<int[]> implements ITaskIt
     public boolean allowAnvil = false;
     public boolean allowSmelt = true;
     public boolean allowCraft = true;
+    public boolean allowCraftedFromStatistics = false;
 
     @Override
     public void readFromNBT(NBTTagCompound nbt) {
         partialMatch = nbt.getBoolean("partialMatch");
         ignoreNBT = nbt.getBoolean("ignoreNBT");
         if (nbt.hasKey("allowCraft")) allowCraft = nbt.getBoolean("allowCraft");
+        if (nbt.hasKey("allowCraftedFromStatistics"))
+            allowCraftedFromStatistics = nbt.getBoolean("allowCraftedFromStatistics");
         if (nbt.hasKey("allowSmelt")) allowSmelt = nbt.getBoolean("allowSmelt");
         if (nbt.hasKey("allowAnvil")) allowAnvil = nbt.getBoolean("allowAnvil");
 
@@ -61,6 +68,7 @@ public class TaskCrafting extends TaskProgressableBase<int[]> implements ITaskIt
         nbt.setBoolean("partialMatch", partialMatch);
         nbt.setBoolean("ignoreNBT", ignoreNBT);
         nbt.setBoolean("allowCraft", allowCraft);
+        nbt.setBoolean("allowCraftedFromStatistics", allowCraftedFromStatistics);
         nbt.setBoolean("allowSmelt", allowSmelt);
         nbt.setBoolean("allowAnvil", allowAnvil);
 
@@ -139,17 +147,43 @@ public class TaskCrafting extends TaskProgressableBase<int[]> implements ITaskIt
             if (isComplete(uuid)) return;
 
             int[] tmp = getUsersProgress(uuid);
+            boolean progressChanged = false;
+            boolean completed = true;
             for (int i = 0; i < requiredItems.size(); i++) {
                 BigItemStack rStack = requiredItems.get(i);
-                if (tmp[i] < rStack.stackSize) return;
+                EntityPlayerMP player;
+                if ((tmp[i] < rStack.stackSize)
+                        && allowCraftedFromStatistics
+                        && (player = QuestingAPI.getPlayer(uuid)) != null) {
+                    StatisticsFile stats = player.func_147099_x();
+                    int itemId = Item.getIdFromItem(rStack.getBaseStack().getItem());
+                    if (itemId < StatList.objectCraftStats.length && StatList.objectCraftStats[itemId] != null) {
+                        // This has a very misleading deobf name, writeStat looks up the given stat in the hashmap and
+                        // returns it as an int.
+                        int alreadyCrafted = stats.writeStat(StatList.objectCraftStats[itemId]);
+                        if (alreadyCrafted > tmp[i]) {
+                            tmp[i] = alreadyCrafted;
+                            progressChanged = true;
+                        }
+                    }
+                }
+                if (tmp[i] < rStack.stackSize) {
+                    completed = false;
+                }
             }
-            setComplete(uuid);
+            if (progressChanged) {
+                setUserProgress(uuid, tmp);
+            }
+            if (completed) {
+                setComplete(uuid);
+            }
         });
 
         pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
     }
 
-    public void onItemCraft(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack, IntSupplier realStackSizeSupplier) {
+    public void onItemCraft(
+            ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack, IntSupplier realStackSizeSupplier) {
         if (!allowCraft) return;
         onItemInternal(pInfo, quest, stack, realStackSizeSupplier);
     }
@@ -168,7 +202,8 @@ public class TaskCrafting extends TaskProgressableBase<int[]> implements ITaskIt
         onItemInternal(pInfo, quest, stack, null);
     }
 
-    private void onItemInternal(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack, IntSupplier realStackSizeSupplier) {
+    private void onItemInternal(
+            ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack, IntSupplier realStackSizeSupplier) {
         // ignore null stack
         // ignore negatively sized stack only if it's indeed the real stack size
         if (stack == null || (stack.stackSize <= 0 && realStackSizeSupplier == null)) return;
@@ -181,7 +216,9 @@ public class TaskCrafting extends TaskProgressableBase<int[]> implements ITaskIt
             final BigItemStack rStack = requiredItems.get(i);
             final int index = i;
 
-            if (ItemComparison.StackMatch(rStack.getBaseStack(), stack, !ignoreNBT, partialMatch) || ItemComparison.OreDictionaryMatch(rStack.getOreIngredient(), rStack.GetTagCompound(), stack, !ignoreNBT, partialMatch)) {
+            if (ItemComparison.StackMatch(rStack.getBaseStack(), stack, !ignoreNBT, partialMatch)
+                    || ItemComparison.OreDictionaryMatch(
+                            rStack.getOreIngredient(), rStack.GetTagCompound(), stack, !ignoreNBT, partialMatch)) {
                 int realStackSize;
                 if (realStackSizeCache < 0) {
                     realStackSize = realStackSizeSupplier.getAsInt();
@@ -193,8 +230,9 @@ public class TaskCrafting extends TaskProgressableBase<int[]> implements ITaskIt
                     realStackSize = realStackSizeCache;
                 }
                 progress.stream()
-                    .filter(e -> e.getSecond()[index] < rStack.stackSize)
-                    .forEach(e -> e.getSecond()[index] = Math.min(e.getSecond()[index] + realStackSize, rStack.stackSize));
+                        .filter(e -> e.getSecond()[index] < rStack.stackSize)
+                        .forEach(e -> e.getSecond()[index] =
+                                Math.min(e.getSecond()[index] + realStackSize, rStack.stackSize));
                 changed = true;
             }
         }

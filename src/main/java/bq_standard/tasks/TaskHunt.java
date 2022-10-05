@@ -14,6 +14,9 @@ import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskHunt;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
@@ -21,10 +24,6 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
 
 public class TaskHunt extends TaskProgressableBase<Integer> {
     // region Properties
@@ -104,7 +103,6 @@ public class TaskHunt extends TaskProgressableBase<Integer> {
     }
     // endregion Progress
 
-
     @Override
     public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {
         final List<Tuple2<UUID, Integer>> progress = getBulkProgress(pInfo.ALL_UUIDS);
@@ -117,7 +115,8 @@ public class TaskHunt extends TaskProgressableBase<Integer> {
     }
 
     @SuppressWarnings({"unchecked", "DuplicatedCode"})
-    public void onKilledByPlayer(ParticipantInfo pInfo, DBEntry<IQuest> quest, EntityLivingBase entity, DamageSource source) {
+    public void onKilledByPlayer(
+            ParticipantInfo pInfo, DBEntry<IQuest> quest, EntityLivingBase entity, DamageSource source) {
         if (damageType.length() > 0 && (source == null || !damageType.equalsIgnoreCase(source.damageType))) return;
 
         Class<? extends Entity> subject = entity.getClass();

@@ -11,6 +11,10 @@ import bq_standard.tasks.factory.FactoryTaskLocation;
 import codechicken.lib.math.MathHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import javax.annotation.Nonnull;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -23,11 +27,6 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.WorldProvider;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.util.Constants;
-
-import javax.annotation.Nonnull;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
 
 public class TaskLocation extends TaskBase implements ITaskTickable {
     // region Static
@@ -140,13 +139,29 @@ public class TaskLocation extends TaskBase implements ITaskTickable {
         boolean flag = false;
 
         if (playerMP.dimension == dim && (range <= 0 || getDistance(playerMP) <= range)) {
-            if (biome >= 0 && biome != playerMP.getServerForPlayer().getBiomeGenForCoords(MathHelper.floor_double(playerMP.posX), MathHelper.floor_double(playerMP.posZ)).biomeID) {
+            if (biome >= 0
+                    && biome
+                            != playerMP.getServerForPlayer()
+                                    .getBiomeGenForCoords(
+                                            MathHelper.floor_double(playerMP.posX),
+                                            MathHelper.floor_double(playerMP.posZ))
+                                    .biomeID) {
                 if (!invert) return;
-            } else if (!StringUtils.isNullOrEmpty(structure) && playerMP.getServerForPlayer().getChunkProvider().func_147416_a(playerMP.getServerForPlayer(), structure, MathHelper.floor_double(playerMP.posX), MathHelper.floor_double(playerMP.posY), MathHelper.floor_double(playerMP.posZ)) == null) {
+            } else if (!StringUtils.isNullOrEmpty(structure)
+                    && playerMP.getServerForPlayer()
+                                    .getChunkProvider()
+                                    .func_147416_a(
+                                            playerMP.getServerForPlayer(),
+                                            structure,
+                                            MathHelper.floor_double(playerMP.posX),
+                                            MathHelper.floor_double(playerMP.posY),
+                                            MathHelper.floor_double(playerMP.posZ))
+                            == null) {
                 if (!invert) return;
             } else if (visible && range > 0) // Do not do ray casting with infinite range!
             {
-                Vec3 pPos = Vec3.createVectorHelper(playerMP.posX, playerMP.posY + playerMP.getEyeHeight(), playerMP.posZ);
+                Vec3 pPos =
+                        Vec3.createVectorHelper(playerMP.posX, playerMP.posY + playerMP.getEyeHeight(), playerMP.posZ);
                 Vec3 tPos = Vec3.createVectorHelper(x, y, z);
                 MovingObjectPosition mop = playerMP.worldObj.func_147447_a(pPos, tPos, false, true, false);
 

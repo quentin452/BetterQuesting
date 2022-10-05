@@ -14,8 +14,7 @@ public final class PanelItemSlotBuilder {
     private boolean showCount, oreDict;
 
     @SuppressWarnings("unused")
-    PanelItemSlotBuilder() {
-    }
+    PanelItemSlotBuilder() {}
 
     private PanelItemSlotBuilder(BigItemStack value, IGuiRect rectangle) {
         this.value = value;
@@ -45,7 +44,8 @@ public final class PanelItemSlotBuilder {
 
     public PanelItemSlot build() {
         PanelItemSlot slot;
-        if (BQ_Standard.hasNEI && value != null) slot = new PanelInteractiveItemSlot(rectangle, id, value, showCount, oreDict);
+        if (BQ_Standard.hasNEI && value != null)
+            slot = new PanelInteractiveItemSlot(rectangle, id, value, showCount, oreDict);
         else slot = new PanelItemSlot(rectangle, id, value, showCount, oreDict);
 
         return slot;

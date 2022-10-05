@@ -9,48 +9,40 @@ import net.minecraft.world.World;
 /**
  * Elevates the player's privileges to OP level for use in command rewards
  */
-public class AdminExecute implements ICommandSender
-{
-	private final EntityPlayer player;
-	
-	public AdminExecute(EntityPlayer player)
-	{
-		this.player = player;
-	}
+public class AdminExecute implements ICommandSender {
+    private final EntityPlayer player;
 
-	@Override
-	public String getCommandSenderName()
-	{
-		return player.getCommandSenderName();
-	}
+    public AdminExecute(EntityPlayer player) {
+        this.player = player;
+    }
 
-	@Override
-	public IChatComponent func_145748_c_()
-	{
-		return player.func_145748_c_();
-	}
+    @Override
+    public String getCommandSenderName() {
+        return player.getCommandSenderName();
+    }
 
-	@Override
-	public void addChatMessage(IChatComponent p_145747_1_)
-	{
-		player.addChatMessage(p_145747_1_);
-	}
+    @Override
+    public IChatComponent func_145748_c_() {
+        return player.func_145748_c_();
+    }
 
-	@Override
-	public boolean canCommandSenderUseCommand(int p_70003_1_, String p_70003_2_)
-	{
-		return true;
-	}
+    @Override
+    public void addChatMessage(IChatComponent p_145747_1_) {
+        player.addChatMessage(p_145747_1_);
+    }
 
-	@Override
-	public ChunkCoordinates getPlayerCoordinates()
-	{
-		return player.getPlayerCoordinates();
-	}
+    @Override
+    public boolean canCommandSenderUseCommand(int p_70003_1_, String p_70003_2_) {
+        return true;
+    }
 
-	@Override
-	public World getEntityWorld()
-	{
-		return player.getEntityWorld();
-	}
+    @Override
+    public ChunkCoordinates getPlayerCoordinates() {
+        return player.getPlayerCoordinates();
+    }
+
+    @Override
+    public World getEntityWorld() {
+        return player.getEntityWorld();
+    }
 }

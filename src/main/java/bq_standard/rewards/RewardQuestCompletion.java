@@ -9,63 +9,57 @@ import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.api2.storage.DBEntry;
 import bq_standard.client.gui.rewards.PanelRewardQuestCompletion;
 import bq_standard.rewards.factory.FactoryRewardQuestCompletion;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import java.util.UUID;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
-import java.util.UUID;
-
 public class RewardQuestCompletion implements IReward {
-	public int questNum = -1;
-	
-	@Override
-	public ResourceLocation getFactoryID() {
-		return FactoryRewardQuestCompletion.INSTANCE.getRegistryName();
-	}
-	
-	@Override
-	public String getUnlocalisedName() {
-		return "bq_standard.reward.questcompletion";
-	}
-	
-	@Override
-	public boolean canClaim(EntityPlayer player, DBEntry<IQuest> quest)	{
-		return true;
-	}
+    public int questNum = -1;
 
-	@Override
-	public void claimReward(EntityPlayer player, DBEntry<IQuest> quest)	{
-		if (questNum == -1)
-			return;
-		IQuest targetQuest = QuestingAPI.getAPI(ApiReference.QUEST_DB).getValue(questNum);
-		if (targetQuest == null)
-			return;
-		UUID uuid = QuestingAPI.getQuestingUUID(player);
-		if (!targetQuest.isComplete(uuid))
-			targetQuest.setComplete(uuid, System.currentTimeMillis());
-	}
-	
-	@Override
-	public void readFromNBT(NBTTagCompound nbt) {
-		questNum = nbt.getInteger("quest");
-	}
-	
-	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
-		nbt.setInteger("quest", questNum);
-		return nbt;
-	}
+    @Override
+    public ResourceLocation getFactoryID() {
+        return FactoryRewardQuestCompletion.INSTANCE.getRegistryName();
+    }
 
-	@Override
-	public IGuiPanel getRewardGui(IGuiRect rect, DBEntry<IQuest> quest) {
-	    return new PanelRewardQuestCompletion(rect, this);
-	}
-	
-	@Override
-	public GuiScreen getRewardEditor(GuiScreen screen, DBEntry<IQuest> quest) {
-		return null;
-	}
+    @Override
+    public String getUnlocalisedName() {
+        return "bq_standard.reward.questcompletion";
+    }
+
+    @Override
+    public boolean canClaim(EntityPlayer player, DBEntry<IQuest> quest) {
+        return true;
+    }
+
+    @Override
+    public void claimReward(EntityPlayer player, DBEntry<IQuest> quest) {
+        if (questNum == -1) return;
+        IQuest targetQuest = QuestingAPI.getAPI(ApiReference.QUEST_DB).getValue(questNum);
+        if (targetQuest == null) return;
+        UUID uuid = QuestingAPI.getQuestingUUID(player);
+        if (!targetQuest.isComplete(uuid)) targetQuest.setComplete(uuid, System.currentTimeMillis());
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound nbt) {
+        questNum = nbt.getInteger("quest");
+    }
+
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+        nbt.setInteger("quest", questNum);
+        return nbt;
+    }
+
+    @Override
+    public IGuiPanel getRewardGui(IGuiRect rect, DBEntry<IQuest> quest) {
+        return new PanelRewardQuestCompletion(rect, this);
+    }
+
+    @Override
+    public GuiScreen getRewardEditor(GuiScreen screen, DBEntry<IQuest> quest) {
+        return null;
+    }
 }

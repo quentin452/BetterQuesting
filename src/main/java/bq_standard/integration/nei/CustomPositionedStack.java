@@ -1,7 +1,6 @@
 package bq_standard.integration.nei;
 
 import codechicken.nei.PositionedStack;
-
 import java.util.Collections;
 import java.util.List;
 

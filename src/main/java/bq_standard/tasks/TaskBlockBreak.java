@@ -14,6 +14,10 @@ import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskBlockBreak;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.init.Blocks;
@@ -26,11 +30,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.oredict.OreDictionary;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
 
 public class TaskBlockBreak extends TaskProgressableBase<int[]> {
     // region Properties
@@ -165,11 +164,15 @@ public class TaskBlockBreak extends TaskProgressableBase<int[]> {
         for (int i = 0; i < blockTypes.size(); i++) {
             NbtBlockType targetBlock = blockTypes.get(i);
 
-            int tmpMeta = (targetBlock.m < 0 || targetBlock.m == OreDictionary.WILDCARD_VALUE) ? OreDictionary.WILDCARD_VALUE : meta;
-            boolean oreMatch = targetBlock.oreDict.length() > 0 && OreDictionary.getOres(targetBlock.oreDict).contains(new ItemStack(block, 1, tmpMeta));
+            int tmpMeta = (targetBlock.m < 0 || targetBlock.m == OreDictionary.WILDCARD_VALUE)
+                    ? OreDictionary.WILDCARD_VALUE
+                    : meta;
+            boolean oreMatch = targetBlock.oreDict.length() > 0
+                    && OreDictionary.getOres(targetBlock.oreDict).contains(new ItemStack(block, 1, tmpMeta));
             final int index = i;
 
-            if ((oreMatch || (block == targetBlock.b && (targetBlock.m < 0 || meta == targetBlock.m))) && ItemComparison.CompareNBTTag(targetBlock.tags, tags, true)) {
+            if ((oreMatch || (block == targetBlock.b && (targetBlock.m < 0 || meta == targetBlock.m)))
+                    && ItemComparison.CompareNBTTag(targetBlock.tags, tags, true)) {
                 progress.forEach((entry) -> {
                     if (entry.getSecond()[index] >= targetBlock.n) return;
                     entry.getSecond()[index]++;

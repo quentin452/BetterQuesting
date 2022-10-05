@@ -23,8 +23,7 @@ public class TaskCheckbox extends TaskBase {
     }
 
     @Override
-    public void readFromNBT(NBTTagCompound nbt) {
-    }
+    public void readFromNBT(NBTTagCompound nbt) {}
     // endregion Properties
 
     // region Basic
@@ -52,6 +51,5 @@ public class TaskCheckbox extends TaskBase {
     // endregion Basic
 
     @Override
-    public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {
-    }
+    public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {}
 }
