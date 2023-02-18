@@ -6,7 +6,8 @@ import betterquesting.api.enums.EnumQuestVisibility;
 import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.storage.BQ_Settings;
-import betterquesting.api2.storage.DBEntry;
+import betterquesting.api.utils.NBTConverter;
+import betterquesting.api2.storage.IUuidDatabase;
 import betterquesting.network.handlers.NetCacheSync;
 import betterquesting.questing.QuestDatabase;
 import net.minecraft.entity.Entity;
@@ -17,62 +18,56 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
+import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 
 public class QuestCache implements IExtendedEntityProperties
 {
     public static final ResourceLocation LOC_QUEST_CACHE = new ResourceLocation("betterquesting", "quest_cache");
     
     // Quests that are visible to the player
-    private final TreeSet<Integer> visibleQuests = new TreeSet<>();
+    private final HashSet<UUID> visibleQuests = new HashSet<>();
     
     // Quests that are currently being undertaken. NOTE: Quests can be locked but still processing data if configured to do so
-    private final TreeSet<Integer> activeQuests = new TreeSet<>();
+    private final HashSet<UUID> activeQuests = new HashSet<>();
     
     // Quests and their scheduled time of being reset
-    private final TreeSet<QResetTime> resetSchedule = new TreeSet<>((o1, o2) -> o1.questID == o2.questID ? 0 : Long.compare(o1.time, o2.time));
+    private final TreeSet<QResetTime> resetSchedule = new TreeSet<>((o1, o2) -> o1.questID.equals(o2.questID) ? 0 : Long.compare(o1.time, o2.time));
     
     // Quests with pending auto claims (usually should be empty unless a condition needs to be met)
-    private final TreeSet<Integer> autoClaims = new TreeSet<>();
+    private final HashSet<UUID> autoClaims = new HashSet<>();
     
     // Quests that need to be sent to the client to update progression (NOT for edits. Handle that elsewhere)
-    private final TreeSet<Integer> markedDirty = new TreeSet<>();
+    private final HashSet<UUID> markedDirty = new HashSet<>();
     
     @Override
     public void init(Entity entity, World world)
     {
     }
     
-    public synchronized int[] getActiveQuests()
+    public synchronized Set<UUID> getActiveQuests()
     {
-        // Probably a better way of doing this but this will do for now
-        int i = 0;
-        int[] aryAct = new int[activeQuests.size()];
-        for(Integer q : activeQuests) aryAct[i++] = q;
-        return aryAct;
+        return activeQuests;
     }
     
-    public synchronized int[] getVisibleQuests()
+    public synchronized Set<UUID> getVisibleQuests()
     {
-        // Probably a better way of doing this but this will do for now
-        int i = 0;
-        int[] aryVis = new int[visibleQuests.size()];
-        for(Integer q : visibleQuests) aryVis[i++] = q;
-        return aryVis;
+        return visibleQuests;
     }
     
-    public synchronized int[] getPendingAutoClaims()
+    public synchronized Set<UUID> getPendingAutoClaims()
     {
-        // Probably a better way of doing this but this will do for now
-        int i = 0;
-        int[] aryAC = new int[autoClaims.size()];
-        for(Integer q : autoClaims) aryAC[i++] = q;
-        return aryAC;
+        return autoClaims;
     }
     
     public synchronized QResetTime[] getScheduledResets() // Already sorted by time
@@ -80,15 +75,13 @@ public class QuestCache implements IExtendedEntityProperties
         return resetSchedule.toArray(new QResetTime[0]);
     }
     
-    public synchronized void markQuestDirty(int questID)
+    public synchronized void markQuestDirty(UUID questID)
     {
-        if(questID < 0) return;
         markedDirty.add(questID);
     }
     
-    public synchronized void markQuestClean(int questID)
+    public synchronized void markQuestClean(UUID questID)
     {
-        if(questID < 0) return;
         markedDirty.remove(questID);
     }
     
@@ -97,13 +90,9 @@ public class QuestCache implements IExtendedEntityProperties
         markedDirty.clear();
     }
     
-    public synchronized int[] getDirtyQuests()
+    public synchronized Set<UUID> getDirtyQuests()
     {
-        // Probably a better way of doing this but this will do for now
-        int i = 0;
-        int[] aryMD = new int[markedDirty.size()];
-        for(Integer q : markedDirty) aryMD[i++] = q;
-        return aryMD;
+        return markedDirty;
     }
     
     // TODO: Ensure this is thread safe because we're likely going to run this in the background
@@ -111,44 +100,44 @@ public class QuestCache implements IExtendedEntityProperties
     public synchronized void updateCache(@Nonnull EntityPlayer player)
     {
         UUID uuid = QuestingAPI.getQuestingUUID(player);
-        List<DBEntry<IQuest>> questDB = QuestingAPI.getAPI(ApiReference.QUEST_DB).getEntries();
-        
-        List<Integer> tmpVisible = new ArrayList<>();
-        List<Integer> tmpActive = new ArrayList<>();
+        Set<Map.Entry<UUID, IQuest>> questDB = QuestingAPI.getAPI(ApiReference.QUEST_DB).entrySet();
+
+        List<UUID> tmpVisible = new ArrayList<>();
+        List<UUID> tmpActive = new ArrayList<>();
         List<QResetTime> tmpReset = new ArrayList<>();
-        List<Integer> tmpAutoClaim = new ArrayList<>();
+        List<UUID> tmpAutoClaim = new ArrayList<>();
 
         long currentTime = System.currentTimeMillis();
-        for(DBEntry<IQuest> entry : questDB)
+        for (Map.Entry<UUID, IQuest> entry : questDB)
         {
-            if(entry.getValue().isUnlocked(uuid) || entry.getValue().getProperty(NativeProps.LOCKED_PROGRESS)) // Unlocked or actively processing progression data
+            if (entry.getValue().isUnlocked(uuid) || entry.getValue().getProperty(NativeProps.LOCKED_PROGRESS)) // Unlocked or actively processing progression data
             {
                 int repeat = entry.getValue().getProperty(NativeProps.REPEAT_TIME);
                 NBTTagCompound ue = entry.getValue().getCompletionInfo(uuid);
                 
-                if((ue == null && entry.getValue().getTasks().size() <= 0) || entry.getValue().canSubmit(player)) // Can be active without completion in the case of locked progress. Also account for taskless quests
+                if ((ue == null && entry.getValue().getTasks().size() <= 0) || entry.getValue().canSubmit(player)) // Can be active without completion in the case of locked progress. Also account for taskless quests
                 {
-                    tmpActive.add(entry.getID());
-                } else if(ue != null) // These conditions only trigger after first completion
+                    tmpActive.add(entry.getKey());
+                } else if (ue != null) // These conditions only trigger after first completion
                 {
-                    if(repeat >= 0 && entry.getValue().hasClaimed(uuid))
+                    if (repeat >= 0 && entry.getValue().hasClaimed(uuid))
                     {
                         long altTime = ue.getLong("timestamp");
                         if (altTime > currentTime) altTime = currentTime;
                         if (repeat > 1 && !entry.getValue().getProperty(NativeProps.REPEAT_REL)) altTime -= (altTime % repeat);
-                        tmpReset.add(new QResetTime(entry.getID(), altTime + (repeat * 50)));
+                        tmpReset.add(new QResetTime(entry.getKey(), altTime + (repeat * 50)));
                     }
                     
-                    if(!entry.getValue().hasClaimed(uuid) && entry.getValue().getProperty(NativeProps.AUTO_CLAIM))
+                    if (!entry.getValue().hasClaimed(uuid) && entry.getValue().getProperty(NativeProps.AUTO_CLAIM))
                     {
-                        tmpAutoClaim.add(entry.getID());
+                        tmpAutoClaim.add(entry.getKey());
                     }
                 }
             }
             
-            if(isQuestShown(entry.getValue(), uuid, player))
+            if (isQuestShown(entry.getValue(), uuid, player))
             {
-                tmpVisible.add(entry.getID());
+                tmpVisible.add(entry.getKey());
             }
         }
         
@@ -164,22 +153,25 @@ public class QuestCache implements IExtendedEntityProperties
         autoClaims.clear();
         autoClaims.addAll(tmpAutoClaim);
         
-        if(player instanceof EntityPlayerMP) NetCacheSync.sendSync((EntityPlayerMP)player);
+        if (player instanceof EntityPlayerMP)
+        {
+            NetCacheSync.sendSync((EntityPlayerMP) player);
+        }
     }
     
     @Override
     public synchronized void saveNBTData(NBTTagCompound tags)
     {
-        tags.setIntArray("visibleQuests", getVisibleQuests());
-        tags.setIntArray("activeQuests", getActiveQuests());
-        tags.setIntArray("autoClaims", getPendingAutoClaims());
-        tags.setIntArray("markedDirty", getDirtyQuests());
+
+        tags.setTag("visibleQuests", NBTConverter.writeQuestIds(getVisibleQuests()));
+        tags.setTag("activeQuests", NBTConverter.writeQuestIds(getActiveQuests()));
+        tags.setTag("autoClaims", NBTConverter.writeQuestIds(getPendingAutoClaims()));
+        tags.setTag("markedDirty", NBTConverter.writeQuestIds(getDirtyQuests()));
         
         NBTTagList tagSchedule = new NBTTagList();
-        for(QResetTime entry : getScheduledResets())
+        for (QResetTime entry : getScheduledResets())
         {
-            NBTTagCompound tagEntry = new NBTTagCompound();
-            tagEntry.setInteger("quest", entry.questID);
+            NBTTagCompound tagEntry = NBTConverter.writeQuestId(entry.questID);
             tagEntry.setLong("time", entry.time);
             tagSchedule.appendTag(tagEntry);
         }
@@ -194,29 +186,42 @@ public class QuestCache implements IExtendedEntityProperties
         resetSchedule.clear();
         autoClaims.clear();
         markedDirty.clear();
-        
-        for(int i : nbt.getIntArray("visibleQuests")) visibleQuests.add(i);
-        for(int i : nbt.getIntArray("activeQuests")) activeQuests.add(i);
-        for(int i : nbt.getIntArray("autoClaims")) autoClaims.add(i);
-        for(int i : nbt.getIntArray("markedDirty")) markedDirty.add(i);
-        
-        NBTTagList tagList = nbt.getTagList("resetSchedule", 10);
-        for(int i = 0; i < tagList.tagCount(); i++)
+
+        BiConsumer<String, Set<UUID>> handleTag =
+                (tagName, map) -> {
+                    if (nbt.func_150299_b(tagName) == Constants.NBT.TAG_LIST)
+                    {
+                        map.addAll(NBTConverter.readQuestIds(nbt, tagName));
+                    }
+                    else
+                    {
+                        // TODO is this NBT ever persisted? We only need this block if it is.
+                        Arrays.stream(nbt.getIntArray(tagName))
+                                .mapToObj(IUuidDatabase::convertLegacyId)
+                                .forEach(map::add);
+                    }
+                };
+
+        handleTag.accept("visibleQuests", visibleQuests);
+        handleTag.accept("activeQuests", activeQuests);
+        handleTag.accept("autoClaims", autoClaims);
+        handleTag.accept("markedDirty", markedDirty);
+
+        NBTTagList tagList = nbt.getTagList("resetSchedule", Constants.NBT.TAG_COMPOUND);
+        for (int i = 0; i < tagList.tagCount(); i++)
         {
             NBTTagCompound tagEntry = tagList.getCompoundTagAt(i);
-            if(tagEntry.hasKey("quest", 99))
-            {
-                resetSchedule.add(new QResetTime(tagEntry.getInteger("quest"), tagEntry.getLong("time")));
-            }
+            NBTConverter.tryReadQuestId(tagEntry).ifPresent(
+                    uuid -> resetSchedule.add(new QResetTime(uuid, tagEntry.getLong("time"))));
         }
     }
     
     public class QResetTime implements Comparable<QResetTime>
     {
-        public final int questID;
+        public final UUID questID;
         public final long time;
         
-        private QResetTime(int questID, long time)
+        private QResetTime(UUID questID, long time)
         {
             this.questID = questID;
             this.time = time;
@@ -231,8 +236,11 @@ public class QuestCache implements IExtendedEntityProperties
         @Override
         public boolean equals(Object o)
         {
-            if(!(o instanceof QResetTime)) return false;
-            return ((QResetTime)o).questID == questID;
+            if (!(o instanceof QResetTime))
+            {
+                return false;
+            }
+            return ((QResetTime) o).questID.equals(questID);
         }
     }
     
@@ -240,68 +248,59 @@ public class QuestCache implements IExtendedEntityProperties
     // TODO: Also make this thread safe
     public static boolean isQuestShown(IQuest quest, UUID uuid, EntityPlayer player)
     {
-        if(quest == null || uuid == null)
+        if (quest == null || uuid == null)
         {
             return false;
         }
         
         EnumQuestVisibility vis = quest.getProperty(NativeProps.VISIBILITY);
         
-        if(
+        if (
             QuestingAPI.getAPI(ApiReference.SETTINGS).canUserEdit(player)
             || vis == EnumQuestVisibility.ALWAYS) // Always shown or in edit mode
         {
             return true;
-        } else if(vis == EnumQuestVisibility.HIDDEN)
+        }
+        else if (vis == EnumQuestVisibility.HIDDEN)
         {
             return false;
-        } else if(vis == EnumQuestVisibility.SECRET)
+        }
+        else if (vis == EnumQuestVisibility.SECRET)
         {
             return quest.isComplete(uuid) || quest.isUnlocked(uuid);
-        } else if(BQ_Settings.viewMode)
+        }
+        else if (BQ_Settings.viewMode)
         {
             return true;
-        } else if(vis == EnumQuestVisibility.UNLOCKED)
+        }
+        else if (vis == EnumQuestVisibility.UNLOCKED)
         {
             return quest.isComplete(uuid) || quest.isUnlocked(uuid);
-        } else if(vis == EnumQuestVisibility.NORMAL)
+        }
+        else if (vis == EnumQuestVisibility.NORMAL)
         {
-            if(quest.isComplete(uuid) || quest.isUnlocked(uuid)) // Complete or pending
+            if (quest.isComplete(uuid) || quest.isUnlocked(uuid)) // Complete or pending
             {
                 return true;
             }
             
             // Previous quest is underway and this one is visible but still locked (foreshadowing)
-            for(DBEntry<IQuest> q : QuestDatabase.INSTANCE.bulkLookup(quest.getRequirements()))
-            {
-                if(!q.getValue().isUnlocked(uuid))
-                {
-                    return false;
-                }
-            }
-            
-            return true;
-        } else if(vis == EnumQuestVisibility.COMPLETED)
+            return QuestDatabase.INSTANCE.filterKeys(quest.getRequirements()).values().stream()
+                    .allMatch(q -> q.isUnlocked(uuid));
+        }
+        else if (vis == EnumQuestVisibility.COMPLETED)
         {
             return quest.isComplete(uuid);
-        } else if(vis == EnumQuestVisibility.CHAIN)
+        }
+        else if (vis == EnumQuestVisibility.CHAIN)
         {
-            if(quest.getRequirements().length <= 0)
+            if (quest.getRequirements().isEmpty())
             {
                 return true;
             }
-            
-            for(DBEntry<IQuest> q : QuestDatabase.INSTANCE.bulkLookup(quest.getRequirements()))
-            {
-                if(q == null) return true;
-                
-                if(isQuestShown(q.getValue(), uuid, player))
-                {
-                    return true;
-                }
-            }
-            
-            return false;
+
+            return QuestDatabase.INSTANCE.filterKeys(quest.getRequirements()).values().stream()
+                    .anyMatch(q -> isQuestShown(q, uuid, player));
         }
         
         return true;
