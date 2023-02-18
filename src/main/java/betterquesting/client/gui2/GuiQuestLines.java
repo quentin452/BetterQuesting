@@ -55,10 +55,15 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.config.Configuration;
 import org.lwjgl.util.vector.Vector4f;
 
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.util.*;
+import java.util.List;
 
 import static betterquesting.api.storage.BQ_Settings.alwaysDrawImplicit;
 
@@ -374,15 +379,35 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
                     boolean questExistsUnderMouse = cvQuest.getButtonAt(mx, my) != null;
 
                     if (questExistsUnderMouse) {
+                        UUID questId = cvQuest.getButtonAt(mx, my).getStoredValue().getKey();
                         int maxWidth = questExistsUnderMouse ? RenderUtils.getStringWidth(QuestTranslation.translate("betterquesting.btn.share_quest"), fr) : 0;
 
                         PopContextMenu popup = new PopContextMenu(new GuiRectangle(mx, my, maxWidth + 12, questExistsUnderMouse ? 48 : 16), true);
-
                         Runnable questSharer = () -> {
-                            mc.thePlayer.sendChatMessage("betterquesting.msg.sharequest:" + cvQuest.getButtonAt(mx, my).getStoredValue().getKey());
+                            mc.thePlayer.sendChatMessage("betterquesting.msg.sharequest:" + questId);
                             mc.displayGuiScreen(null);
                         };
                         popup.addButton(QuestTranslation.translate("betterquesting.btn.share_quest"), null, questSharer);
+
+                        Runnable copyQuestId = () -> {
+                            StringSelection stringToCopy = new StringSelection(questId.toString());
+                            try {
+                                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringToCopy, null);
+                                mc.thePlayer.addChatMessage(
+                                        new ChatComponentText(
+                                                QuestTranslation.translate("betterquesting.msg.copy_quest_copied")));
+                                mc.thePlayer.addChatMessage(
+                                        new ChatComponentText(
+                                                "  " + EnumChatFormatting.AQUA + questId));
+                            } catch (IllegalStateException e) {
+                                mc.thePlayer.addChatMessage(
+                                        new ChatComponentText(
+                                                QuestTranslation.translate("betterquesting.msg.copy_quest_failed")));
+                            }
+                            closePopup();
+                        };
+                        popup.addButton(QuestTranslation.translate("betterquesting.btn.copy_quest"), null, copyQuestId);
+
                         openPopup(popup);
                         return true;
                     }
