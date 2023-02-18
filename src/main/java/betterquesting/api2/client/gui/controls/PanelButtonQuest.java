@@ -151,7 +151,7 @@ public class PanelButtonQuest extends PanelButtonStorage<Map.Entry<UUID, IQuest>
 			list.add(ChatFormatting.RED + "" + ChatFormatting.UNDERLINE + QuestTranslation.translate("betterquesting.tooltip.requires") + " (" + quest.getProperty(NativeProps.LOGIC_QUEST).toString().toUpperCase() + ")");
 
             // TODO: Make this lookup unnecessary
-            QuestDatabase.INSTANCE.filterKeys(quest.getRequirements()).values().stream()
+            QuestDatabase.INSTANCE.getAll(quest.getRequirements())
                     .filter(q -> !q.isComplete(playerID))
                     .forEach(q -> list.add(ChatFormatting.RED + "- " + QuestTranslation.translate(q.getProperty(NativeProps.NAME))));
 		} else

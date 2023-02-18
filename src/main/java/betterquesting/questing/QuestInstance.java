@@ -310,7 +310,7 @@ public class QuestInstance implements IQuest
         }
 
         int complete =
-                (int) QuestDatabase.INSTANCE.filterKeys(preRequisites).values().stream()
+                (int) QuestDatabase.INSTANCE.getAll(preRequisites)
                         .filter(quest -> quest.isComplete(uuid))
                         .count();
 		return qInfo.getProperty(NativeProps.LOGIC_QUEST).getResult(complete, preRequisites.size());
@@ -353,7 +353,7 @@ public class QuestInstance implements IQuest
 		if (questLogic.isTrivial()) return true;
 
 		int complete =
-                (int) QuestDatabase.INSTANCE.filterKeys(preRequisites).values().stream()
+                (int) QuestDatabase.INSTANCE.getAll(preRequisites)
                         .filter(quest -> quest.isComplete(uuid))
                         .count();
 		return questLogic.isUnlockable(complete, preRequisites.size());

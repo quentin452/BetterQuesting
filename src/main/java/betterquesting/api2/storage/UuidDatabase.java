@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** Database that uses randomly-generated UUIDs as keys. */
 public class UuidDatabase<T> implements IUuidDatabase<T> {
@@ -31,8 +34,15 @@ public class UuidDatabase<T> implements IUuidDatabase<T> {
     }
 
     @Override
-    public BiMap<UUID, T> filterKeys(Collection<UUID> keys) {
-        return Maps.filterKeys(database, keys::contains);
+    public Stream<T> getAll(Collection<UUID> keys) {
+        return keys.stream().distinct().filter(database::containsKey).map(database::get);
+    }
+
+    @Override
+    public Map<UUID, T> filterKeys(Collection<UUID> keys) {
+        return keys.stream().distinct()
+                .filter(database::containsKey)
+                .collect(Collectors.toMap(Function.identity(), database::get));
     }
 
     @Override

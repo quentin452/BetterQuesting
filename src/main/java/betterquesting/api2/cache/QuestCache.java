@@ -285,7 +285,7 @@ public class QuestCache implements IExtendedEntityProperties
             }
             
             // Previous quest is underway and this one is visible but still locked (foreshadowing)
-            return QuestDatabase.INSTANCE.filterKeys(quest.getRequirements()).values().stream()
+            return QuestDatabase.INSTANCE.getAll(quest.getRequirements())
                     .allMatch(q -> q.isUnlocked(uuid));
         }
         else if (vis == EnumQuestVisibility.COMPLETED)
@@ -299,7 +299,7 @@ public class QuestCache implements IExtendedEntityProperties
                 return true;
             }
 
-            return QuestDatabase.INSTANCE.filterKeys(quest.getRequirements()).values().stream()
+            return QuestDatabase.INSTANCE.getAll(quest.getRequirements())
                     .anyMatch(q -> isQuestShown(q, uuid, player));
         }
         

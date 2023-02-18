@@ -87,7 +87,7 @@ public class NetQuestAction
     
     public static void claimQuest(Collection<UUID> questIDs, EntityPlayerMP player)
     {
-        QuestDatabase.INSTANCE.filterKeys(questIDs).values().stream()
+        QuestDatabase.INSTANCE.getAll(questIDs)
                 .filter(q -> q.canClaim(player))
                 .forEach(q -> q.claimReward(player));
     }

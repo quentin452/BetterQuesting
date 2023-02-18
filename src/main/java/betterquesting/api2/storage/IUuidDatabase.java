@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiPredicate;
+import java.util.stream.Stream;
 
 /** Database that uses randomly-generated UUIDs as keys. */
 public interface IUuidDatabase<T> extends BiMap<UUID, T> {
@@ -24,11 +25,13 @@ public interface IUuidDatabase<T> extends BiMap<UUID, T> {
     @Nullable
     UUID lookupKey(T value);
 
-    Map<UUID, T> filterKeys(Collection<UUID> values);
+    Stream<T> getAll(Collection<UUID> keys);
 
-    Map<UUID, T> filterValues(Collection<T> values);
+    Map<UUID, T> filterKeys(Collection<UUID> keys);
 
-    Map<UUID, T> filterEntries(BiPredicate<UUID, T> filter);
+    BiMap<UUID, T> filterValues(Collection<T> values);
+
+    BiMap<UUID, T> filterEntries(BiPredicate<UUID, T> filter);
 
     /**
      * Removes {@code value} from the database, and returns its corresponding key.
