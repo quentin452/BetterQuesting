@@ -127,7 +127,7 @@ public class QuestCommandDefaults extends QuestCommandBase
 				}
 				
                 NetSettingSync.sendSync(null);
-                NetQuestSync.quickSync(-1, true, true);
+                NetQuestSync.quickSync(null, true, true);
                 NetChapterSync.sendSync(null, null);
                 SaveLoadHandler.INSTANCE.markDirty();
 			} else

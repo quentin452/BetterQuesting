@@ -1,7 +1,6 @@
 package betterquesting.commands;
 
 import betterquesting.api.questing.IQuest;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.network.handlers.NetQuestSync;
 import betterquesting.questing.QuestDatabase;
 import com.google.common.collect.Lists;
@@ -14,11 +13,11 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerProfileCache;
 import net.minecraft.util.ChatComponentText;
-import net.minecraftforge.common.UsernameCache;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -59,36 +58,35 @@ public class BQ_CopyProgress extends CommandBase {
 
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
-        if(args.length == 0 || args.length > 2) {
+        if (args.length == 0 || args.length > 2) {
             throw new CommandException("Wrong arguments");
         }
 
         UUID fromUUID;
         UUID toUUID;
-        if (args.length == 2)
-        {
+        if (args.length == 2) {
             fromUUID = GetPlayerUUID(args[0]);
             toUUID = GetPlayerUUID(args[1]);
-        }else if(sender instanceof EntityPlayer){
+        } else if (sender instanceof EntityPlayer) {
             fromUUID = ((EntityPlayer) sender).getPersistentID();
             toUUID = GetPlayerUUID(args[0]);
-        }else {
+        } else {
             throw new CommandException("Wrong arguments");
         }
 
         long current = System.currentTimeMillis();
-        List<Integer> ids = new ArrayList<>();
-        for(DBEntry<IQuest> questDBEntry : QuestDatabase.INSTANCE.getEntries()) {
+        List<UUID> ids = new ArrayList<>();
+        for (Map.Entry<UUID, IQuest> questDBEntry : QuestDatabase.INSTANCE.entrySet()) {
             IQuest quest = questDBEntry.getValue();
-            if(quest.isComplete(fromUUID) && !quest.isComplete(toUUID)) {
+            if (quest.isComplete(fromUUID) && !quest.isComplete(toUUID)) {
                 quest.setComplete(toUUID, current);
-                ids.add(questDBEntry.getID());
+                ids.add(questDBEntry.getKey());
             }
         }
 
         EntityPlayerMP player = getPlayerAdvanced(sender, toUUID.toString());
-        if (player != null){
-            NetQuestSync.sendSync(player, ids.stream().mapToInt(i -> i).toArray(), false, true);
+        if (player != null) {
+            NetQuestSync.sendSync(player, ids, false, true);
         }
 
         sender.addChatMessage(new ChatComponentText("Completed " + ids.size() + " for " + toUUID));
