@@ -32,6 +32,7 @@ import net.minecraftforge.common.util.Constants;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Level;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -46,13 +47,13 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class QuestCommandDefaults extends QuestCommandBase {
-    private static final String DEFAULT_FILE = "DefaultQuests";
+    public static final String DEFAULT_FILE = "DefaultQuests";
 
-    private static final String SETTINGS_FILE = "Settings.json";
-    private static final String QUEST_LINES_FILE = "QuestLines.json";
-    private static final String QUEST_DIR = "Quests";
-    private static final String MULTI_QUEST_LINE_DIRECTORY = "MultipleQuestLine";
-    private static final String NO_QUEST_LINE_DIRECTORY = "NoQuestLine";
+    public static final String SETTINGS_FILE = "Settings.json";
+    public static final String QUEST_LINES_FILE = "QuestLines.json";
+    public static final String QUEST_DIR = "Quests";
+    public static final String MULTI_QUEST_LINE_DIRECTORY = "MultipleQuestLine";
+    public static final String NO_QUEST_LINE_DIRECTORY = "NoQuestLine";
 
     @Override
     public String getUsageSuffix() {
@@ -85,33 +86,35 @@ public class QuestCommandDefaults extends QuestCommandBase {
 
     @Override
     public void runCommand(MinecraftServer server, CommandBase command, ICommandSender sender, String[] args) {
+        String databaseName;
         File dataDir;
         // The location of the legacy single huge file.
         File legacyFile;
-
         if (args.length == 3 && !args[2].equalsIgnoreCase(DEFAULT_FILE)) {
+            databaseName = args[2];
             dataDir = new File(BQ_Settings.defaultDir, "saved_quests/" + args[2]);
             legacyFile = new File(BQ_Settings.defaultDir, "saved_quests/" + args[2] + ".json");
         } else {
+            databaseName = null;
             dataDir = new File(BQ_Settings.defaultDir, DEFAULT_FILE);
             legacyFile = new File(BQ_Settings.defaultDir, DEFAULT_FILE + ".json");
         }
 
         if (args[1].equalsIgnoreCase("save")) {
-            save(sender, args, dataDir);
+            save(sender, databaseName, dataDir);
 
         } else if (args[1].equalsIgnoreCase("load")) {
             if (!dataDir.exists() && legacyFile.exists()) {
-                loadLegacy(sender, args, legacyFile);
+                loadLegacy(sender, databaseName, legacyFile);
             } else {
-                load(sender, args, dataDir);
+                load(sender, databaseName, dataDir);
             }
 
         } else if (args[1].equalsIgnoreCase("set") && args.length == 3) {
             if (!dataDir.exists() && legacyFile.exists()) {
-                setLegacy(sender, args, legacyFile);
+                setLegacy(sender, databaseName, legacyFile);
             } else {
-                set(sender, args, dataDir);
+                set(sender, databaseName, dataDir);
             }
 
         } else {
@@ -119,13 +122,22 @@ public class QuestCommandDefaults extends QuestCommandBase {
         }
     }
 
-    private void save(ICommandSender sender, String[] args, File dataDir) {
+    /** Helper method that handles having null sender. */
+    private static void sendChatMessage(
+            @Nullable ICommandSender sender, String translationKey, Object... args) {
+        if (sender == null) {
+            return;
+        }
+        sender.addChatMessage(new ChatComponentTranslation(translationKey, args));
+    }
+
+    private void save(@Nullable ICommandSender sender, @Nullable String databaseName, File dataDir) {
         BiFunction<String, String, String> buildFileName =
                 (name, id) -> name.replaceAll("[^a-zA-Z0-9]", "") + "-" + id;
 
         if (!dataDir.exists() && !dataDir.mkdirs()) {
             QuestingAPI.getLogger().log(Level.ERROR, "Failed to create directory\n{}", dataDir);
-            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.error"));
+            sendChatMessage(sender, "betterquesting.cmd.error");
             return;
         }
 
@@ -181,7 +193,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
             File questFile = new File(questDir, buildFileName.apply(questName, questId.toString()) + ".json");
             if (!questFile.exists() && !questFile.mkdirs()) {
                 QuestingAPI.getLogger().log(Level.ERROR, "Failed to create directories\n{}", questFile);
-                sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.error"));
+                sendChatMessage(sender, "betterquesting.cmd.error");
                 return;
             }
 
@@ -190,15 +202,15 @@ public class QuestCommandDefaults extends QuestCommandBase {
             JsonHelper.WriteToFile(questFile, NBTConverter.NBTtoJSON_Compound(questTag, new JsonObject(), true));
         }
 
-        if (args.length == 3 && !args[2].equalsIgnoreCase(DEFAULT_FILE)) {
-            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.save2", args[2]));
+        if (databaseName != null && !databaseName.equalsIgnoreCase(DEFAULT_FILE)) {
+            sendChatMessage(sender, "betterquesting.cmd.default.save2", databaseName);
         } else {
-            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.save"));
+            sendChatMessage(sender, "betterquesting.cmd.default.save");
         }
     }
 
     /** This is currently unused, because we always want to use the new save format instead. */
-    private void saveLegacy(ICommandSender sender, String[] args, File legacyFile) {
+    private void saveLegacy(@Nullable ICommandSender sender, @Nullable String databaseName, File legacyFile) {
         boolean editMode = QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE);
 
         NBTTagCompound base = new NBTTagCompound();
@@ -212,16 +224,16 @@ public class QuestCommandDefaults extends QuestCommandBase {
         base.setString("format", BetterQuesting.FORMAT);
         JsonHelper.WriteToFile(legacyFile, NBTConverter.NBTtoJSON_Compound(base, new JsonObject(), true));
 
-        if (args.length == 3 && !args[2].equalsIgnoreCase(DEFAULT_FILE)) {
-            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.save2", args[2] + ".json"));
+        if (databaseName != null && !databaseName.equalsIgnoreCase(DEFAULT_FILE)) {
+            sendChatMessage(sender, "betterquesting.cmd.default.save2", databaseName + ".json");
         } else {
-            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.save"));
+            sendChatMessage(sender, "betterquesting.cmd.default.save");
         }
     }
 
-    private void load(ICommandSender sender, String[] args, File dataDir) {
+    public static void load(@Nullable ICommandSender sender, @Nullable String databaseName, File dataDir) {
         if (!dataDir.exists()) {
-            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.none"));
+            sendChatMessage(sender, "betterquesting.cmd.default.none");
             return;
         }
 
@@ -237,7 +249,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
         File settingsFile = new File(dataDir, SETTINGS_FILE);
         if (!settingsFile.exists()) {
             QuestingAPI.getLogger().log(Level.ERROR, "Failed to find file\n{}", settingsFile);
-            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.error"));
+            sendChatMessage(sender, "betterquesting.cmd.error");
             return;
         }
         QuestSettings.INSTANCE.readFromNBT(readNbt.apply(settingsFile));
@@ -245,7 +257,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
         File questLinesFile = new File(dataDir, QUEST_LINES_FILE);
         if (!questLinesFile.exists()) {
             QuestingAPI.getLogger().log(Level.ERROR, "Failed to find file\n{}", questLinesFile);
-            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.error"));
+            sendChatMessage(sender, "betterquesting.cmd.error");
             return;
         }
         NBTTagCompound questLinesTag = readNbt.apply(questLinesFile);
@@ -267,7 +279,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
             );
         } catch (IOException e) {
             QuestingAPI.getLogger().log(Level.ERROR, "Failed to traverse directory\n" + questDir, e);
-            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.error"));
+            sendChatMessage(sender, "betterquesting.cmd.error");
             return;
         }
 
@@ -275,10 +287,10 @@ public class QuestCommandDefaults extends QuestCommandBase {
         QuestSettings.INSTANCE.setProperty(NativeProps.EDIT_MODE, editMode);
         QuestSettings.INSTANCE.setProperty(NativeProps.HARDCORE, hardMode);
 
-        if (args.length == 3 && !args[2].equalsIgnoreCase(DEFAULT_FILE)) {
-            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.load2", args[2]));
+        if (databaseName != null && !databaseName.equalsIgnoreCase(DEFAULT_FILE)) {
+            sendChatMessage(sender, "betterquesting.cmd.default.load2", databaseName);
         } else {
-            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.load"));
+            sendChatMessage(sender, "betterquesting.cmd.default.load");
         }
 
         NetSettingSync.sendSync(null);
@@ -287,7 +299,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
         SaveLoadHandler.INSTANCE.markDirty();
     }
 
-    private void loadLegacy(ICommandSender sender, String[] args, File legacyFile) {
+    public static void loadLegacy(@Nullable ICommandSender sender, @Nullable String databaseName, File legacyFile) {
         if (legacyFile.exists()) {
             boolean editMode = QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE);
             boolean hardMode = QuestSettings.INSTANCE.getProperty(NativeProps.HARDCORE);
@@ -306,10 +318,10 @@ public class QuestCommandDefaults extends QuestCommandBase {
             QuestSettings.INSTANCE.setProperty(NativeProps.EDIT_MODE, editMode);
             QuestSettings.INSTANCE.setProperty(NativeProps.HARDCORE, hardMode);
 
-            if (args.length == 3 && !args[2].equalsIgnoreCase(DEFAULT_FILE)) {
-                sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.load2", args[2] + ".json"));
+            if (databaseName != null && !databaseName.equalsIgnoreCase(DEFAULT_FILE)) {
+                sendChatMessage(sender, "betterquesting.cmd.default.load2", databaseName + ".json");
             } else {
-                sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.load"));
+                sendChatMessage(sender, "betterquesting.cmd.default.load");
             }
 
             NetSettingSync.sendSync(null);
@@ -317,36 +329,37 @@ public class QuestCommandDefaults extends QuestCommandBase {
             NetChapterSync.sendSync(null, null);
             SaveLoadHandler.INSTANCE.markDirty();
         } else {
-            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.none"));
+            sendChatMessage(sender, "betterquesting.cmd.default.none");
         }
     }
 
-    private void set(ICommandSender sender, String[] args, File dataDir) {
-        if (dataDir.exists() && !args[2].equalsIgnoreCase(DEFAULT_FILE)) {
-            File defDir = new File(BQ_Settings.defaultDir, DEFAULT_FILE);
-
-            if (defDir.exists() && !defDir.delete()) {
-                QuestingAPI.getLogger().log(Level.ERROR, "Failed to delete directory {}", defDir);
-                sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.error"));
-                return;
-            }
-
-            try {
-                FileUtils.copyDirectory(dataDir, defDir);
-            } catch (IOException e) {
-                QuestingAPI.getLogger().log(Level.ERROR, "Failed to copy directory", e);
-                sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.error"));
-                return;
-            }
-
-            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.set", args[2]));
-        } else {
-            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.none"));
+    public static void set(@Nullable ICommandSender sender, String databaseName, File dataDir) {
+        if (!dataDir.exists() || databaseName.equalsIgnoreCase(DEFAULT_FILE)) {
+            sendChatMessage(sender, "betterquesting.cmd.default.none");
+            return;
         }
+
+        File defDir = new File(BQ_Settings.defaultDir, DEFAULT_FILE);
+
+        if (defDir.exists() && !defDir.delete()) {
+            QuestingAPI.getLogger().log(Level.ERROR, "Failed to delete directory {}", defDir);
+            sendChatMessage(sender, "betterquesting.cmd.error");
+            return;
+        }
+
+        try {
+            FileUtils.copyDirectory(dataDir, defDir);
+        } catch (IOException e) {
+            QuestingAPI.getLogger().log(Level.ERROR, "Failed to copy directory", e);
+            sendChatMessage(sender, "betterquesting.cmd.error");
+            return;
+        }
+
+        sendChatMessage(sender, "betterquesting.cmd.default.set", databaseName);
     }
 
-    private void setLegacy(ICommandSender sender, String[] args, File legacyFile) {
-        if (legacyFile.exists() && !args[2].equalsIgnoreCase(DEFAULT_FILE)) {
+    public static void setLegacy(@Nullable ICommandSender sender, String databaseName, File legacyFile) {
+        if (legacyFile.exists() && !databaseName.equalsIgnoreCase(DEFAULT_FILE)) {
             File defFile = new File(BQ_Settings.defaultDir, DEFAULT_FILE + ".json");
 
             if (defFile.exists()) {
@@ -355,9 +368,9 @@ public class QuestCommandDefaults extends QuestCommandBase {
 
             JsonHelper.CopyPaste(legacyFile, defFile);
 
-            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.set", args[2]));
+            sendChatMessage(sender, "betterquesting.cmd.default.set", databaseName);
         } else {
-            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.none"));
+            sendChatMessage(sender, "betterquesting.cmd.default.none");
         }
     }
 }

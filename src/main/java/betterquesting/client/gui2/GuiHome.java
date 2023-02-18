@@ -5,8 +5,6 @@ import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.party.IParty;
 import betterquesting.api.storage.BQ_Settings;
-import betterquesting.api.utils.JsonHelper;
-import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.GuiScreenCanvas;
 import betterquesting.api2.client.gui.controls.IPanelButton;
 import betterquesting.api2.client.gui.controls.PanelButton;
@@ -30,14 +28,11 @@ import betterquesting.api2.utils.QuestTranslation;
 import betterquesting.client.gui2.editors.nbt.GuiNbtEditor;
 import betterquesting.client.gui2.party.GuiPartyCreate;
 import betterquesting.client.gui2.party.GuiPartyManage;
+import betterquesting.commands.admin.QuestCommandDefaults;
 import betterquesting.handlers.ConfigHandler;
 import betterquesting.handlers.EventHandler;
 import betterquesting.handlers.SaveLoadHandler;
-import betterquesting.network.handlers.NetChapterSync;
-import betterquesting.network.handlers.NetQuestSync;
 import betterquesting.network.handlers.NetSettingSync;
-import betterquesting.questing.QuestDatabase;
-import betterquesting.questing.QuestLineDatabase;
 import betterquesting.questing.party.PartyManager;
 import betterquesting.storage.QuestSettings;
 import cpw.mods.fml.relauncher.Side;
@@ -45,7 +40,6 @@ import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.config.Configuration;
 import org.lwjgl.util.vector.Vector4f;
@@ -188,32 +182,30 @@ public class GuiHome extends GuiScreenCanvas implements IPEventListener
 			}));
 		} else if(btn.getButtonID() == 5) // Update me
 		{
-			final File qFile = new File(BQ_Settings.defaultDir, "DefaultQuests.json");
-			
-			if(qFile.exists())
+			final File qDir = new File(BQ_Settings.defaultDir, "DefaultQuests");
+            final File qFile = new File(BQ_Settings.defaultDir, "DefaultQuests.json");
+
+            if (qDir.exists())
+            {
+                EventHandler.scheduleServerTask(
+                        Executors.callable(
+                                () -> {
+                                    QuestCommandDefaults.load(null, null, qDir);
+                                    SaveLoadHandler.INSTANCE.resetUpdate();
+                                }));
+
+                //this.initGui(); // Reset the whole thing
+                mc.displayGuiScreen(null);
+            }
+			else if (qFile.exists())
 			{
-				EventHandler.scheduleServerTask(Executors.callable(() -> {
-					boolean editMode = QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE);
-					boolean hardMode = QuestSettings.INSTANCE.getProperty(NativeProps.HARDCORE);
-					
-					NBTTagList jsonP = QuestDatabase.INSTANCE.writeProgressToNBT(new NBTTagList(), null);
-					NBTTagCompound j1 = NBTConverter.JSONtoNBT_Object(JsonHelper.ReadFromFile(qFile), new NBTTagCompound(), true);
-					QuestSettings.INSTANCE.readFromNBT(j1.getCompoundTag("questSettings"));
-					QuestDatabase.INSTANCE.readFromNBT(j1.getTagList("questDatabase", 10), false);
-					QuestLineDatabase.INSTANCE.readFromNBT(j1.getTagList("questLines", 10), false);
-					QuestDatabase.INSTANCE.readProgressFromNBT(jsonP, false);
-					
-					QuestSettings.INSTANCE.setProperty(NativeProps.EDIT_MODE, editMode);
-					QuestSettings.INSTANCE.setProperty(NativeProps.HARDCORE, hardMode);
-					
-					NetSettingSync.sendSync(null);
-                    NetQuestSync.quickSync(null, true, true);
-                    NetChapterSync.sendSync(null, null);
-					
-					SaveLoadHandler.INSTANCE.resetUpdate();
-					SaveLoadHandler.INSTANCE.markDirty();
-				}));
-				
+                EventHandler.scheduleServerTask(
+                        Executors.callable(
+                                () -> {
+                                    QuestCommandDefaults.loadLegacy(null, null, qDir);
+                                    SaveLoadHandler.INSTANCE.resetUpdate();
+                                }));
+
 				//this.initGui(); // Reset the whole thing
 				mc.displayGuiScreen(null);
 			}
