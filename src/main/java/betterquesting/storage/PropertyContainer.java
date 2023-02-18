@@ -101,12 +101,11 @@ public class PropertyContainer implements IPropertyContainer, INBTSaveLoad<NBTTa
 	}
 	
 	@Override
-    @SuppressWarnings("unchecked")
 	public void readFromNBT(NBTTagCompound nbt)
 	{
 	    synchronized(nbtInfo)
         {
-            for(String key : (Set<String>)nbtInfo.func_150296_c()) nbtInfo.removeTag(key);
+            removeAllProps();
             merge(nbtInfo, nbt);
         }
 	}
