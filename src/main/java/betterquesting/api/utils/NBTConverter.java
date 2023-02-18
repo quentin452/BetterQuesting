@@ -8,15 +8,21 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.stream.JsonWriter;
 import net.minecraft.nbt.*;
 import net.minecraft.nbt.NBTBase.NBTPrimitive;
+import net.minecraftforge.common.util.Constants;
 import org.apache.logging.log4j.Level;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class NBTConverter
 {
@@ -327,7 +333,78 @@ public class NBTConverter
             return Collections.emptyList();
         }
     }
-	
+
+    public static NBTTagCompound writeQuestId(UUID uuid)
+    {
+        NBTTagCompound tag = new NBTTagCompound();
+        writeQuestId(uuid, tag);
+        return tag;
+    }
+
+    public static void writeQuestId(UUID uuid, NBTTagCompound tag)
+    {
+        tag.setLong("questIDHigh", uuid.getMostSignificantBits());
+        tag.setLong("questIDLow", uuid.getLeastSignificantBits());
+    }
+
+    /** Use this method in cases where the player needs to edit the NBT manually. */
+    public static void writeQuestIdString(@Nullable UUID uuid, NBTTagCompound tag)
+    {
+        tag.setString("questID", uuid == null ? "" : uuid.toString());
+    }
+
+    public static NBTTagList writeQuestIds(Collection<UUID> uuids)
+    {
+        NBTTagList tagList = new NBTTagList();
+        uuids.forEach(uuid -> tagList.appendTag(writeQuestId(uuid)));
+        return tagList;
+    }
+
+    public static Optional<UUID> tryReadQuestId(NBTTagCompound tag)
+    {
+        if (tag.hasKey("questIDHigh", 99) && tag.hasKey("questIDLow", 99))
+        {
+            return Optional.of(readQuestId(tag));
+        }
+        else
+        {
+            return Optional.empty();
+        }
+    }
+
+    public static UUID readQuestId(NBTTagCompound tag)
+    {
+        return new UUID(tag.getLong("questIDHigh"), tag.getLong("questIDLow"));
+    }
+
+    /** Use this method in cases where the player needs to edit the NBT manually. */
+    public static Optional<UUID> tryReadQuestIdString(NBTTagCompound tag)
+    {
+        if (!tag.hasKey("questID", Constants.NBT.TAG_STRING)) {
+            return Optional.empty();
+        }
+
+        String questId = tag.getString("questID");
+        if (questId.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(UUID.fromString(questId));
+    }
+
+    public static List<UUID> readQuestIds(NBTTagCompound tag, String key)
+    {
+        return readQuestIds(tag.getTagList(key, Constants.NBT.TAG_COMPOUND));
+    }
+
+    public static List<UUID> readQuestIds(NBTTagList tagList)
+    {
+        return getTagList(tagList).stream()
+                .map(NBTTagCompound.class::cast)
+                .map(NBTConverter::readQuestId)
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
     @SuppressWarnings("WeakerAccess")
 	public static Number getNumber(NBTBase tag)
 	{
