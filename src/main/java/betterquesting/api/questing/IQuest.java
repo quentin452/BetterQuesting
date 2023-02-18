@@ -16,6 +16,7 @@ import net.minecraft.nbt.NBTTagList;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 public interface IQuest extends INBTSaveLoad<NBTTagCompound>, INBTProgress<NBTTagCompound>, IPropertyContainer
@@ -60,14 +61,15 @@ public interface IQuest extends INBTSaveLoad<NBTTagCompound>, INBTProgress<NBTTa
 	
 	IDatabaseNBT<ITask, NBTTagList, NBTTagList> getTasks();
 	IDatabaseNBT<IReward, NBTTagList, NBTTagList> getRewards();
-	
+
+    /** Returns a mutable set. Changes made to the returned set will be reflected in the quest! */
 	@Nonnull
-	int[] getRequirements();
-	void setRequirements(@Nonnull int[] req);
+    Set<UUID> getRequirements();
+	void setRequirements(@Nonnull Iterable<UUID> req);
 
 	@Nonnull
-	RequirementType getRequirementType(int req);
-	void setRequirementType(int req, @Nonnull RequirementType kind);
+	RequirementType getRequirementType(UUID req);
+	void setRequirementType(UUID req, @Nonnull RequirementType kind);
 
 	enum RequirementType {
 		NORMAL(PresetIcon.ICON_VISIBILITY_NORMAL),
