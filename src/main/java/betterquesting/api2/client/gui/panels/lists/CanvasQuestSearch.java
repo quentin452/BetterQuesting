@@ -19,6 +19,7 @@ import betterquesting.api2.utils.QuestTranslation;
 import betterquesting.misc.QuestSearchEntry;
 import betterquesting.questing.QuestDatabase;
 import betterquesting.questing.QuestLineDatabase;
+import com.google.common.collect.Maps;
 import net.minecraft.entity.player.EntityPlayer;
 import org.apache.commons.lang3.StringUtils;
 
@@ -49,14 +50,14 @@ public class CanvasQuestSearch extends CanvasSearch<QuestSearchEntry, QuestSearc
 
     private List<QuestSearchEntry> collectQuests() {
         return QuestLineDatabase.INSTANCE.getEntries().stream().flatMap(iQuestLineDBEntry ->
-                iQuestLineDBEntry.getValue().getEntries().stream().map(iQuestLineEntryDBEntry ->
+                iQuestLineDBEntry.getValue().entrySet().stream().map(iQuestLineEntryDBEntry ->
                         createQuestSearchEntry(iQuestLineEntryDBEntry, iQuestLineDBEntry)
                 )).collect(Collectors.toList());
     }
 
-    private QuestSearchEntry createQuestSearchEntry(DBEntry<IQuestLineEntry> iQuestLineEntryDBEntry, DBEntry<IQuestLine> iQuestLineDBEntry){
-        int questId = iQuestLineEntryDBEntry.getID();
-        DBEntry<IQuest> quest = new DBEntry<>(questId, QuestDatabase.INSTANCE.getValue(questId));
+    private QuestSearchEntry createQuestSearchEntry(Map.Entry<UUID, IQuestLineEntry> iQuestLineEntryDBEntry, DBEntry<IQuestLine> iQuestLineDBEntry){
+        UUID questId = iQuestLineEntryDBEntry.getKey();
+        Map.Entry<UUID, IQuest> quest = Maps.immutableEntry(questId, QuestDatabase.INSTANCE.get(questId));
         return new QuestSearchEntry(quest, iQuestLineDBEntry);
     }
 
@@ -69,7 +70,7 @@ public class CanvasQuestSearch extends CanvasSearch<QuestSearchEntry, QuestSearc
             }
         } else if (
             // quest id
-            String.valueOf(entry.getQuest().getID()).contains(query)
+            String.valueOf(entry.getQuest().getKey()).contains(query)
             // quest title
             || entry.getQuest().getValue().getProperty(NativeProps.NAME).toLowerCase().contains(query)
             || QuestTranslation.translate(entry.getQuest().getValue().getProperty(NativeProps.NAME)).toLowerCase().contains(query)
