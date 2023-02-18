@@ -155,7 +155,7 @@ public class SaveLoadHandler {
         isDirty = false;
 
         QuestSettings.INSTANCE.reset();
-        QuestDatabase.INSTANCE.reset();
+        QuestDatabase.INSTANCE.clear();
         QuestLineDatabase.INSTANCE.reset();
         LifeDatabase.INSTANCE.reset();
         NameCache.INSTANCE.reset();
@@ -170,7 +170,7 @@ public class SaveLoadHandler {
 
     private void loadConfig() {
         QuestSettings.INSTANCE.reset();
-        QuestDatabase.INSTANCE.reset();
+        QuestDatabase.INSTANCE.clear();
         QuestLineDatabase.INSTANCE.reset();
 
         boolean useDef = !fileDatabase.exists();
@@ -232,9 +232,9 @@ public class SaveLoadHandler {
             // Mark all data as dirty to migrate the file to the new format
             markDirty();
             HashSet<UUID> usersFound = new HashSet<>();
-            for (DBEntry<IQuest> quest : QuestDatabase.INSTANCE.getEntries()) {
-                if(quest.getValue() instanceof QuestInstance) {
-                    QuestInstance qi = (QuestInstance) quest.getValue();
+            for (IQuest quest : QuestDatabase.INSTANCE.values()) {
+                if (quest instanceof QuestInstance) {
+                    QuestInstance qi = (QuestInstance) quest;
                     qi.getUsersWithCompletionData(usersFound);
                 }
             }
