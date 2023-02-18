@@ -3,6 +3,7 @@ package betterquesting.client.toolbox.tools;
 import betterquesting.api.client.toolbox.IToolboxTool;
 import betterquesting.api.properties.NativeProps;
 import betterquesting.api.utils.BigItemStack;
+import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.controls.PanelButtonQuest;
 import betterquesting.api2.client.gui.panels.lists.CanvasQuestLine;
 import betterquesting.client.gui2.editors.designer.PanelToolController;
@@ -60,8 +61,7 @@ public class ToolboxToolIcon implements IToolboxTool
             {
                 b.getStoredValue().getValue().setProperty(NativeProps.ICON, value);
                 
-                NBTTagCompound entry = new NBTTagCompound();
-                entry.setInteger("questID", b.getStoredValue().getID());
+                NBTTagCompound entry = NBTConverter.writeQuestId(b.getStoredValue().getKey());
                 entry.setTag("config", b.getStoredValue().getValue().writeToNBT(new NBTTagCompound()));
                 dataList.appendTag(entry);
             }
