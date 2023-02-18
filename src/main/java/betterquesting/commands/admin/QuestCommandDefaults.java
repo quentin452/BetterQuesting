@@ -135,7 +135,16 @@ public class QuestCommandDefaults extends QuestCommandBase {
         BiFunction<String, String, String> buildFileName =
                 (name, id) -> name.replaceAll("[^a-zA-Z0-9]", "") + "-" + id;
 
-        if (!dataDir.exists() && !dataDir.mkdirs()) {
+        if (dataDir.exists()) {
+            try {
+                FileUtils.deleteDirectory(dataDir);
+            } catch (IOException e) {
+                QuestingAPI.getLogger().log(Level.ERROR, "Failed to delete directory\n" + dataDir, e);
+                sendChatMessage(sender, "betterquesting.cmd.error");
+                return;
+            }
+        }
+        if (!dataDir.mkdirs()) {
             QuestingAPI.getLogger().log(Level.ERROR, "Failed to create directory\n{}", dataDir);
             sendChatMessage(sender, "betterquesting.cmd.error");
             return;
@@ -345,16 +354,20 @@ public class QuestCommandDefaults extends QuestCommandBase {
 
         File defDir = new File(BQ_Settings.defaultDir, DEFAULT_FILE);
 
-        if (defDir.exists() && !defDir.delete()) {
-            QuestingAPI.getLogger().log(Level.ERROR, "Failed to delete directory {}", defDir);
-            sendChatMessage(sender, "betterquesting.cmd.error");
-            return;
+        if (defDir.exists()) {
+            try {
+                FileUtils.deleteDirectory(defDir);
+            } catch (IOException e) {
+                QuestingAPI.getLogger().log(Level.ERROR, "Failed to delete directory\n" + defDir, e);
+                sendChatMessage(sender, "betterquesting.cmd.error");
+                return;
+            }
         }
 
         try {
             FileUtils.copyDirectory(dataDir, defDir);
         } catch (IOException e) {
-            QuestingAPI.getLogger().log(Level.ERROR, "Failed to copy directory", e);
+            QuestingAPI.getLogger().log(Level.ERROR, "Failed to copy directory\n" + dataDir, e);
             sendChatMessage(sender, "betterquesting.cmd.error");
             return;
         }
