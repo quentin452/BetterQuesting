@@ -73,10 +73,10 @@ public class CanvasQuestSearch extends CanvasSearch<QuestSearchEntry, QuestSearc
             String.valueOf(entry.getQuest().getKey()).contains(query)
             // quest title
             || entry.getQuest().getValue().getProperty(NativeProps.NAME).toLowerCase().contains(query)
-            || QuestTranslation.translate(entry.getQuest().getValue().getProperty(NativeProps.NAME)).toLowerCase().contains(query)
+            || QuestTranslation.translateQuestName(entry.getQuest()).toLowerCase().contains(query)
             // quest desc
             || entry.getQuest().getValue().getProperty(NativeProps.DESC).toLowerCase().contains(query)
-            || QuestTranslation.translate(entry.getQuest().getValue().getProperty(NativeProps.DESC)).toLowerCase().contains(query)
+            || QuestTranslation.translateQuestDescription(entry.getQuest()).toLowerCase().contains(query)
         ) {
             results.add(entry);
         } else {
@@ -95,8 +95,8 @@ public class CanvasQuestSearch extends CanvasSearch<QuestSearchEntry, QuestSearc
     protected boolean addResult(QuestSearchEntry entry, int index, int cachedWidth) {
         PanelButtonCustom buttonContainer = createContainerButton(entry, index, cachedWidth);
 
-        addTextBox(cachedWidth, buttonContainer, 56, 6, entry.getQuestLineEntry().getValue().getProperty(NativeProps.NAME));
-        addTextBox(cachedWidth, buttonContainer, 36, 20, entry.getQuest().getValue().getProperty(NativeProps.NAME));
+        addTextBox(cachedWidth, buttonContainer, 56, 6, QuestTranslation.translateQuestLineName(entry.getQuestLineEntry()));
+        addTextBox(cachedWidth, buttonContainer, 36, 20, QuestTranslation.translateQuestName(entry.getQuest()));
 
         return true;
     }

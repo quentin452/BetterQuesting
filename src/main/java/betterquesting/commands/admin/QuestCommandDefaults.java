@@ -198,8 +198,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
                 case 1:
                     IQuestLine questLine = questLines.get(0);
                     String questLineId = Integer.toString(questLineToIdMap.get(questLine));
-                    String questLineName =
-                            QuestTranslation.translate(questLine.getProperty(NativeProps.NAME));
+                    String questLineName = questLine.getProperty(NativeProps.NAME);
                     questDir = new File(questDir, buildFileName.apply(questLineName, questLineId));
                     break;
 
@@ -208,7 +207,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
                     break;
             }
 
-            String questName = QuestTranslation.translate(quest.getProperty(NativeProps.NAME));
+            String questName = quest.getProperty(NativeProps.NAME);
             File questFile = new File(questDir, buildFileName.apply(questName, questId.toString()) + ".json");
             if (!questFile.exists() && !questFile.mkdirs()) {
                 QuestingAPI.getLogger().log(Level.ERROR, "Failed to create directories\n{}", questFile);

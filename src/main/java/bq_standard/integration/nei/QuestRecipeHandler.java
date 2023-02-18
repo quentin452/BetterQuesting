@@ -5,7 +5,6 @@ import static codechicken.lib.gui.GuiDraw.drawTexturedModalRect;
 import static net.minecraft.util.EnumChatFormatting.*;
 
 import betterquesting.api.api.QuestingAPI;
-import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.rewards.IReward;
 import betterquesting.api.questing.tasks.ITask;
@@ -131,7 +130,7 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
     @Override
     public void drawExtras(int recipeIndex) {
         CachedQuestRecipe recipe = (CachedQuestRecipe) this.arecipes.get(recipeIndex);
-        String questTitle = UNDERLINE + getTextWithoutFormattingCodes(QuestTranslation.translate(recipe.questName));
+        String questTitle = UNDERLINE + getTextWithoutFormattingCodes(recipe.questName);
 
         int color;
         if (isMouseOverTitle(recipeIndex)) {
@@ -305,7 +304,7 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
         private final UUID questID;
 
         private CachedQuestRecipe(Map.Entry<UUID, IQuest> entry) {
-            this.questName = entry.getValue().getProperty(NativeProps.NAME);
+            this.questName = QuestTranslation.translateQuestName(entry);
             this.questID = entry.getKey();
 
             loadTasks(entry.getValue());

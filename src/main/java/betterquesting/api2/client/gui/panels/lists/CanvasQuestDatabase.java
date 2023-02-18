@@ -28,7 +28,7 @@ public abstract class CanvasQuestDatabase extends CanvasSearch<Map.Entry<UUID, I
     @Override
     protected void queryMatches(Map.Entry<UUID, IQuest> entry, String query, final ArrayDeque<Map.Entry<UUID, IQuest>> results)
     {
-        if ((entry.getKey().toString()).contains(query) || entry.getValue().getProperty(NativeProps.NAME).toLowerCase().contains(query) || QuestTranslation.translate(entry.getValue().getProperty(NativeProps.NAME)).toLowerCase().contains(query))
+        if ((entry.getKey().toString()).contains(query) || entry.getValue().getProperty(NativeProps.NAME).toLowerCase().contains(query) || QuestTranslation.translateQuestName(entry).toLowerCase().contains(query))
         {
             results.add(entry);
         }

@@ -63,7 +63,7 @@ public class GuiQuestEditor extends GuiScreenCanvas implements IPEventListener, 
             mc.displayGuiScreen(this.parent);
         } else
         {
-            pnTitle.setText(QuestTranslation.translate("betterquesting.title.edit_quest", QuestTranslation.translate(quest.getProperty(NativeProps.NAME))));
+            pnTitle.setText(QuestTranslation.translate("betterquesting.title.edit_quest", QuestTranslation.translateQuestName(questID, quest)));
             if(!flName.isFocused()) flName.setText(quest.getProperty(NativeProps.NAME));
             if(!flDesc.isFocused()) flDesc.setText(quest.getProperty(NativeProps.DESC));
             btnLogic.setText(QuestTranslation.translate("betterquesting.btn.logic") + ": " + quest.getProperty(NativeProps.LOGIC_QUEST));
@@ -91,7 +91,7 @@ public class GuiQuestEditor extends GuiScreenCanvas implements IPEventListener, 
         CanvasTextured cvBackground = new CanvasTextured(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 0, 0, 0), 0), PresetTexture.PANEL_MAIN.getTexture());
         this.addPanel(cvBackground);
         
-        pnTitle = new PanelTextBox(new GuiTransform(GuiAlign.TOP_EDGE, new GuiPadding(0, 16, 0, -32), 0), QuestTranslation.translate("betterquesting.title.edit_quest", QuestTranslation.translate(quest.getProperty(NativeProps.NAME)))).setAlignment(1);
+        pnTitle = new PanelTextBox(new GuiTransform(GuiAlign.TOP_EDGE, new GuiPadding(0, 16, 0, -32), 0), QuestTranslation.translate("betterquesting.title.edit_quest", QuestTranslation.translateQuestName(questID, quest))).setAlignment(1);
         pnTitle.setColor(PresetColor.TEXT_HEADER.getColor());
         cvBackground.addPanel(pnTitle);
         

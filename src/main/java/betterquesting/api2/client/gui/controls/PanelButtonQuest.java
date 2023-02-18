@@ -109,7 +109,7 @@ public class PanelButtonQuest extends PanelButtonStorage<Map.Entry<UUID, IQuest>
     {
 		List<String> list = new ArrayList<>();
 
-		list.add(QuestTranslation.translate(quest.getProperty(NativeProps.NAME)) + (!Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? "" : (" #" + qID)));
+		list.add(QuestTranslation.translateQuestName(qID, quest) + (!Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? "" : (" #" + qID)));
 
 		UUID playerID = QuestingAPI.getQuestingUUID(player);
 
@@ -151,9 +151,9 @@ public class PanelButtonQuest extends PanelButtonStorage<Map.Entry<UUID, IQuest>
 			list.add(ChatFormatting.RED + "" + ChatFormatting.UNDERLINE + QuestTranslation.translate("betterquesting.tooltip.requires") + " (" + quest.getProperty(NativeProps.LOGIC_QUEST).toString().toUpperCase() + ")");
 
             // TODO: Make this lookup unnecessary
-            QuestDatabase.INSTANCE.getAll(quest.getRequirements())
-                    .filter(q -> !q.isComplete(playerID))
-                    .forEach(q -> list.add(ChatFormatting.RED + "- " + QuestTranslation.translate(q.getProperty(NativeProps.NAME))));
+            QuestDatabase.INSTANCE.filterKeys(quest.getRequirements()).entrySet().stream()
+                    .filter(entry -> !entry.getValue().isComplete(playerID))
+                    .forEach(entry -> list.add(ChatFormatting.RED + "- " + QuestTranslation.translateQuestName(entry)));
 		} else
 		{
 			int n = 0;

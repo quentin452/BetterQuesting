@@ -2,7 +2,6 @@ package betterquesting.client.gui2.inventory;
 
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.client.gui.misc.INeedsRefresh;
-import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.tasks.IFluidTask;
 import betterquesting.api.questing.tasks.IItemTask;
@@ -307,7 +306,7 @@ public class GuiSubmitStation extends GuiContainerCanvas implements INeedsRefres
         } else selQuest = lazyPosMod(selQuest, quests.size());
         
         Map.Entry<UUID, IQuest> entry = quests.get(selQuest);
-        txtQstTitle.setText(QuestTranslation.translate(entry.getValue().getProperty(NativeProps.NAME)));
+        txtQstTitle.setText(QuestTranslation.translateQuestName(entry));
         
         tasks.clear();
         tasks.addAll(entry.getValue().getTasks().getEntries());

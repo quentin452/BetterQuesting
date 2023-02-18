@@ -2,7 +2,6 @@ package betterquesting.client.gui2.editors;
 
 import betterquesting.api.client.gui.misc.INeedsRefresh;
 import betterquesting.api.client.gui.misc.IVolatileScreen;
-import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.IQuestLine;
 import betterquesting.api.questing.IQuestLineEntry;
@@ -131,7 +130,7 @@ public class GuiQuestLineAddRemove extends GuiScreenCanvas implements IPEventLis
                 btnAdd.setActive(questLine != null && questLine.get(entry.getKey()) == null);
                 this.addPanel(btnAdd);
                 
-                PanelButtonStorage<Map.Entry<UUID, IQuest>> btnEdit = new PanelButtonStorage<>(new GuiRectangle(16, index * 16, width - 32, 16, 0), 1, QuestTranslation.translate(entry.getValue().getProperty(NativeProps.NAME)), entry);
+                PanelButtonStorage<Map.Entry<UUID, IQuest>> btnEdit = new PanelButtonStorage<>(new GuiRectangle(16, index * 16, width - 32, 16, 0), 1, QuestTranslation.translateQuestName(entry), entry);
                 this.addPanel(btnEdit);
                 
                 PanelButtonStorage<Map.Entry<UUID, IQuest>> btnDel = new PanelButtonStorage<>(new GuiRectangle(width - 16, index * 16, 16, 16, 0), 4, "", entry);
@@ -276,11 +275,12 @@ public class GuiQuestLineAddRemove extends GuiScreenCanvas implements IPEventLis
                 canvasQL.addPanel(btnErr);
                 continue;
             }
-            
-            PanelButtonStorage<Map.Entry<UUID, IQuest>> btnEdit = new PanelButtonStorage<>(new GuiRectangle(0, i * 16, width - 16, 16, 0), 1, QuestTranslation.translate(quest.getProperty(NativeProps.NAME)), Maps.immutableEntry(entry.getKey(), quest));
+
+            Map.Entry<UUID, IQuest> questEntry = Maps.immutableEntry(entry.getKey(), quest);
+            PanelButtonStorage<Map.Entry<UUID, IQuest>> btnEdit = new PanelButtonStorage<>(new GuiRectangle(0, i * 16, width - 16, 16, 0), 1, QuestTranslation.translateQuestName(questEntry), questEntry);
             canvasQL.addPanel(btnEdit);
             
-            PanelButtonStorage<Map.Entry<UUID, IQuest>> btnRem = new PanelButtonStorage<>(new GuiRectangle(width - 16, i * 16, 16, 16, 0), 3, "", Maps.immutableEntry(entry.getKey(), quest));
+            PanelButtonStorage<Map.Entry<UUID, IQuest>> btnRem = new PanelButtonStorage<>(new GuiRectangle(width - 16, i * 16, 16, 16, 0), 3, "", questEntry);
             btnRem.setIcon(PresetIcon.ICON_NEGATIVE.getTexture());
             canvasQL.addPanel(btnRem);
         }

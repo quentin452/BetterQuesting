@@ -3,7 +3,6 @@ package betterquesting.client.gui2;
 import betterquesting.api.api.ApiReference;
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.client.gui.misc.INeedsRefresh;
-import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.rewards.IReward;
 import betterquesting.api.questing.tasks.ITask;
@@ -141,7 +140,7 @@ public class GuiQuest extends GuiScreenCanvas implements IPEventListener, INeeds
         CanvasTextured cvBackground = new CanvasTextured(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 0, 0, 0), 0), PresetTexture.PANEL_MAIN.getTexture());
         this.addPanel(cvBackground);
 
-        PanelTextBox panTxt = new PanelTextBox(new GuiTransform(GuiAlign.TOP_EDGE, new GuiPadding(0, 16, 0, -32), 0), QuestTranslation.translate(quest.getProperty(NativeProps.NAME))).setAlignment(1);
+        PanelTextBox panTxt = new PanelTextBox(new GuiTransform(GuiAlign.TOP_EDGE, new GuiPadding(0, 16, 0, -32), 0), QuestTranslation.translateQuestName(questID, quest)).setAlignment(1);
         panTxt.setColor(PresetColor.TEXT_HEADER.getColor());
         cvBackground.addPanel(panTxt);
 
@@ -406,7 +405,7 @@ public class GuiQuest extends GuiScreenCanvas implements IPEventListener, INeeds
             csDesc = new CanvasScrolling(new GuiTransform(GuiAlign.HALF_LEFT, new GuiPadding(0, 0, 16, 0), 0));
         }
         cvInner.addPanel(csDesc);
-        PanelTextBox paDesc = new PanelTextBox(new GuiRectangle(0, 0, csDesc.getTransform().getWidth(), 0), QuestTranslation.translate(quest.getProperty(NativeProps.DESC)), true);
+        PanelTextBox paDesc = new PanelTextBox(new GuiRectangle(0, 0, csDesc.getTransform().getWidth(), 0), QuestTranslation.translateQuestDescription(questID, quest), true);
         paDesc.setColor(PresetColor.TEXT_MAIN.getColor());//.setFontSize(10);
         csDesc.addCulledPanel(paDesc, false);
 
