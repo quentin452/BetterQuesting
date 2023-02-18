@@ -6,6 +6,7 @@ import betterquesting.api.enums.EnumLogic;
 import betterquesting.api.enums.EnumQuestVisibility;
 import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
+import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.GuiScreenCanvas;
 import betterquesting.api2.client.gui.controls.IPanelButton;
 import betterquesting.api2.client.gui.controls.PanelButton;
@@ -32,9 +33,11 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import org.lwjgl.input.Keyboard;
 
+import java.util.UUID;
+
 public class GuiQuestEditor extends GuiScreenCanvas implements IPEventListener, IVolatileScreen, INeedsRefresh
 {
-    private final int questID;
+    private final UUID questID;
     private IQuest quest;
     
     private PanelTextBox pnTitle;
@@ -44,7 +47,7 @@ public class GuiQuestEditor extends GuiScreenCanvas implements IPEventListener, 
     private PanelButton btnLogic;
     private PanelButton btnVis;
     
-    public GuiQuestEditor(GuiScreen parent, int questID)
+    public GuiQuestEditor(GuiScreen parent, UUID questID)
     {
         super(parent);
         this.questID = questID;
@@ -53,7 +56,7 @@ public class GuiQuestEditor extends GuiScreenCanvas implements IPEventListener, 
     @Override
     public void refreshGui()
     {
-        quest = QuestDatabase.INSTANCE.getValue(questID);
+        quest = QuestDatabase.INSTANCE.get(questID);
         
         if(quest == null)
         {
@@ -73,7 +76,7 @@ public class GuiQuestEditor extends GuiScreenCanvas implements IPEventListener, 
     {
         super.initPanel();
         
-        quest = QuestDatabase.INSTANCE.getValue(questID);
+        quest = QuestDatabase.INSTANCE.get(questID);
         
         if(quest == null)
         {
@@ -251,8 +254,7 @@ public class GuiQuestEditor extends GuiScreenCanvas implements IPEventListener, 
 	{
 	    NBTTagCompound payload = new NBTTagCompound();
 	    NBTTagList dataList = new NBTTagList();
-	    NBTTagCompound entry = new NBTTagCompound();
-	    entry.setInteger("questID", questID);
+	    NBTTagCompound entry = NBTConverter.writeQuestId(questID);
 	    entry.setTag("config", quest.writeToNBT(new NBTTagCompound()));
 	    dataList.appendTag(entry);
 	    payload.setTag("data", dataList);

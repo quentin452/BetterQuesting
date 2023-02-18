@@ -207,7 +207,7 @@ public class GuiHome extends GuiScreenCanvas implements IPEventListener
 					QuestSettings.INSTANCE.setProperty(NativeProps.HARDCORE, hardMode);
 					
 					NetSettingSync.sendSync(null);
-                    NetQuestSync.quickSync(-1, true, true);
+                    NetQuestSync.quickSync(null, true, true);
                     NetChapterSync.sendSync(null, null);
 					
 					SaveLoadHandler.INSTANCE.resetUpdate();

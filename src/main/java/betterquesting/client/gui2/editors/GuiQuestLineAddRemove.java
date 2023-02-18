@@ -6,6 +6,7 @@ import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.IQuestLine;
 import betterquesting.api.questing.IQuestLineEntry;
+import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.GuiScreenCanvas;
 import betterquesting.api2.client.gui.controls.IPanelButton;
 import betterquesting.api2.client.gui.controls.PanelButton;
@@ -28,7 +29,6 @@ import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.client.gui.themes.presets.PresetIcon;
 import betterquesting.api2.client.gui.themes.presets.PresetLine;
 import betterquesting.api2.client.gui.themes.presets.PresetTexture;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.QuestTranslation;
 import betterquesting.client.gui2.GuiQuest;
 import betterquesting.network.handlers.NetChapterEdit;
@@ -36,13 +36,17 @@ import betterquesting.network.handlers.NetQuestEdit;
 import betterquesting.questing.QuestDatabase;
 import betterquesting.questing.QuestLineDatabase;
 import betterquesting.questing.QuestLineEntry;
+import com.google.common.collect.Maps;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import org.lwjgl.input.Keyboard;
 
 import javax.annotation.Nullable;
-import java.util.List;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.UUID;
 
 public class GuiQuestLineAddRemove extends GuiScreenCanvas implements IPEventListener, IVolatileScreen, INeedsRefresh
 {
@@ -119,18 +123,18 @@ public class GuiQuestLineAddRemove extends GuiScreenCanvas implements IPEventLis
         canvasDB = new CanvasQuestDatabase(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 32, 8, 24), 0))
         {
             @Override
-            protected boolean addResult(DBEntry<IQuest> entry, int index, int width)
+            protected boolean addResult(Map.Entry<UUID, IQuest> entry, int index, int width)
             {
                 
-                PanelButtonStorage<DBEntry<IQuest>> btnAdd = new PanelButtonStorage<>(new GuiRectangle(0, index * 16, 16, 16, 0), 2, "", entry);
+                PanelButtonStorage<Map.Entry<UUID, IQuest>> btnAdd = new PanelButtonStorage<>(new GuiRectangle(0, index * 16, 16, 16, 0), 2, "", entry);
                 btnAdd.setIcon(PresetIcon.ICON_POSITIVE.getTexture());
-                btnAdd.setActive(questLine != null && questLine.getValue(entry.getID()) == null);
+                btnAdd.setActive(questLine != null && questLine.get(entry.getKey()) == null);
                 this.addPanel(btnAdd);
                 
-                PanelButtonStorage<DBEntry<IQuest>> btnEdit = new PanelButtonStorage<>(new GuiRectangle(16, index * 16, width - 32, 16, 0), 1, QuestTranslation.translate(entry.getValue().getProperty(NativeProps.NAME)), entry);
+                PanelButtonStorage<Map.Entry<UUID, IQuest>> btnEdit = new PanelButtonStorage<>(new GuiRectangle(16, index * 16, width - 32, 16, 0), 1, QuestTranslation.translate(entry.getValue().getProperty(NativeProps.NAME)), entry);
                 this.addPanel(btnEdit);
                 
-                PanelButtonStorage<DBEntry<IQuest>> btnDel = new PanelButtonStorage<>(new GuiRectangle(width - 16, index * 16, 16, 16, 0), 4, "", entry);
+                PanelButtonStorage<Map.Entry<UUID, IQuest>> btnDel = new PanelButtonStorage<>(new GuiRectangle(width - 16, index * 16, 16, 16, 0), 4, "", entry);
                 btnDel.setIcon(PresetIcon.ICON_TRASH.getTexture());
                 this.addPanel(btnDel);
                 
@@ -174,30 +178,32 @@ public class GuiQuestLineAddRemove extends GuiScreenCanvas implements IPEventLis
     {
         IPanelButton btn = event.getButton();
         
-        if(btn.getButtonID() == 0) // Exit
+        if (btn.getButtonID() == 0) // Exit
         {
             mc.displayGuiScreen(this.parent);
-        } else if(btn.getButtonID() == 1) // Edit
+        }
+        else if (btn.getButtonID() == 1) // Edit
         {
-            DBEntry<IQuest> entry = ((PanelButtonStorage<DBEntry<IQuest>>)btn).getStoredValue();
-            mc.displayGuiScreen(new GuiQuest(this, entry.getID()));
-        } else if(btn.getButtonID() == 2) // Add
+            Map.Entry<UUID, IQuest> entry = ((PanelButtonStorage<Map.Entry<UUID, IQuest>>) btn).getStoredValue();
+            mc.displayGuiScreen(new GuiQuest(this, entry.getKey()));
+        }
+        else if (btn.getButtonID() == 2) // Add
         {
-            DBEntry<IQuest> entry = ((PanelButtonStorage<DBEntry<IQuest>>)btn).getStoredValue();
+            Map.Entry<UUID, IQuest> entry = ((PanelButtonStorage<Map.Entry<UUID, IQuest>>)btn).getStoredValue();
             IQuestLineEntry qe = new QuestLineEntry(0, 0);
             int x1 = 0;
             int y1 = 0;
             
             topLoop:
-            while(questLine != null)
+            while (questLine != null)
             {
-                for(DBEntry<IQuestLineEntry> qe2 : questLine.getEntries())
+                for (IQuestLineEntry qle : questLine.values())
                 {
-                    int x2 = qe2.getValue().getPosX();
-                    int y2 = qe2.getValue().getPosY();
-                    int s2 = qe2.getValue().getSize();
+                    int x2 = qle.getPosX();
+                    int y2 = qle.getPosY();
+                    int s2 = qle.getSize();
                     
-                    if(x1 >= x2 && x1 < x2 + s2 && y1 >= y2 && y1 < y2 + s2)
+                    if (x1 >= x2 && x1 < x2 + s2 && y1 >= y2 && y1 < y2 + s2)
                     {
                         x1 += s2;
                         y1 += s2;
@@ -209,34 +215,37 @@ public class GuiQuestLineAddRemove extends GuiScreenCanvas implements IPEventLis
             }
             
             qe.setPosition(x1, y1);
-            questLine.add(entry.getID(), qe);
+            questLine.put(entry.getKey(), qe);
             SendChanges();
-        } else if(btn.getButtonID() == 3 && questLine != null) // Remove
+        }
+        else if (btn.getButtonID() == 3 && questLine != null) // Remove
         {
-            DBEntry<IQuest> entry = ((PanelButtonStorage<DBEntry<IQuest>>)btn).getStoredValue();
-            questLine.removeID(entry.getID());
+            Map.Entry<UUID, IQuest> entry = ((PanelButtonStorage<Map.Entry<UUID, IQuest>>) btn).getStoredValue();
+            questLine.remove(entry.getKey());
             SendChanges();
-        } else if(btn.getButtonID() == 4) // Delete
+        }
+        else if (btn.getButtonID() == 4) // Delete
         {
-            DBEntry<IQuest> entry = ((PanelButtonStorage<DBEntry<IQuest>>)btn).getStoredValue();
+            Map.Entry<UUID, IQuest> entry = ((PanelButtonStorage<Map.Entry<UUID, IQuest>>)btn).getStoredValue();
             NBTTagCompound payload = new NBTTagCompound();
-            payload.setIntArray("questIDs", new int[]{entry.getID()});
+            payload.setTag("questIDs", NBTConverter.writeQuestIds(Collections.singletonList(entry.getKey())));
             payload.setInteger("action", 1);
             NetQuestEdit.sendEdit(payload);
-        } else if(btn.getButtonID() == 5) // New
+        }
+        else if (btn.getButtonID() == 5) // New
         {
             NBTTagCompound payload = new NBTTagCompound();
             NBTTagList dataList = new NBTTagList();
             NBTTagCompound entry = new NBTTagCompound();
-            entry.setInteger("questID", -1);
             dataList.appendTag(entry);
             payload.setTag("data", dataList);
             payload.setInteger("action", 3);
             NetQuestEdit.sendEdit(payload);
-        } else if(btn.getButtonID() == 6) // Error resolve
+        }
+        else if (btn.getButtonID() == 6) // Error resolve
         {
             NBTTagCompound payload = new NBTTagCompound();
-            payload.setIntArray("questIDs", new int[]{((PanelButtonStorage<Integer>)btn).getStoredValue()});
+            payload.setTag("questIDs", NBTConverter.writeQuestIds(Collections.singletonList(((PanelButtonStorage<UUID>) btn).getStoredValue())));
             payload.setInteger("action", 1);
             NetQuestEdit.sendEdit(payload);
         }
@@ -253,25 +262,25 @@ public class GuiQuestLineAddRemove extends GuiScreenCanvas implements IPEventLis
         
         int width = canvasQL.getTransform().getWidth();
     
-        List<DBEntry<IQuestLineEntry>> qles = questLine.getEntries();
-        for(int i = 0; i < qles.size(); i++)
+        Iterator<Map.Entry<UUID, IQuestLineEntry>> qleIterator = questLine.entrySet().iterator();
+        for (int i = 0; qleIterator.hasNext(); i++)
         {
-            DBEntry<IQuestLineEntry> entry = qles.get(i);
+            Map.Entry<UUID, IQuestLineEntry> entry = qleIterator.next();
             
-            IQuest quest = QuestDatabase.INSTANCE.getValue(entry.getID());
+            IQuest quest = QuestDatabase.INSTANCE.get(entry.getKey());
             
-            if(quest == null)
+            if (quest == null)
             {
-                PanelButtonStorage<Integer> btnErr = new PanelButtonStorage<>(new GuiRectangle(width - 16, i * 16, 16, 16, 0), 6, "[ERROR]", entry.getID());
+                PanelButtonStorage<UUID> btnErr = new PanelButtonStorage<>(new GuiRectangle(width - 16, i * 16, 16, 16, 0), 6, "[ERROR]", entry.getKey());
                 btnErr.setActive(true);
                 canvasQL.addPanel(btnErr);
                 continue;
             }
             
-            PanelButtonStorage<DBEntry<IQuest>> btnEdit = new PanelButtonStorage<>(new GuiRectangle(0, i * 16, width - 16, 16, 0), 1, QuestTranslation.translate(quest.getProperty(NativeProps.NAME)), new DBEntry<>(entry.getID(), quest));
+            PanelButtonStorage<Map.Entry<UUID, IQuest>> btnEdit = new PanelButtonStorage<>(new GuiRectangle(0, i * 16, width - 16, 16, 0), 1, QuestTranslation.translate(quest.getProperty(NativeProps.NAME)), Maps.immutableEntry(entry.getKey(), quest));
             canvasQL.addPanel(btnEdit);
             
-            PanelButtonStorage<DBEntry<IQuest>> btnRem = new PanelButtonStorage<>(new GuiRectangle(width - 16, i * 16, 16, 16, 0), 3, "", new DBEntry<>(entry.getID(), quest));
+            PanelButtonStorage<Map.Entry<UUID, IQuest>> btnRem = new PanelButtonStorage<>(new GuiRectangle(width - 16, i * 16, 16, 16, 0), 3, "", Maps.immutableEntry(entry.getKey(), quest));
             btnRem.setIcon(PresetIcon.ICON_NEGATIVE.getTexture());
             canvasQL.addPanel(btnRem);
         }

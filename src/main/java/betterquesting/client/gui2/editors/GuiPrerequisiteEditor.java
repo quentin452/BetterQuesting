@@ -5,6 +5,7 @@ import betterquesting.api.client.gui.misc.IVolatileScreen;
 import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.IQuest.RequirementType;
+import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.GuiScreenCanvas;
 import betterquesting.api2.client.gui.controls.IPanelButton;
 import betterquesting.api2.client.gui.controls.PanelButton;
@@ -27,24 +28,27 @@ import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.client.gui.themes.presets.PresetIcon;
 import betterquesting.api2.client.gui.themes.presets.PresetLine;
 import betterquesting.api2.client.gui.themes.presets.PresetTexture;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.QuestTranslation;
 import betterquesting.client.gui2.GuiQuest;
 import betterquesting.network.handlers.NetQuestEdit;
 import betterquesting.questing.QuestDatabase;
+import com.google.common.collect.Maps;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import org.lwjgl.input.Keyboard;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class GuiPrerequisiteEditor extends GuiScreenCanvas implements IPEventListener, IVolatileScreen, INeedsRefresh
 {
     private IQuest quest;
-    private final int questID;
+    private final UUID questID;
     
     private CanvasQuestDatabase canvasDB;
     private CanvasScrolling canvasPreReq;
@@ -53,15 +57,15 @@ public class GuiPrerequisiteEditor extends GuiScreenCanvas implements IPEventLis
     {
         super(parent);
         this.quest = quest;
-        this.questID = QuestDatabase.INSTANCE.getID(quest);
+        this.questID = QuestDatabase.INSTANCE.lookupKey(quest);
     }
     
     @Override
     public void refreshGui()
     {
-        quest = QuestDatabase.INSTANCE.getValue(questID);
+        quest = QuestDatabase.INSTANCE.get(questID);
         
-        if(quest == null)
+        if (quest == null)
         {
             mc.displayGuiScreen(parent);
             return;
@@ -104,17 +108,17 @@ public class GuiPrerequisiteEditor extends GuiScreenCanvas implements IPEventLis
         canvasDB = new CanvasQuestDatabase(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 32, 8, 24), 0))
         {
             @Override
-            protected boolean addResult(DBEntry<IQuest> entry, int index, int width)
+            protected boolean addResult(Map.Entry<UUID, IQuest> entry, int index, int width)
             {
-                PanelButtonStorage<DBEntry<IQuest>> btnAdd = new PanelButtonStorage<>(new GuiRectangle(0, index * 16, 16, 16, 0), 2, "", entry);
+                PanelButtonStorage<Map.Entry<UUID, IQuest>> btnAdd = new PanelButtonStorage<>(new GuiRectangle(0, index * 16, 16, 16, 0), 2, "", entry);
                 btnAdd.setIcon(PresetIcon.ICON_POSITIVE.getTexture());
-                btnAdd.setActive(!containsReq(quest, entry.getID()));
+                btnAdd.setActive(!containsReq(quest, entry.getKey()));
                 this.addPanel(btnAdd);
                 
-                PanelButtonStorage<DBEntry<IQuest>> btnEdit = new PanelButtonStorage<>(new GuiRectangle(16, index * 16, width - 32, 16, 0), 1, QuestTranslation.translate(entry.getValue().getProperty(NativeProps.NAME)), entry);
+                PanelButtonStorage<Map.Entry<UUID, IQuest>> btnEdit = new PanelButtonStorage<>(new GuiRectangle(16, index * 16, width - 32, 16, 0), 1, QuestTranslation.translate(entry.getValue().getProperty(NativeProps.NAME)), entry);
                 this.addPanel(btnEdit);
                 
-                PanelButtonStorage<DBEntry<IQuest>> btnDel = new PanelButtonStorage<>(new GuiRectangle(width - 16, index * 16, 16, 16, 0), 4, "", entry);
+                PanelButtonStorage<Map.Entry<UUID, IQuest>> btnDel = new PanelButtonStorage<>(new GuiRectangle(width - 16, index * 16, 16, 16, 0), 4, "", entry);
                 btnDel.setIcon(PresetIcon.ICON_TRASH.getTexture());
                 this.addPanel(btnDel);
                 
@@ -164,19 +168,22 @@ public class GuiPrerequisiteEditor extends GuiScreenCanvas implements IPEventLis
         canvasPreReq.resetCanvas();
         int width = canvasPreReq.getTransform().getWidth();
         
-        List<DBEntry<IQuest>> arrReq = QuestDatabase.INSTANCE.bulkLookup(quest.getRequirements());
-        for(int i = 0; i < arrReq.size(); i++)
+        List<Map.Entry<UUID, IQuest>> arrReq =
+                quest.getRequirements().stream()
+                        .map(uuid -> Maps.immutableEntry(uuid, QuestDatabase.INSTANCE.get(uuid)))
+                        .collect(Collectors.toCollection(ArrayList::new));
+        for (int i = 0; i < arrReq.size(); i++)
         {
-            PanelButtonStorage<DBEntry<IQuest>> btnEdit = new PanelButtonStorage<>(new GuiRectangle(0, i * 16, width - 32, 16, 0), 1, QuestTranslation.translate(arrReq.get(i).getValue().getProperty(NativeProps.NAME)), arrReq.get(i));
+            PanelButtonStorage<Map.Entry<UUID, IQuest>> btnEdit = new PanelButtonStorage<>(new GuiRectangle(0, i * 16, width - 32, 16, 0), 1, QuestTranslation.translate(arrReq.get(i).getValue().getProperty(NativeProps.NAME)), arrReq.get(i));
             canvasPreReq.addPanel(btnEdit);
 
-            PanelButtonStorage<DBEntry<IQuest>> btnType = new PanelButtonStorage<>(new GuiRectangle(width - 32, i * 16, 16, 16, 0), 6, "", arrReq.get(i));
-            RequirementType requirementType = quest.getRequirementType(arrReq.get(i).getID());
+            PanelButtonStorage<Map.Entry<UUID, IQuest>> btnType = new PanelButtonStorage<>(new GuiRectangle(width - 32, i * 16, 16, 16, 0), 6, "", arrReq.get(i));
+            RequirementType requirementType = quest.getRequirementType(arrReq.get(i).getKey());
             btnType.setIcon(requirementType.getIcon().getTexture());
             btnType.setTooltip(Collections.singletonList(requirementType.getButtonTooltip()));
             canvasPreReq.addPanel(btnType);
 
-            PanelButtonStorage<DBEntry<IQuest>> btnRem = new PanelButtonStorage<>(new GuiRectangle(width - 16, i * 16, 16, 16, 0), 3, "", arrReq.get(i));
+            PanelButtonStorage<Map.Entry<UUID, IQuest>> btnRem = new PanelButtonStorage<>(new GuiRectangle(width - 16, i * 16, 16, 16, 0), 3, "", arrReq.get(i));
             btnRem.setIcon(PresetIcon.ICON_NEGATIVE.getTexture());
             canvasPreReq.addPanel(btnRem);
         }
@@ -196,80 +203,65 @@ public class GuiPrerequisiteEditor extends GuiScreenCanvas implements IPEventLis
 	{
         IPanelButton btn = event.getButton();
         
-        if(btn.getButtonID() == 0) // Exit
+        if (btn.getButtonID() == 0) // Exit
         {
             mc.displayGuiScreen(this.parent);
-        } else if(btn.getButtonID() == 1 && btn instanceof PanelButtonStorage) // Edit Quest
+        }
+        else if (btn.getButtonID() == 1 && btn instanceof PanelButtonStorage) // Edit Quest
         {
-            DBEntry<IQuest> entry = ((PanelButtonStorage<DBEntry<IQuest>>)btn).getStoredValue();
-            mc.displayGuiScreen(new GuiQuest(this, entry.getID()));
-        } else if(btn.getButtonID() == 2 && btn instanceof PanelButtonStorage) // Add
+            Map.Entry<UUID, IQuest> entry = ((PanelButtonStorage<Map.Entry<UUID, IQuest>>) btn).getStoredValue();
+            mc.displayGuiScreen(new GuiQuest(this, entry.getKey()));
+        }
+        else if (btn.getButtonID() == 2 && btn instanceof PanelButtonStorage) // Add
         {
-            DBEntry<IQuest> entry = ((PanelButtonStorage<DBEntry<IQuest>>)btn).getStoredValue();
-            addReq(quest, entry.getID());
+            Map.Entry<UUID, IQuest> entry = ((PanelButtonStorage<Map.Entry<UUID, IQuest>>) btn).getStoredValue();
+            addReq(quest, entry.getKey());
             SendChanges();
-        } else if(btn.getButtonID() == 3 && btn instanceof PanelButtonStorage) // Remove
+        }
+        else if (btn.getButtonID() == 3 && btn instanceof PanelButtonStorage) // Remove
         {
-            DBEntry<IQuest> entry = ((PanelButtonStorage<DBEntry<IQuest>>)btn).getStoredValue();
-            removeReq(quest, entry.getID());
+            Map.Entry<UUID, IQuest> entry = ((PanelButtonStorage<Map.Entry<UUID, IQuest>>) btn).getStoredValue();
+            removeReq(quest, entry.getKey());
             SendChanges();
-        } else if(btn.getButtonID() == 4 && btn instanceof PanelButtonStorage) // Delete
+        }
+        else if (btn.getButtonID() == 4 && btn instanceof PanelButtonStorage) // Delete
         {
-            DBEntry<IQuest> entry = ((PanelButtonStorage<DBEntry<IQuest>>)btn).getStoredValue();
+            Map.Entry<UUID, IQuest> entry = ((PanelButtonStorage<Map.Entry<UUID, IQuest>>) btn).getStoredValue();
             NBTTagCompound payload = new NBTTagCompound();
-            payload.setIntArray("questIDs", new int[]{entry.getID()});
+            payload.setTag("questIDs", NBTConverter.writeQuestIds(Collections.singletonList(entry.getKey())));
             payload.setInteger("action", 1);
             NetQuestEdit.sendEdit(payload);
-        } else if(btn.getButtonID() == 5) // New
+        }
+        else if (btn.getButtonID() == 5) // New
         {
             NBTTagCompound payload = new NBTTagCompound();
             NBTTagList dataList = new NBTTagList();
             NBTTagCompound entry = new NBTTagCompound();
-            entry.setInteger("questID", -1);
             dataList.appendTag(entry);
             payload.setTag("data", dataList);
             NetQuestEdit.sendEdit(payload);
-        } else if(btn.getButtonID() == 6) // set type
+        }
+        else if (btn.getButtonID() == 6) // set type
         {
-            DBEntry<IQuest> entry = ((PanelButtonStorage<DBEntry<IQuest>>)btn).getStoredValue();
-            quest.setRequirementType(entry.getID(), quest.getRequirementType(entry.getID()).next());
+            Map.Entry<UUID, IQuest> entry = ((PanelButtonStorage<Map.Entry<UUID, IQuest>>) btn).getStoredValue();
+            quest.setRequirementType(entry.getKey(), quest.getRequirementType(entry.getKey()).next());
             SendChanges();
         }
     }
     
-    private boolean containsReq(IQuest quest, int id)
+    private boolean containsReq(IQuest quest, UUID uuid)
     {
-        for(int reqID : quest.getRequirements()) if(id == reqID) return true;
-        return false;
+        return quest.getRequirements().contains(uuid);
     }
     
-    private void removeReq(IQuest quest, int id)
+    private void removeReq(IQuest quest, UUID uuid)
     {
-        int[] orig = quest.getRequirements();
-        if(orig.length <= 0) return;
-        boolean hasRemoved = false;
-        int[] rem = new int[orig.length - 1];
-        for(int i = 0; i < orig.length; i++)
-        {
-            if(!hasRemoved && orig[i] == id)
-            {
-                hasRemoved = true;
-                continue;
-            } else if(!hasRemoved && i >= rem.length) break;
-            
-            rem[!hasRemoved ? i : (i - 1)] = orig[i];
-        }
-        
-        if(hasRemoved) quest.setRequirements(rem);
+        quest.getRequirements().remove(uuid);
     }
     
-    private void addReq(IQuest quest, int id)
+    private void addReq(IQuest quest, UUID uuid)
     {
-        if(containsReq(quest, id)) return;
-        int[] orig = quest.getRequirements();
-        int[] added = Arrays.copyOf(orig, orig.length + 1);
-        added[orig.length] = id;
-        quest.setRequirements(added);
+        quest.getRequirements().add(uuid);
     }
 	
 	private void SendChanges()
@@ -277,7 +269,7 @@ public class GuiPrerequisiteEditor extends GuiScreenCanvas implements IPEventLis
 	    NBTTagCompound payload = new NBTTagCompound();
 	    NBTTagList dataList = new NBTTagList();
 	    NBTTagCompound entry = new NBTTagCompound();
-	    entry.setInteger("questID", questID);
+        NBTConverter.writeQuestId(questID, entry);
 	    entry.setTag("config", quest.writeToNBT(new NBTTagCompound()));
 	    dataList.appendTag(entry);
 	    payload.setTag("data", dataList);

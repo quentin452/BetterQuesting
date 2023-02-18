@@ -36,13 +36,15 @@ import org.lwjgl.util.vector.Vector4f;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class GuiSubmitStation extends GuiContainerCanvas implements INeedsRefresh
 {
     private final ContainerSubmitStation ssContainer;
     private final TileSubmitStation tile;
     
-    private final List<DBEntry<IQuest>> quests = new ArrayList<>();
+    private final List<Map.Entry<UUID, IQuest>> quests = new ArrayList<>();
     private final List<DBEntry<ITask>> tasks = new ArrayList<>();
     
     private IGuiCanvas cvBackground;
@@ -74,7 +76,10 @@ public class GuiSubmitStation extends GuiContainerCanvas implements INeedsRefres
     {
         quests.clear();
         QuestCache qc = (QuestCache)mc.thePlayer.getExtendedProperties(QuestCache.LOC_QUEST_CACHE.toString());
-        if(qc != null) quests.addAll(QuestDatabase.INSTANCE.bulkLookup(qc.getActiveQuests()));
+        if (qc != null)
+        {
+            quests.addAll(QuestDatabase.INSTANCE.filterKeys(qc.getActiveQuests()).entrySet());
+        }
         filterQuests();
         
         refreshTaskPanel();
@@ -90,7 +95,10 @@ public class GuiSubmitStation extends GuiContainerCanvas implements INeedsRefres
         quests.clear();
         taskPanel = null;
         QuestCache qc = (QuestCache)mc.thePlayer.getExtendedProperties(QuestCache.LOC_QUEST_CACHE.toString());
-        if(qc != null) quests.addAll(QuestDatabase.INSTANCE.bulkLookup(qc.getActiveQuests()));
+        if (qc != null)
+        {
+            quests.addAll(QuestDatabase.INSTANCE.filterKeys(qc.getActiveQuests()).entrySet());
+        }
         filterQuests();
         
         // Background panel
@@ -159,7 +167,7 @@ public class GuiSubmitStation extends GuiContainerCanvas implements INeedsRefres
                 final IQuest quest = quests.get(selQuest).getValue();
                 final ITask task = tasks.get(selTask).getValue();
                 tile.setupTask(QuestingAPI.getQuestingUUID(mc.thePlayer), quest, task);
-                NetStationEdit.setupStation(tile.xCoord, tile.yCoord, tile.zCoord, QuestDatabase.INSTANCE.getID(quest), quest.getTasks().getID(task));
+                NetStationEdit.setupStation(tile.xCoord, tile.yCoord, tile.zCoord, QuestDatabase.INSTANCE.lookupKey(quest), quest.getTasks().getID(task));
                 refreshTaskPanel();
             }
         };
@@ -215,11 +223,11 @@ public class GuiSubmitStation extends GuiContainerCanvas implements INeedsRefres
     
     private void filterQuests()
     {
-        Iterator<DBEntry<IQuest>> iter = quests.iterator();
+        Iterator<Map.Entry<UUID, IQuest>> iter = quests.iterator();
         
         while(iter.hasNext())
         {
-            DBEntry<IQuest> entry = iter.next();
+            Map.Entry<UUID, IQuest> entry = iter.next();
             
             boolean valid = false;
             
@@ -238,16 +246,19 @@ public class GuiSubmitStation extends GuiContainerCanvas implements INeedsRefres
     
     private void refreshTaskPanel()
     {
-        if(taskPanel != null) cvBackground.removePanel(taskPanel);
-        
-        if(tile.isSetup())
+        if (taskPanel != null)
         {
-            DBEntry<IQuest> qdbe = null;
+            cvBackground.removePanel(taskPanel);
+        }
+        
+        if (tile.isSetup())
+        {
+            Map.Entry<UUID, IQuest> qdbe = null;
             
-            for(int i = 0; i < quests.size(); i++)
+            for (int i = 0; i < quests.size(); i++)
             {
-                DBEntry<IQuest> entry = quests.get(i);
-                if(entry.getID() == tile.questID)
+                Map.Entry<UUID, IQuest> entry = quests.get(i);
+                if (entry.getKey().equals(tile.questID))
                 {
                     selQuest = i;
                     qdbe = entry;
@@ -255,12 +266,12 @@ public class GuiSubmitStation extends GuiContainerCanvas implements INeedsRefres
                 }
             }
             
-            if(qdbe != null)
+            if (qdbe != null)
             {
                 List<DBEntry<ITask>> tmpTasks = qdbe.getValue().getTasks().getEntries();
-                for(int i = 0; i < tmpTasks.size(); i++)
+                for (int i = 0; i < tmpTasks.size(); i++)
                 {
-                    if(tmpTasks.get(i).getID() == tile.taskID)
+                    if (tmpTasks.get(i).getID() == tile.taskID)
                     {
                         selTask = i;
                         break;
@@ -295,7 +306,7 @@ public class GuiSubmitStation extends GuiContainerCanvas implements INeedsRefres
             return;
         } else selQuest = lazyPosMod(selQuest, quests.size());
         
-        DBEntry<IQuest> entry = quests.get(selQuest);
+        Map.Entry<UUID, IQuest> entry = quests.get(selQuest);
         txtQstTitle.setText(QuestTranslation.translate(entry.getValue().getProperty(NativeProps.NAME)));
         
         tasks.clear();
