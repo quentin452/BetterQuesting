@@ -4,7 +4,6 @@ import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.rewards.IReward;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
-import betterquesting.api2.storage.DBEntry;
 import bq_standard.client.gui.rewards.PanelRewardScoreboard;
 import bq_standard.core.BQ_Standard;
 import bq_standard.rewards.factory.FactoryRewardScoreboard;
@@ -16,6 +15,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.scoreboard.*;
 import net.minecraft.util.ResourceLocation;
 import org.apache.logging.log4j.Level;
+
+import java.util.Map;
+import java.util.UUID;
 
 public class RewardScoreboard implements IReward {
     public String score = "Reputation";
@@ -34,12 +36,12 @@ public class RewardScoreboard implements IReward {
     }
 
     @Override
-    public boolean canClaim(EntityPlayer player, DBEntry<IQuest> quest) {
+    public boolean canClaim(EntityPlayer player, Map.Entry<UUID, IQuest> quest) {
         return true;
     }
 
     @Override
-    public void claimReward(EntityPlayer player, DBEntry<IQuest> quest) {
+    public void claimReward(EntityPlayer player, Map.Entry<UUID, IQuest> quest) {
         Scoreboard board = player.getWorldScoreboard();
         if (board == null) return;
 
@@ -89,13 +91,13 @@ public class RewardScoreboard implements IReward {
 
     @Override
     @SideOnly(Side.CLIENT)
-    public IGuiPanel getRewardGui(IGuiRect rect, DBEntry<IQuest> quest) {
+    public IGuiPanel getRewardGui(IGuiRect rect, Map.Entry<UUID, IQuest> quest) {
         return new PanelRewardScoreboard(rect, this);
     }
 
     @Override
     @SideOnly(Side.CLIENT)
-    public GuiScreen getRewardEditor(GuiScreen screen, DBEntry<IQuest> quest) {
+    public GuiScreen getRewardEditor(GuiScreen screen, Map.Entry<UUID, IQuest> quest) {
         return null;
     }
 }
