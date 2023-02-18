@@ -57,81 +57,118 @@ public class QuestCommandDefaults extends QuestCommandBase {
 
     @Override
     public void runCommand(MinecraftServer server, CommandBase command, ICommandSender sender, String[] args) {
-        File qFile;
+        File dataDir;
+        // The location of the legacy single huge file.
+        File legacyFile;
 
         if (args.length == 3 && !args[2].equalsIgnoreCase("DefaultQuests")) {
-            qFile = new File(BQ_Settings.defaultDir, "saved_quests/" + args[2] + ".json");
+            dataDir = new File(BQ_Settings.defaultDir, "saved_quests/" + args[2]);
+            legacyFile = new File(BQ_Settings.defaultDir, "saved_quests/" + args[2] + ".json");
         } else {
-            qFile = new File(BQ_Settings.defaultDir, "DefaultQuests.json");
+            dataDir = new File(BQ_Settings.defaultDir, "DefaultQuests");
+            legacyFile = new File(BQ_Settings.defaultDir, "DefaultQuests.json");
         }
 
         if (args[1].equalsIgnoreCase("save")) {
-            boolean editMode = QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE);
+            save(sender, args, dataDir);
 
-            NBTTagCompound base = new NBTTagCompound();
-            // Don't write editmode to json
-            QuestSettings.INSTANCE.setProperty(NativeProps.EDIT_MODE, false);
-            base.setTag("questSettings", QuestSettings.INSTANCE.writeToNBT(new NBTTagCompound()));
-            // And restore back
-            QuestSettings.INSTANCE.setProperty(NativeProps.EDIT_MODE, editMode);
-            base.setTag("questDatabase", QuestDatabase.INSTANCE.writeToNBT(new NBTTagList(), null));
-            base.setTag("questLines", QuestLineDatabase.INSTANCE.writeToNBT(new NBTTagList(), null));
-            base.setString("format", BetterQuesting.FORMAT);
-            JsonHelper.WriteToFile(qFile, NBTConverter.NBTtoJSON_Compound(base, new JsonObject(), true));
-
-            if (args.length == 3 && !args[2].equalsIgnoreCase("DefaultQuests")) {
-                sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.save2", args[2] + ".json"));
-            } else {
-                sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.save"));
-            }
         } else if (args[1].equalsIgnoreCase("load")) {
-            if (qFile.exists()) {
-                boolean editMode = QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE);
-                boolean hardMode = QuestSettings.INSTANCE.getProperty(NativeProps.HARDCORE);
-
-                NBTTagList jsonP = QuestDatabase.INSTANCE.writeProgressToNBT(new NBTTagList(), null);
-
-                JsonObject j1 = JsonHelper.ReadFromFile(qFile);
-                NBTTagCompound nbt1 = NBTConverter.JSONtoNBT_Object(j1, new NBTTagCompound(), true);
-
-                QuestSettings.INSTANCE.readFromNBT(nbt1.getCompoundTag("questSettings"));
-                QuestDatabase.INSTANCE.readFromNBT(nbt1.getTagList("questDatabase", 10), false);
-                QuestLineDatabase.INSTANCE.readFromNBT(nbt1.getTagList("questLines", 10), false);
-
-                QuestDatabase.INSTANCE.readProgressFromNBT(jsonP, false);
-
-                QuestSettings.INSTANCE.setProperty(NativeProps.EDIT_MODE, editMode);
-                QuestSettings.INSTANCE.setProperty(NativeProps.HARDCORE, hardMode);
-
-                if (args.length == 3 && !args[2].equalsIgnoreCase("DefaultQuests")) {
-                    sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.load2", args[2] + ".json"));
-                } else {
-                    sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.load"));
-                }
-
-                NetSettingSync.sendSync(null);
-                NetQuestSync.quickSync(null, true, true);
-                NetChapterSync.sendSync(null, null);
-                SaveLoadHandler.INSTANCE.markDirty();
+            if (!dataDir.exists() && legacyFile.exists()) {
+                loadLegacy(sender, args, legacyFile);
             } else {
-                sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.none"));
+                load(sender, args, dataDir);
             }
+
         } else if (args[1].equalsIgnoreCase("set") && args.length == 3) {
-            if (qFile.exists() && !args[2].equalsIgnoreCase("DefaultQuests")) {
-                File defFile = new File(BQ_Settings.defaultDir, "DefaultQuests.json");
-
-                if (defFile.exists()) {
-                    defFile.delete();
-                }
-
-                JsonHelper.CopyPaste(qFile, defFile);
-
-                sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.set", args[2]));
+            if (!dataDir.exists() && legacyFile.exists()) {
+                setLegacy(sender, args, legacyFile);
             } else {
-                sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.none"));
+                set(sender, args, dataDir);
             }
+
         } else {
             throw getException(command);
+        }
+    }
+
+    private void save(ICommandSender sender, String[] args, File dataDir) {
+    }
+
+    /** This is currently unused, because we always want to use the new save format instead. */
+    private void saveLegacy(ICommandSender sender, String[] args, File legacyFile) {
+        boolean editMode = QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE);
+
+        NBTTagCompound base = new NBTTagCompound();
+        // Don't write editmode to json
+        QuestSettings.INSTANCE.setProperty(NativeProps.EDIT_MODE, false);
+        base.setTag("questSettings", QuestSettings.INSTANCE.writeToNBT(new NBTTagCompound()));
+        // And restore back
+        QuestSettings.INSTANCE.setProperty(NativeProps.EDIT_MODE, editMode);
+        base.setTag("questDatabase", QuestDatabase.INSTANCE.writeToNBT(new NBTTagList(), null));
+        base.setTag("questLines", QuestLineDatabase.INSTANCE.writeToNBT(new NBTTagList(), null));
+        base.setString("format", BetterQuesting.FORMAT);
+        JsonHelper.WriteToFile(legacyFile, NBTConverter.NBTtoJSON_Compound(base, new JsonObject(), true));
+
+        if (args.length == 3 && !args[2].equalsIgnoreCase("DefaultQuests")) {
+            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.save2", args[2] + ".json"));
+        } else {
+            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.save"));
+        }
+    }
+
+    private void load(ICommandSender sender, String[] args, File dataDir) {
+    }
+
+    private void loadLegacy(ICommandSender sender, String[] args, File legacyFile) {
+        if (legacyFile.exists()) {
+            boolean editMode = QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE);
+            boolean hardMode = QuestSettings.INSTANCE.getProperty(NativeProps.HARDCORE);
+
+            NBTTagList jsonP = QuestDatabase.INSTANCE.writeProgressToNBT(new NBTTagList(), null);
+
+            JsonObject j1 = JsonHelper.ReadFromFile(legacyFile);
+            NBTTagCompound nbt1 = NBTConverter.JSONtoNBT_Object(j1, new NBTTagCompound(), true);
+
+            QuestSettings.INSTANCE.readFromNBT(nbt1.getCompoundTag("questSettings"));
+            QuestDatabase.INSTANCE.readFromNBT(nbt1.getTagList("questDatabase", 10), false);
+            QuestLineDatabase.INSTANCE.readFromNBT(nbt1.getTagList("questLines", 10), false);
+
+            QuestDatabase.INSTANCE.readProgressFromNBT(jsonP, false);
+
+            QuestSettings.INSTANCE.setProperty(NativeProps.EDIT_MODE, editMode);
+            QuestSettings.INSTANCE.setProperty(NativeProps.HARDCORE, hardMode);
+
+            if (args.length == 3 && !args[2].equalsIgnoreCase("DefaultQuests")) {
+                sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.load2", args[2] + ".json"));
+            } else {
+                sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.load"));
+            }
+
+            NetSettingSync.sendSync(null);
+            NetQuestSync.quickSync(null, true, true);
+            NetChapterSync.sendSync(null, null);
+            SaveLoadHandler.INSTANCE.markDirty();
+        } else {
+            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.none"));
+        }
+    }
+
+    private void set(ICommandSender sender, String[] args, File dataDir) {
+    }
+
+    private void setLegacy(ICommandSender sender, String[] args, File legacyFile) {
+        if (legacyFile.exists() && !args[2].equalsIgnoreCase("DefaultQuests")) {
+            File defFile = new File(BQ_Settings.defaultDir, "DefaultQuests.json");
+
+            if (defFile.exists()) {
+                defFile.delete();
+            }
+
+            JsonHelper.CopyPaste(legacyFile, defFile);
+
+            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.set", args[2]));
+        } else {
+            sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.default.none"));
         }
     }
 }
