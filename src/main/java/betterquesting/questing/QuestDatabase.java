@@ -2,75 +2,83 @@ package betterquesting.questing;
 
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.IQuestDatabase;
-import betterquesting.api2.storage.DBEntry;
-import betterquesting.api2.storage.SimpleDatabase;
+import betterquesting.api.utils.NBTConverter;
+import betterquesting.api2.storage.IUuidDatabase;
+import betterquesting.api2.storage.UuidDatabase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
-public final class QuestDatabase extends SimpleDatabase<IQuest> implements IQuestDatabase
+public class QuestDatabase extends UuidDatabase<IQuest> implements IQuestDatabase
 {
 	public static final QuestDatabase INSTANCE = new QuestDatabase();
-	
+
 	@Override
-	public synchronized IQuest createNew(int id)
+	public synchronized IQuest createNew(UUID questID)
 	{
 	    IQuest quest = new QuestInstance();
-	    if(id >= 0) this.add(id, quest);
+	    put(questID, quest);
 		return quest;
 	}
 	
 	@Override
-    public synchronized boolean removeID(int id)
+    public IQuest remove(Object key)
     {
-        boolean success = super.removeID(id);
-        if(success) for(DBEntry<IQuest> entry : getEntries()) removeReq(entry.getValue(), id);
-        return success;
+        if (!(key instanceof UUID))
+        {
+            return null;
+        }
+        UUID questID = (UUID) key;
+
+        IQuest removed = super.remove(questID);
+        if (removed != null)
+        {
+            for (IQuest quest : values())
+            {
+                removeReq(quest, questID);
+            }
+        }
+        return removed;
     }
     
     @Override
-    public synchronized boolean removeValue(IQuest value)
+    public UUID removeValue(IQuest value)
     {
-        int id = this.getID(value);
-        if(id < 0) return false;
-        boolean success = this.removeValue(value);
-        if(success) for(DBEntry<IQuest> entry : getEntries()) removeReq(entry.getValue(), id);
-        return success;
+        UUID questID = super.removeValue(value);
+        if (questID != null)
+        {
+            for (IQuest quest : values())
+            {
+                    removeReq(quest, questID);
+
+            }
+        }
+        return questID;
     }
     
-    private void removeReq(IQuest quest, int id)
+    private void removeReq(IQuest quest, UUID questID)
     {
-        int[] orig = quest.getRequirements();
-        if(orig.length <= 0) return;
-        boolean hasRemoved = false;
-        int[] rem = new int[orig.length - 1];
-        for(int i = 0; i < orig.length; i++)
-        {
-            if(!hasRemoved && orig[i] == id)
-            {
-                hasRemoved = true;
-                continue;
-            } else if(!hasRemoved && i >= rem.length) break;
-            
-            rem[!hasRemoved ? i : (i - 1)] = orig[i];
-        }
-        
-        if(hasRemoved) quest.setRequirements(rem);
+        quest.getRequirements().remove(questID);
     }
 	
 	@Override
 	public synchronized NBTTagList writeToNBT(NBTTagList nbt, @Nullable List<Integer> subset)
 	{
-		for(DBEntry<IQuest> entry : this.getEntries())
+        if (subset != null)
+        {
+            throw new UnsupportedOperationException("subset not supported");
+        }
+
+		for(Map.Entry<UUID, IQuest> entry : entrySet())
 		{
-		    if(subset != null && !subset.contains(entry.getID())) continue;
 			NBTTagCompound jq = new NBTTagCompound();
-			if(subset != null && jq.hasNoTags()) continue;
 			entry.getValue().writeToNBT(jq);
-			jq.setInteger("questID", entry.getID());
+            NBTConverter.writeQuestId(entry.getKey(), jq);
 			nbt.appendTag(jq);
 		}
 		
@@ -80,17 +88,33 @@ public final class QuestDatabase extends SimpleDatabase<IQuest> implements IQues
 	@Override
 	public synchronized void readFromNBT(NBTTagList nbt, boolean merge)
 	{
-		if(!merge) this.reset();
-		
-		for(int i = 0; i < nbt.tagCount(); i++)
+		if (!merge)
+        {
+            clear();
+        }
+
+		for (int i = 0; i < nbt.tagCount(); i++)
 		{
 			NBTTagCompound qTag = nbt.getCompoundTagAt(i);
-			
-			int qID = qTag.hasKey("questID", 99) ? qTag.getInteger("questID") : -1;
-			if(qID < 0) continue;
-			
-			IQuest quest = getValue(qID);
-			quest = quest != null? quest : this.createNew(qID);
+
+            Optional<UUID> questIDOptional = NBTConverter.tryReadQuestId(qTag);
+            UUID questID;
+            if (questIDOptional.isPresent())
+            {
+                questID = questIDOptional.get();
+            }
+            else if (qTag.hasKey("questID", 99))
+            {
+                // This block is needed for old questbook data.
+                questID = IUuidDatabase.convertLegacyId(qTag.getInteger("questID"));
+            }
+            else
+            {
+                continue;
+            }
+
+			IQuest quest = get(questID);
+			quest = quest != null ? quest : createNew(questID);
 			quest.readFromNBT(qTag);
 		}
 	}
@@ -98,10 +122,10 @@ public final class QuestDatabase extends SimpleDatabase<IQuest> implements IQues
 	@Override
 	public synchronized NBTTagList writeProgressToNBT(NBTTagList json, List<UUID> users)
 	{
-		for(DBEntry<IQuest> entry : this.getEntries())
+		for (Map.Entry<UUID, IQuest> entry : entrySet())
 		{
 			NBTTagCompound jq = entry.getValue().writeProgressToNBT(new NBTTagCompound(), users);
-			jq.setInteger("questID", entry.getID());
+            NBTConverter.writeQuestId(entry.getKey(), jq);
 			json.appendTag(jq);
 		}
 		
@@ -111,15 +135,33 @@ public final class QuestDatabase extends SimpleDatabase<IQuest> implements IQues
 	@Override
 	public synchronized void readProgressFromNBT(NBTTagList json, boolean merge)
 	{
-		for(int i = 0; i < json.tagCount(); i++)
+		for (int i = 0; i < json.tagCount(); i++)
 		{
 			NBTTagCompound qTag = json.getCompoundTagAt(i);
-			
-			int qID = qTag.hasKey("questID", 99) ? qTag.getInteger("questID") : -1;
-			if(qID < 0) continue;
-			
-			IQuest quest = getValue(qID);
-			if(quest != null) quest.readProgressFromNBT(qTag, merge);
+
+            Optional<UUID> questIDOptional = NBTConverter.tryReadQuestId(qTag);
+            UUID questID = null;
+            if (questIDOptional.isPresent())
+            {
+                questID = questIDOptional.get();
+            }
+            else if (qTag.hasKey("questID", 99))
+            {
+                // This block is needed for old player progress data.
+                questID = IUuidDatabase.convertLegacyId(qTag.getInteger("questID"));
+            }
+
+            if (questID == null)
+            {
+                // Quest was deleted
+                continue;
+            }
+
+			IQuest quest = get(questID);
+			if (quest != null)
+            {
+                quest.readProgressFromNBT(qTag, merge);
+            }
 		}
 	}
 }

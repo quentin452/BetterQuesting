@@ -14,6 +14,7 @@ import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.cache.QuestCache;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.storage.IDatabaseNBT;
+import betterquesting.api2.storage.IUuidDatabase;
 import betterquesting.api2.utils.DirtyPlayerMarker;
 import betterquesting.api2.utils.ParticipantInfo;
 import betterquesting.core.BetterQuesting;
@@ -21,27 +22,23 @@ import betterquesting.questing.rewards.RewardStorage;
 import betterquesting.questing.tasks.TaskStorage;
 import betterquesting.storage.PropertyContainer;
 import betterquesting.storage.QuestSettings;
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
+import com.google.common.collect.Maps;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTBase.NBTPrimitive;
-import net.minecraft.nbt.NBTTagByteArray;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagIntArray;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraftforge.common.util.Constants;
 import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -51,8 +48,8 @@ public class QuestInstance implements IQuest
 	private final RewardStorage rewards = new RewardStorage();
 
 	private final HashMap<UUID, NBTTagCompound> completeUsers = new HashMap<>();
-    private int[] preRequisites = new int[0];
-    private TIntObjectMap<RequirementType> prereqTypes = new TIntObjectHashMap<>();
+    private Set<UUID> preRequisites = new HashSet<>();
+    private HashMap<UUID, RequirementType> prereqTypes = new HashMap<>();
 
 	private final PropertyContainer qInfo = new PropertyContainer();
 
@@ -128,52 +125,62 @@ public class QuestInstance implements IQuest
 	{
 		UUID playerID = QuestingAPI.getQuestingUUID(player);
         QuestCache qc = (QuestCache)player.getExtendedProperties(QuestCache.LOC_QUEST_CACHE.toString());
-        if(qc == null) return;
-        int questID = QuestDatabase.INSTANCE.getID(this);
+        if (qc == null) {
+            return;
+        }
 
-		if(isComplete(playerID) && (qInfo.getProperty(NativeProps.REPEAT_TIME) < 0 || rewards.size() <= 0))
+        UUID questID = QuestDatabase.INSTANCE.lookupKey(this);
+
+		if (isComplete(playerID) && (qInfo.getProperty(NativeProps.REPEAT_TIME) < 0 || rewards.size() <= 0))
 		{
 			return;
-		} else if(!canSubmit(player))
+		}
+        else if (!canSubmit(player))
 		{
 			return;
 		}
 
-		if(isUnlocked(playerID) || QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE))
+		if (isUnlocked(playerID) || QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE))
 		{
 			int done = 0;
 			boolean update = false;
 
             ParticipantInfo partInfo = new ParticipantInfo(player);
-            DBEntry<IQuest> dbe = new DBEntry<>(questID, this);
+            Map.Entry<UUID, IQuest> mapEntry = Maps.immutableEntry(questID, this);
 
-			for(DBEntry<ITask> entry : tasks.getEntries())
+			for (DBEntry<ITask> entry : tasks.getEntries())
 			{
-				if(!entry.getValue().isComplete(playerID) || !entry.getValue().ignored(playerID))
+				if (!entry.getValue().isComplete(playerID) || !entry.getValue().ignored(playerID))
 				{
-					entry.getValue().detect(partInfo, dbe);
+					entry.getValue().detect(partInfo, mapEntry);
 
-					if(entry.getValue().isComplete(playerID) || entry.getValue().ignored(playerID))
+					if (entry.getValue().isComplete(playerID) || entry.getValue().ignored(playerID))
 					{
 						done++;
 						update = true;
 					}
-				} else
+				}
+                else
 				{
 					done++;
 				}
 			}
 			// Note: Tasks can mark the quest dirty themselves if progress changed but hasn't fully completed.
-			if(tasks.size() <= 0 || qInfo.getProperty(NativeProps.LOGIC_TASK).getResult(done, tasks.size()))
+			if (tasks.size() <= 0 || qInfo.getProperty(NativeProps.LOGIC_TASK).getResult(done, tasks.size()))
 			{
 			    // State won't be auto updated in edit mode so we force change it here and mark it for re-sync
-				if(QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE)) setComplete(playerID, System.currentTimeMillis());
+				if (QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE))
+                {
+                    setComplete(playerID, System.currentTimeMillis());
+                }
 				qc.markQuestDirty(questID);
-			} else if(update && qInfo.getProperty(NativeProps.SIMULTANEOUS))
+			}
+            else if (update && qInfo.getProperty(NativeProps.SIMULTANEOUS))
 			{
 				resetUser(playerID, false);
 				qc.markQuestDirty(questID);
-			} else if(update)
+			}
+            else if (update)
 			{
 				qc.markQuestDirty(questID);
 			}
@@ -216,9 +223,10 @@ public class QuestInstance implements IQuest
     @Override
     public boolean canClaim(EntityPlayer player) {
         if (!canClaimBasically(player)) return false;
-        DBEntry<IQuest> dbe = new DBEntry<>(QuestDatabase.INSTANCE.getID(this), this);
+        Map.Entry<UUID, IQuest> mapEntry =
+                Maps.immutableEntry(QuestDatabase.INSTANCE.lookupKey(this), this);
         for (DBEntry<IReward> rew : rewards.getEntries()) {
-            if (!rew.getValue().canClaim(player, dbe)) {
+            if (!rew.getValue().canClaim(player, mapEntry)) {
                 return false;
             }
         }
@@ -229,21 +237,21 @@ public class QuestInstance implements IQuest
 	@Override
 	public void claimReward(EntityPlayer player)
 	{
-        int questID = QuestDatabase.INSTANCE.getID(this);
-        DBEntry<IQuest> dbe = new DBEntry<>(questID, this);
-		for(DBEntry<IReward> rew : rewards.getEntries())
+        UUID questID = QuestDatabase.INSTANCE.lookupKey(this);
+        Map.Entry<UUID, IQuest> mapEntry = Maps.immutableEntry(questID, this);
+		for (DBEntry<IReward> rew : rewards.getEntries())
 		{
-			rew.getValue().claimReward(player, dbe);
+			rew.getValue().claimReward(player, mapEntry);
 		}
 
 		UUID pID = QuestingAPI.getQuestingUUID(player);
         QuestCache qc = (QuestCache)player.getExtendedProperties(QuestCache.LOC_QUEST_CACHE.toString());
 
-        synchronized(completeUsers)
+        synchronized (completeUsers)
         {
             NBTTagCompound entry = getCompletionInfo(pID);
 
-            if(entry == null)
+            if (entry == null)
             {
                 entry = new NBTTagCompound();
                 this.completeUsers.put(pID, entry);
@@ -254,7 +262,9 @@ public class QuestInstance implements IQuest
 
             DirtyPlayerMarker.markDirty(pID);
         }
-		if(qc != null) qc.markQuestDirty(QuestDatabase.INSTANCE.getID(this));
+		if (qc != null) {
+            qc.markQuestDirty(QuestDatabase.INSTANCE.lookupKey(this));
+        }
 	}
 
 	@Override
@@ -294,20 +304,16 @@ public class QuestInstance implements IQuest
 	@Override
 	public boolean isUnlocked(UUID uuid)
 	{
-		if(preRequisites.length <= 0) return true;
+		if (preRequisites.isEmpty())
+        {
+            return true;
+        }
 
-		int A = 0;
-		int B = preRequisites.length;
-
-		for(DBEntry<IQuest> quest : QuestDatabase.INSTANCE.bulkLookup(getRequirements()))
-		{
-			if(quest.getValue().isComplete(uuid))
-			{
-				A++;
-			}
-		}
-
-		return qInfo.getProperty(NativeProps.LOGIC_QUEST).getResult(A, B);
+        int complete =
+                (int) QuestDatabase.INSTANCE.filterKeys(preRequisites).values().stream()
+                        .filter(quest -> quest.isComplete(uuid))
+                        .count();
+		return qInfo.getProperty(NativeProps.LOGIC_QUEST).getResult(complete, preRequisites.size());
 	}
 
 	@Override
@@ -338,23 +344,19 @@ public class QuestInstance implements IQuest
 		// glease: currently we do not have whole chains mutually exclusive with each other here in gtnh,
 		// but this might be useful for more quest driven packs. the performance implication dissuade me from implementing
 		// this. should look into this later.
-		if(preRequisites.length == 0) return true;
+        if (preRequisites.isEmpty())
+        {
+            return true;
+        }
 
 		EnumLogic questLogic = qInfo.getProperty(NativeProps.LOGIC_QUEST);
-		if(questLogic.isTrivial()) return true;
+		if (questLogic.isTrivial()) return true;
 
-		int A = 0;
-		int B = preRequisites.length;
-
-		for(DBEntry<IQuest> quest : QuestDatabase.INSTANCE.bulkLookup(getRequirements()))
-		{
-			if(quest.getValue().isComplete(uuid))
-			{
-				A++;
-			}
-		}
-
-		return questLogic.isUnlockable(A, B);
+		int complete =
+                (int) QuestDatabase.INSTANCE.filterKeys(preRequisites).values().stream()
+                        .filter(quest -> quest.isComplete(uuid))
+                        .count();
+		return questLogic.isUnlockable(complete, preRequisites.size());
 	}
 
 	/**
@@ -478,27 +480,27 @@ public class QuestInstance implements IQuest
 
 	@Nonnull
 	@Override
-    public int[] getRequirements()
+    public Set<UUID> getRequirements()
     {
-        return this.preRequisites;
+        return preRequisites;
     }
 
-    public void setRequirements(@Nonnull int[] req)
+    public void setRequirements(@Nonnull Iterable<UUID> req)
     {
-        Arrays.sort(req);
-        prereqTypes.retainEntries((a, b) -> Arrays.binarySearch(req, a) >= 0);
-        this.preRequisites = req;
+        preRequisites.clear();
+        req.forEach(preRequisites::add);
+        prereqTypes.keySet().removeIf(key -> !preRequisites.contains(key));
     }
 
     @Nonnull
     @Override
-    public RequirementType getRequirementType(int req) {
+    public RequirementType getRequirementType(UUID req) {
         RequirementType type = prereqTypes.get(req);
         return type == null ? RequirementType.NORMAL : type;
     }
 
     @Override
-    public void setRequirementType(int req, @Nonnull RequirementType kind) {
+    public void setRequirementType(UUID req, @Nonnull RequirementType kind) {
         if (kind == RequirementType.NORMAL)
             prereqTypes.remove(req);
         else
@@ -511,14 +513,21 @@ public class QuestInstance implements IQuest
 		jObj.setTag("properties", qInfo.writeToNBT(new NBTTagCompound()));
 		jObj.setTag("tasks", tasks.writeToNBT(new NBTTagList(), null));
 		jObj.setTag("rewards", rewards.writeToNBT(new NBTTagList(), null));
-		jObj.setTag("preRequisites", new NBTTagIntArray(getRequirements()));
-        if (!prereqTypes.isEmpty()) {
-            byte[] types = new byte[preRequisites.length];
-            int[] req = this.preRequisites;
-            for (int i = 0, requirementsLength = req.length; i < requirementsLength; i++)
-                types[i] = getRequirementType(req[i]).id();
-            jObj.setTag("preRequisiteTypes", new NBTTagByteArray(types));
+
+        NBTTagList tagList = new NBTTagList();
+        for (UUID questID : preRequisites)
+        {
+            NBTTagCompound tag = NBTConverter.writeQuestId(questID);
+
+            if (prereqTypes.containsKey(questID))
+            {
+                tag.setByte("type", prereqTypes.get(questID).id());
+            }
+
+            tagList.appendTag(tag);
         }
+        jObj.setTag("preRequisites", tagList);
+
 		return jObj;
 	}
 
@@ -529,28 +538,64 @@ public class QuestInstance implements IQuest
 		this.tasks.readFromNBT(jObj.getTagList("tasks", 10), false);
 		this.rewards.readFromNBT(jObj.getTagList("rewards", 10), false);
 
-		if(jObj.func_150299_b("preRequisites") == NBT.TAG_INT_ARRAY) // Native NBT
+        // The legacy storage format used array indices to link together two separate list tags,
+        // one for prerequisites, and one for prerequisite tags.
+        // We need this map to recreate that link.
+        Map<Integer, UUID> legacyPrerequisiteIndex = new HashMap<>();
+        if (jObj.func_150299_b("preRequisites") == Constants.NBT.TAG_LIST)
+        {
+            preRequisites = new HashSet<>();
+
+            List<NBTBase> tagList =
+                    NBTConverter.getTagList(jObj.getTagList("preRequisites", Constants.NBT.TAG_COMPOUND));
+            for (NBTBase tag : tagList)
+            {
+                if (!(tag instanceof NBTTagCompound))
+                {
+                    continue;
+                }
+
+                NBTTagCompound tagCompound = (NBTTagCompound) tag;
+                Optional<UUID> questIDOptional = NBTConverter.tryReadQuestId(tagCompound);
+                if (!questIDOptional.isPresent())
+                {
+                    continue;
+                }
+
+                UUID questID = questIDOptional.get();
+                preRequisites.add(questID);
+
+                if (tagCompound.hasKey("type", 99))
+                {
+                    setRequirementType(questID, RequirementType.from(tagCompound.getByte("type")));
+                }
+            }
+        }
+        else if (jObj.func_150299_b("preRequisites") == Constants.NBT.TAG_INT_ARRAY) // Legacy format
 		{
-		    setRequirements(jObj.getIntArray("preRequisites"));
-		} else // Probably an NBTTagList
-		{
-			List<NBTBase> rList = NBTConverter.getTagList(jObj.getTagList("preRequisites", 4));
-			int[] req = new int[rList.size()];
-			for(int i = 0; i < rList.size(); i++)
-			{
-				NBTBase pTag = rList.get(i);
-				req[i] = pTag instanceof NBTPrimitive ? ((NBTPrimitive)pTag).func_150287_d() : -1;
-			}
-			setRequirements(req);
+            // This block is needed for old questbook data.
+            preRequisites = new HashSet<>();
+            int[] intArray = jObj.getIntArray("preRequisites");
+            for (int i = 0; i < intArray.length; i++) {
+                UUID questID = IUuidDatabase.convertLegacyId(intArray[i]);
+                preRequisites.add(questID);
+                legacyPrerequisiteIndex.put(i, questID);
+            }
 		}
 
-        if (jObj.func_150299_b("preRequisiteTypes") == NBT.TAG_BYTE_ARRAY) {
-            int[] reqs = getRequirements();
+        // This block is needed for old questbook data.
+        if (jObj.func_150299_b("preRequisiteTypes") == Constants.NBT.TAG_BYTE_ARRAY) {
             byte[] byteArray = jObj.getByteArray("preRequisiteTypes");
-            for (int i = 0, byteArrayLength = byteArray.length; i < byteArrayLength && i < reqs.length; i++)
-                setRequirementType(reqs[i], RequirementType.from(byteArray[i]));
-        } else {
-            prereqTypes.clear();
+            for (int i = 0, byteArrayLength = byteArray.length; i < byteArrayLength; i++)
+            {
+                UUID questID = legacyPrerequisiteIndex.get(i);
+                if (questID == null)
+                {
+                    continue;
+                }
+
+                setRequirementType(questID, RequirementType.from(byteArray[i]));
+            }
         }
 
 		this.setupProps();
