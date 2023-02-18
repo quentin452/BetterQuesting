@@ -71,7 +71,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
         List<String> list = new ArrayList<>();
 
         if (args.length == 2) {
-            return CommandBase.getListOfStringsMatchingLastWord(args, "save", "load", "set");
+            return CommandBase.getListOfStringsMatchingLastWord(args, "save", "savelegacy", "load", "set");
         } else if (args.length == 3) {
             list.add(DEFAULT_FILE);
         }
@@ -102,6 +102,9 @@ public class QuestCommandDefaults extends QuestCommandBase {
 
         if (args[1].equalsIgnoreCase("save")) {
             save(sender, databaseName, dataDir);
+
+        } else if (args[1].equalsIgnoreCase("savelegacy")) {
+            saveLegacy(sender, databaseName, legacyFile);
 
         } else if (args[1].equalsIgnoreCase("load")) {
             if (!dataDir.exists() && legacyFile.exists()) {
@@ -225,7 +228,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
         }
     }
 
-    /** This is currently unused, because we always want to use the new save format instead. */
+    /** This is unused by default, but available if needed. The single file is easier to search. */
     public static void saveLegacy(@Nullable ICommandSender sender, @Nullable String databaseName, File legacyFile) {
         boolean editMode = QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE);
 
