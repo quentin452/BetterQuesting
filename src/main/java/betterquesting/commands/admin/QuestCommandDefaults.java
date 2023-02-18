@@ -49,7 +49,7 @@ import java.util.stream.Stream;
 public class QuestCommandDefaults extends QuestCommandBase {
     public static final String DEFAULT_FILE = "DefaultQuests";
 
-    public static final String SETTINGS_FILE = "Settings.json";
+    public static final String SETTINGS_FILE = "QuestSettings.json";
     public static final String QUEST_LINES_FILE = "QuestLines.json";
     public static final String QUEST_DIR = "Quests";
     public static final String MULTI_QUEST_LINE_DIRECTORY = "MultipleQuestLine";
@@ -135,7 +135,15 @@ public class QuestCommandDefaults extends QuestCommandBase {
         BiFunction<String, String, String> buildFileName =
                 (name, id) -> name.replaceAll("[^a-zA-Z0-9]", "") + "-" + id;
 
+        File settingsFile = new File(dataDir, SETTINGS_FILE);
         if (dataDir.exists()) {
+            if (!settingsFile.exists()) {
+                // This might not be a BetterQuesting database; we should be careful.
+                QuestingAPI.getLogger().log(Level.ERROR, "Directory exists, but isn't a database\n{}", dataDir);
+                sendChatMessage(sender, "betterquesting.cmd.error");
+                return;
+            }
+
             try {
                 FileUtils.deleteDirectory(dataDir);
             } catch (IOException e) {
@@ -150,7 +158,6 @@ public class QuestCommandDefaults extends QuestCommandBase {
             return;
         }
 
-        File settingsFile = new File(dataDir, SETTINGS_FILE);
         boolean editMode = QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE);
         // Don't write editmode to json
         QuestSettings.INSTANCE.setProperty(NativeProps.EDIT_MODE, false);
