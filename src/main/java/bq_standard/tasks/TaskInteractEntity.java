@@ -5,7 +5,6 @@ import betterquesting.api.utils.BigItemStack;
 import betterquesting.api.utils.ItemComparison;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import betterquesting.api2.utils.Tuple2;
 import bq_standard.client.gui.tasks.PanelTaskInteractEntity;
@@ -15,8 +14,8 @@ import bq_standard.tasks.factory.FactoryTaskInteractEntity;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.client.gui.GuiScreen;
@@ -90,14 +89,14 @@ public class TaskInteractEntity extends TaskProgressableBase<Integer> {
 
     @Override
     @SideOnly(Side.CLIENT)
-    public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest) {
+    public IGuiPanel getTaskGui(IGuiRect rect, Map.Entry<UUID, IQuest> quest) {
         return new PanelTaskInteractEntity(rect, this);
     }
 
     @Override
     @Nullable
     @SideOnly(Side.CLIENT)
-    public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest) {
+    public GuiScreen getTaskEditor(GuiScreen parent, Map.Entry<UUID, IQuest> quest) {
         return null;
     }
     // endregion Basic
@@ -121,17 +120,17 @@ public class TaskInteractEntity extends TaskProgressableBase<Integer> {
     // endregion Progress
 
     @Override
-    public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {
+    public void detect(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest) {
         final List<Tuple2<UUID, Integer>> progress = getBulkProgress(pInfo.ALL_UUIDS);
 
         progress.forEach((value) -> {
             if (value.getSecond() >= required) setComplete(value.getFirst());
         });
 
-        pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
+        pInfo.markDirtyParty(quest.getKey());
     }
 
-    public void onInteract(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack item, Entity entity, boolean isHit) {
+    public void onInteract(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, ItemStack item, Entity entity, boolean isHit) {
         if ((!onHit && isHit) || (!onInteract && !isHit)) return;
 
         //noinspection unchecked
@@ -173,7 +172,7 @@ public class TaskInteractEntity extends TaskProgressableBase<Integer> {
             if (np >= required) setComplete(value.getFirst());
         });
 
-        pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
+        pInfo.markDirtyParty(quest.getKey());
     }
 
     @Override

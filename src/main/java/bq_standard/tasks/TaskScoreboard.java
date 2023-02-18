@@ -3,7 +3,6 @@ package bq_standard.tasks;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import bq_standard.ScoreboardBQ;
 import bq_standard.client.gui.editors.tasks.GuiEditTaskScoreboard;
@@ -14,8 +13,9 @@ import bq_standard.tasks.factory.FactoryTaskScoreboard;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import javax.annotation.Nonnull;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
@@ -81,19 +81,19 @@ public class TaskScoreboard extends TaskBase implements ITaskTickable {
 
     @Override
     @SideOnly(Side.CLIENT)
-    public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest) {
+    public IGuiPanel getTaskGui(IGuiRect rect, Map.Entry<UUID, IQuest> quest) {
         return new PanelTaskScoreboard(rect, this);
     }
 
     @Override
     @SideOnly(Side.CLIENT)
-    public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest) {
+    public GuiScreen getTaskEditor(GuiScreen parent, Map.Entry<UUID, IQuest> quest) {
         return new GuiEditTaskScoreboard(parent, quest, this);
     }
     // endregion Basic
 
     @Override
-    public void detect(@Nonnull ParticipantInfo pInfo, DBEntry<IQuest> quest) {
+    public void detect(@Nonnull ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest) {
         Scoreboard board = pInfo.PLAYER.getWorldScoreboard();
         ScoreObjective scoreObj = board.getObjective(scoreName);
 
@@ -116,7 +116,7 @@ public class TaskScoreboard extends TaskBase implements ITaskTickable {
 
         if (operation.checkValues(points, target)) {
             setComplete(pInfo.UUID);
-            pInfo.markDirty(Collections.singletonList(quest.getID()));
+            pInfo.markDirty(quest.getKey());
         }
     }
 
@@ -159,8 +159,11 @@ public class TaskScoreboard extends TaskBase implements ITaskTickable {
     }
 
     @Override
-    public void tickTask(@Nonnull ParticipantInfo pInfo, @Nonnull DBEntry<IQuest> quest) {
-        if (pInfo.PLAYER.ticksExisted % 20 == 0) detect(pInfo, quest); // Auto-detect once per second
+    public void tickTask(@Nonnull ParticipantInfo pInfo, @Nonnull Map.Entry<UUID, IQuest> quest) {
+        if (pInfo.PLAYER.ticksExisted % 20 == 0)
+        {
+            detect(pInfo, quest); // Auto-detect once per second
+        }
     }
 
     @Override
