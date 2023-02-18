@@ -9,17 +9,19 @@ import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.CanvasMinimum;
 import betterquesting.api2.client.gui.resources.colors.GuiColorStatic;
 import betterquesting.api2.client.gui.themes.presets.PresetIcon;
-import betterquesting.api2.storage.DBEntry;
 import bq_standard.network.handlers.NetTaskCheckbox;
 import bq_standard.tasks.TaskCheckbox;
 import net.minecraft.client.Minecraft;
 
+import java.util.Map;
+import java.util.UUID;
+
 public class PanelTaskCheckbox extends CanvasMinimum {
-    private final DBEntry<IQuest> quest;
+    private final Map.Entry<UUID, IQuest> quest;
     private final TaskCheckbox task;
     private final IGuiRect initialRect;
 
-    public PanelTaskCheckbox(IGuiRect rect, DBEntry<IQuest> quest, TaskCheckbox task) {
+    public PanelTaskCheckbox(IGuiRect rect, Map.Entry<UUID, IQuest> quest, TaskCheckbox task) {
         super(rect);
         this.quest = quest;
         this.task = task;
@@ -32,7 +34,7 @@ public class PanelTaskCheckbox extends CanvasMinimum {
 
         boolean isComplete = task.isComplete(QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer));
 
-        final int questID = quest.getID();
+        final UUID questID = quest.getKey();
         final int taskID = quest.getValue().getTasks().getID(task);
 
         PanelButton btnCheck =

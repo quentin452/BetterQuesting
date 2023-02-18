@@ -4,6 +4,7 @@ import betterquesting.api.api.ApiReference;
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.network.QuestingPacket;
 import betterquesting.api.questing.IQuest;
+import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.GuiScreenCanvas;
 import betterquesting.api2.client.gui.controls.PanelButton;
 import betterquesting.api2.client.gui.controls.PanelTextField;
@@ -20,7 +21,6 @@ import betterquesting.api2.client.gui.themes.gui_args.GArgsNBT;
 import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.client.gui.themes.presets.PresetGUIs;
 import betterquesting.api2.client.gui.themes.presets.PresetTexture;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.QuestTranslation;
 import bq_standard.tasks.TaskMeeting;
 import net.minecraft.client.Minecraft;
@@ -33,11 +33,14 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.input.Keyboard;
 
+import java.util.Map;
+import java.util.UUID;
+
 public class GuiEditTaskMeeting extends GuiScreenCanvas {
-    private final DBEntry<IQuest> quest;
+    private final Map.Entry<UUID, IQuest> quest;
     private final TaskMeeting task;
 
-    public GuiEditTaskMeeting(GuiScreen parent, DBEntry<IQuest> quest, TaskMeeting task) {
+    public GuiEditTaskMeeting(GuiScreen parent, Map.Entry<UUID, IQuest> quest, TaskMeeting task) {
         super(parent);
         this.quest = quest;
         this.task = task;
@@ -141,8 +144,7 @@ public class GuiEditTaskMeeting extends GuiScreenCanvas {
     private void sendChanges() {
         NBTTagCompound payload = new NBTTagCompound();
         NBTTagList dataList = new NBTTagList();
-        NBTTagCompound entry = new NBTTagCompound();
-        entry.setInteger("questID", quest.getID());
+        NBTTagCompound entry = NBTConverter.writeQuestId(quest.getKey());
         entry.setTag("config", quest.getValue().writeToNBT(new NBTTagCompound()));
         dataList.appendTag(entry);
         payload.setTag("data", dataList);
