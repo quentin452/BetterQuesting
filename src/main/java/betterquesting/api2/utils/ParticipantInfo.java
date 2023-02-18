@@ -11,6 +11,7 @@ import net.minecraftforge.common.util.FakePlayer;
 
 import javax.annotation.Nonnull;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ParticipantInfo
 {
@@ -69,33 +70,34 @@ public class ParticipantInfo
         this.ALL_UUIDS = Collections.unmodifiableList(allID);
     }
     
-    public void markDirty(@Nonnull List<Integer> questIDs) // Only marks quests dirty for the immediate participating player
+    public void markDirty(UUID questId) // Only marks quests dirty for the immediate participating player
     {
-         QuestCache qc = (QuestCache)PLAYER.getExtendedProperties(QuestCache.LOC_QUEST_CACHE.toString());
-        if(qc != null) questIDs.forEach(qc::markQuestDirty);
+        QuestCache qc = (QuestCache) PLAYER.getExtendedProperties(QuestCache.LOC_QUEST_CACHE.toString());
+        if (qc != null)
+        {
+            qc.markQuestDirty(questId);
+        }
     }
     
-    public void markDirtyParty(@Nonnull List<Integer> questIDs) // Marks quests as dirty for the entire (active) party
+    public void markDirtyParty(UUID questId) // Marks quests as dirty for the entire (active) party
     {
-        if(ACTIVE_PLAYERS.size() <= 0 || questIDs.size() <= 0) return;
         ACTIVE_PLAYERS.forEach((value) -> {
-            QuestCache qc = (QuestCache)value.getExtendedProperties(QuestCache.LOC_QUEST_CACHE.toString());
-            if(qc != null) questIDs.forEach(qc::markQuestDirty);
+            QuestCache qc = (QuestCache) value.getExtendedProperties(QuestCache.LOC_QUEST_CACHE.toString());
+            if (qc != null)
+            {
+                qc.markQuestDirty(questId);
+            }
         });
     }
     
     @Nonnull
-    public int[] getSharedQuests() // Returns an array of all quests which one or more participants have unlocked
+    public Set<UUID> getSharedQuests() // Returns an array of all quests which one or more participants have unlocked
     {
-        TreeSet<Integer> active = new TreeSet<>();
-        ACTIVE_PLAYERS.forEach((p) -> {
-            QuestCache qc = (QuestCache)p.getExtendedProperties(QuestCache.LOC_QUEST_CACHE.toString());
-            if(qc != null) for(int value : qc.getActiveQuests()) active.add(value);
-        });
-        
-        int[] shared = new int[active.size()];
-        int i = 0;
-        for(int value : active) shared[i++] = value;
-        return shared;
+        return ACTIVE_PLAYERS.stream()
+                .map(p -> (QuestCache) p.getExtendedProperties(QuestCache.LOC_QUEST_CACHE.toString()))
+                .filter(Objects::nonNull)
+                .map(QuestCache::getActiveQuests)
+                .flatMap(Set::stream)
+                .collect(Collectors.toCollection(HashSet::new));
     }
 }
