@@ -190,7 +190,7 @@ public class GuiHome extends GuiScreenCanvas implements IPEventListener
                 EventHandler.scheduleServerTask(
                         Executors.callable(
                                 () -> {
-                                    QuestCommandDefaults.load(null, null, qDir);
+                                    QuestCommandDefaults.load(null, null, qDir, false);
                                     SaveLoadHandler.INSTANCE.resetUpdate();
                                 }));
 
@@ -202,7 +202,7 @@ public class GuiHome extends GuiScreenCanvas implements IPEventListener
                 EventHandler.scheduleServerTask(
                         Executors.callable(
                                 () -> {
-                                    QuestCommandDefaults.loadLegacy(null, null, qDir);
+                                    QuestCommandDefaults.loadLegacy(null, null, qDir, false);
                                     SaveLoadHandler.INSTANCE.resetUpdate();
                                 }));
 

@@ -218,15 +218,15 @@ public class SaveLoadHandler {
                 JsonHelper.CopyPaste(fileLives, new File(BQ_Settings.curWorldDir + "/backup/" + fsVer, "LifeDatabase_backup_" + fsVer + ".json"));
             }
 
-            QuestCommandDefaults.loadLegacy(null, null, fileDatabase);
+            QuestCommandDefaults.loadLegacy(null, null, fileDatabase, true);
         } else { // LOAD DEFAULTS
             if (defaultDatabaseDir.exists())
             {
-                QuestCommandDefaults.load(null, null, defaultDatabaseDir);
+                QuestCommandDefaults.load(null, null, defaultDatabaseDir, true);
             }
             else
             {
-                QuestCommandDefaults.loadLegacy(null, null, defaultDatabaseFile);
+                QuestCommandDefaults.loadLegacy(null, null, defaultDatabaseFile, true);
             }
 
             isDirty = true;

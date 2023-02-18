@@ -105,9 +105,9 @@ public class QuestCommandDefaults extends QuestCommandBase {
 
         } else if (args[1].equalsIgnoreCase("load")) {
             if (!dataDir.exists() && legacyFile.exists()) {
-                loadLegacy(sender, databaseName, legacyFile);
+                loadLegacy(sender, databaseName, legacyFile, false);
             } else {
-                load(sender, databaseName, dataDir);
+                load(sender, databaseName, dataDir, false);
             }
 
         } else if (args[1].equalsIgnoreCase("set") && args.length == 3) {
@@ -131,7 +131,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
         sender.addChatMessage(new ChatComponentTranslation(translationKey, args));
     }
 
-    private void save(@Nullable ICommandSender sender, @Nullable String databaseName, File dataDir) {
+    public static void save(@Nullable ICommandSender sender, @Nullable String databaseName, File dataDir) {
         BiFunction<String, String, String> buildFileName =
                 (name, id) -> name.replaceAll("[^a-zA-Z0-9]", "") + "-" + id;
 
@@ -210,7 +210,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
     }
 
     /** This is currently unused, because we always want to use the new save format instead. */
-    private void saveLegacy(@Nullable ICommandSender sender, @Nullable String databaseName, File legacyFile) {
+    public static void saveLegacy(@Nullable ICommandSender sender, @Nullable String databaseName, File legacyFile) {
         boolean editMode = QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE);
 
         NBTTagCompound base = new NBTTagCompound();
@@ -231,7 +231,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
         }
     }
 
-    public static void load(@Nullable ICommandSender sender, @Nullable String databaseName, File dataDir) {
+    public static void load(@Nullable ICommandSender sender, @Nullable String databaseName, File dataDir, boolean loadWorldSettings) {
         if (!dataDir.exists()) {
             sendChatMessage(sender, "betterquesting.cmd.default.none");
             return;
@@ -283,9 +283,12 @@ public class QuestCommandDefaults extends QuestCommandBase {
             return;
         }
 
-        QuestDatabase.INSTANCE.readProgressFromNBT(jsonP, false);
-        QuestSettings.INSTANCE.setProperty(NativeProps.EDIT_MODE, editMode);
-        QuestSettings.INSTANCE.setProperty(NativeProps.HARDCORE, hardMode);
+        if (!loadWorldSettings) {
+            // Don't load world-specific settings, so restore them from the snapshot we took.
+            QuestDatabase.INSTANCE.readProgressFromNBT(jsonP, false);
+            QuestSettings.INSTANCE.setProperty(NativeProps.EDIT_MODE, editMode);
+            QuestSettings.INSTANCE.setProperty(NativeProps.HARDCORE, hardMode);
+        }
 
         if (databaseName != null && !databaseName.equalsIgnoreCase(DEFAULT_FILE)) {
             sendChatMessage(sender, "betterquesting.cmd.default.load2", databaseName);
@@ -299,11 +302,10 @@ public class QuestCommandDefaults extends QuestCommandBase {
         SaveLoadHandler.INSTANCE.markDirty();
     }
 
-    public static void loadLegacy(@Nullable ICommandSender sender, @Nullable String databaseName, File legacyFile) {
+    public static void loadLegacy(@Nullable ICommandSender sender, @Nullable String databaseName, File legacyFile, boolean loadWorldSettings) {
         if (legacyFile.exists()) {
             boolean editMode = QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE);
             boolean hardMode = QuestSettings.INSTANCE.getProperty(NativeProps.HARDCORE);
-
             NBTTagList jsonP = QuestDatabase.INSTANCE.writeProgressToNBT(new NBTTagList(), null);
 
             JsonObject j1 = JsonHelper.ReadFromFile(legacyFile);
@@ -313,10 +315,12 @@ public class QuestCommandDefaults extends QuestCommandBase {
             QuestDatabase.INSTANCE.readFromNBT(nbt1.getTagList("questDatabase", Constants.NBT.TAG_COMPOUND), false);
             QuestLineDatabase.INSTANCE.readFromNBT(nbt1.getTagList("questLines", Constants.NBT.TAG_COMPOUND), false);
 
-            QuestDatabase.INSTANCE.readProgressFromNBT(jsonP, false);
-
-            QuestSettings.INSTANCE.setProperty(NativeProps.EDIT_MODE, editMode);
-            QuestSettings.INSTANCE.setProperty(NativeProps.HARDCORE, hardMode);
+            if (!loadWorldSettings) {
+                // Don't load world-specific settings, so restore them from the snapshot we took.
+                QuestDatabase.INSTANCE.readProgressFromNBT(jsonP, false);
+                QuestSettings.INSTANCE.setProperty(NativeProps.EDIT_MODE, editMode);
+                QuestSettings.INSTANCE.setProperty(NativeProps.HARDCORE, hardMode);
+            }
 
             if (databaseName != null && !databaseName.equalsIgnoreCase(DEFAULT_FILE)) {
                 sendChatMessage(sender, "betterquesting.cmd.default.load2", databaseName + ".json");
