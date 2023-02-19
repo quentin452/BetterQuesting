@@ -33,8 +33,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nullable;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -48,6 +50,7 @@ import java.util.stream.Stream;
 
 public class QuestCommandDefaults extends QuestCommandBase {
     public static final String DEFAULT_FILE = "DefaultQuests";
+    public static final String LANG_FILE = "en_US.lang";
 
     public static final String SETTINGS_FILE = "QuestSettings.json";
     public static final String QUEST_LINES_FILE = "QuestLines.json";
@@ -218,6 +221,57 @@ public class QuestCommandDefaults extends QuestCommandBase {
             NBTTagCompound questTag = quest.writeToNBT(new NBTTagCompound());
             NBTConverter.writeQuestId(questId, questTag);
             JsonHelper.WriteToFile(questFile, NBTConverter.NBTtoJSON_Compound(questTag, new JsonObject(), true));
+        }
+
+        File langFile = new File(dataDir, LANG_FILE);
+        try (
+                PrintWriter writer =
+                        new PrintWriter(
+                                new BufferedOutputStream(Files.newOutputStream(langFile.toPath())))) {
+
+            writer.println("### Quest Lines ###\n");
+
+            QuestLineDatabase.INSTANCE.getSortedEntries().stream()
+                    .forEach(
+                            entry -> {
+                                writer.println("# Quest Line: " + entry.getValue().getProperty(NativeProps.NAME));
+                                writer.println(
+                                        String.format(
+                                                "%s=%s",
+                                                QuestTranslation.buildQuestLineNameKey(entry.getID()),
+                                                entry.getValue().getProperty(NativeProps.NAME)));
+                                writer.println(
+                                        String.format(
+                                                "%s=%s",
+                                                QuestTranslation.buildQuestLineDescriptionKey(entry.getID()),
+                                                entry.getValue().getProperty(NativeProps.DESC)));
+                                writer.println();
+                            });
+
+            writer.println("\n\n### Quests ###\n");
+
+            QuestDatabase.INSTANCE.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .forEach(
+                            entry -> {
+                                writer.println("# Quest: " + entry.getValue().getProperty(NativeProps.NAME));
+                                writer.println(
+                                        String.format(
+                                                "%s=%s",
+                                                QuestTranslation.buildQuestNameKey(entry.getKey()),
+                                                entry.getValue().getProperty(NativeProps.NAME)));
+                                writer.println(
+                                        String.format(
+                                                "%s=%s",
+                                                QuestTranslation.buildQuestDescriptionKey(entry.getKey()),
+                                                entry.getValue().getProperty(NativeProps.DESC)));
+                                writer.println();
+                            });
+
+        } catch (IOException e) {
+            QuestingAPI.getLogger().log(Level.ERROR, "Failed to create file\n" + langFile, e);
+            sendChatMessage(sender, "betterquesting.cmd.error");
+            return;
         }
 
         if (databaseName != null && !databaseName.equalsIgnoreCase(DEFAULT_FILE)) {
