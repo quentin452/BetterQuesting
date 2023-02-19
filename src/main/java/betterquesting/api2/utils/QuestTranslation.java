@@ -27,7 +27,7 @@ public class QuestTranslation {
     private static final Map<String, String> translations;
     static {
         try {
-            Field localeField = ReflectionHelper.findField(I18n.class, "i18nLocale");
+            Field localeField = ReflectionHelper.findField(I18n.class, "field_135054_a");
             Field translationsField = ReflectionHelper.findField(Locale.class, "field_135032_a");
             translations = (Map<String, String>) translationsField.get(localeField.get(null));
         } catch (IllegalAccessException e) {
@@ -104,7 +104,7 @@ public class QuestTranslation {
             String key, IPropertyContainer container, IPropertyType<String> property) {
         String translation = translations.get(key);
         if (translation != null) {
-            return translation;
+            return String.format(translation);
         }
 
         return container.getProperty(property);
