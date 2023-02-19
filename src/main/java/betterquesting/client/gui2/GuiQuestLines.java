@@ -251,7 +251,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
             cvDesc.resetCanvas();
             if(selectedLine != null)
             {
-                txDesc = new PanelTextBox(new GuiRectangle(0, 0, cvDesc.getTransform().getWidth(), 0, 0), QuestTranslation.translate(selectedLine.getUnlocalisedDescription()), true);
+                txDesc = new PanelTextBox(new GuiRectangle(0, 0, cvDesc.getTransform().getWidth(), 0, 0), QuestTranslation.translateQuestLineDescription(selectedLineId, selectedLine), true);
                 txDesc.setColor(PresetColor.TEXT_AUX_0.getColor());//.setFontSize(10);
                 cvDesc.addCulledPanel(txDesc, false);
                 cvDesc.refreshScrollBounds();
@@ -432,7 +432,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
             }
 
             refreshQuestCompletion();
-            txTitle.setText(QuestTranslation.translate(selectedLine.getUnlocalisedName()));
+            txTitle.setText(QuestTranslation.translateQuestLineName(selectedLineId, selectedLine));
             icoChapter.setTexture(new OreDictTexture(1F, selectedLine.getProperty(NativeProps.ICON), false, true), null);
         }
 
@@ -618,7 +618,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
             {
                 cvLines.addPanel(new PanelGeneric(new GuiRectangle(8, n * 16 + 8, 8, 8, -1), new GuiTextureColored(PresetIcon.ICON_TICK.getTexture(), new GuiColorStatic(0xFF00FF00))));
             }
-            PanelButtonStorage<DBEntry<IQuestLine>> btnLine = new PanelButtonStorage<>(new GuiRectangle(16, n * 16, listW - 16, 16, 0), 1, QuestTranslation.translate(entry.getValue().getUnlocalisedName()), entry);
+            PanelButtonStorage<DBEntry<IQuestLine>> btnLine = new PanelButtonStorage<>(new GuiRectangle(16, n * 16, listW - 16, 16, 0), 1, QuestTranslation.translateQuestLineName(entry), entry);
             btnLine.setTextAlignment(0);
             btnLine.setActive((vis & 4) == 0 && entry.getID() != selectedLineId);
             btnLine.setCallback((q) -> {
@@ -664,7 +664,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
 
         cvQuest.setQuestLine(q.getValue());
         icoChapter.setTexture(new OreDictTexture(1F, q.getValue().getProperty(NativeProps.ICON), false, true), null);
-        txTitle.setText(QuestTranslation.translate(q.getValue().getUnlocalisedName()));
+        txTitle.setText(QuestTranslation.translateQuestLineName(q));
         refreshQuestCompletion();
 
         if(!trayLock)
@@ -699,7 +699,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
 
         if (selectedLine != null) {
             refreshQuestCompletion();
-            txTitle.setText(QuestTranslation.translate(selectedLine.getUnlocalisedName()));
+            txTitle.setText(QuestTranslation.translateQuestLineName(selectedLineId, selectedLine));
             icoChapter.setTexture(new OreDictTexture(1F, selectedLine.getProperty(NativeProps.ICON), false, true), null);
         } else
         {

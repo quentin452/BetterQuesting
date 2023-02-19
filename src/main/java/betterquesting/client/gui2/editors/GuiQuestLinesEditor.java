@@ -327,8 +327,7 @@ public class GuiQuestLinesEditor extends GuiScreenCanvas implements IPEventListe
         
         for(DBEntry<IQuestLine> entry : QuestLineDatabase.INSTANCE.getSortedEntries())
         {
-            IQuestLine ql = entry.getValue();
-            PanelButtonStorage<DBEntry<IQuestLine>> tmp = new PanelButtonStorage<>(new GuiRectangle(0, i * 16, w - 32, 16, 0), 5, QuestTranslation.translate(ql.getUnlocalisedName()), entry);
+            PanelButtonStorage<DBEntry<IQuestLine>> tmp = new PanelButtonStorage<>(new GuiRectangle(0, i * 16, w - 32, 16, 0), 5, QuestTranslation.translateQuestLineName(entry), entry);
             tmp.setActive(entry.getID() != selID);
             lineList.addPanel(tmp);
             lineList.addPanel(new PanelButtonStorage<>(new GuiRectangle(w - 32, i * 16, 16, 16, 0), 6, "", entry).setIcon(PresetIcon.ICON_TRASH.getTexture()));

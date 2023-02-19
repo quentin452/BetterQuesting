@@ -83,7 +83,7 @@ public class GuiQuestLineAddRemove extends GuiScreenCanvas implements IPEventLis
         CanvasTextured cvBackground = new CanvasTextured(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 0, 0, 0), 0), PresetTexture.PANEL_MAIN.getTexture());
         this.addPanel(cvBackground);
     
-        PanelTextBox panTxt = new PanelTextBox(new GuiTransform(GuiAlign.TOP_EDGE, new GuiPadding(0, 16, 0, -32), 0), QuestTranslation.translate("betterquesting.title.edit_line2", questLine == null ? "" : QuestTranslation.translate(questLine.getUnlocalisedName()))).setAlignment(1);
+        PanelTextBox panTxt = new PanelTextBox(new GuiTransform(GuiAlign.TOP_EDGE, new GuiPadding(0, 16, 0, -32), 0), QuestTranslation.translate("betterquesting.title.edit_line2", questLine == null ? "" : QuestTranslation.translateQuestLineName(lineID, questLine))).setAlignment(1);
         panTxt.setColor(PresetColor.TEXT_HEADER.getColor());
         cvBackground.addPanel(panTxt);
     
@@ -96,7 +96,7 @@ public class GuiQuestLineAddRemove extends GuiScreenCanvas implements IPEventLis
         
         if(questLine != null)
         {
-            PanelTextBox txtQuest = new PanelTextBox(new GuiTransform(GuiAlign.TOP_EDGE, new GuiPadding(0, 0, 0, -16), 0), QuestTranslation.translate(questLine.getUnlocalisedName())).setAlignment(1).setColor(PresetColor.TEXT_MAIN.getColor());
+            PanelTextBox txtQuest = new PanelTextBox(new GuiTransform(GuiAlign.TOP_EDGE, new GuiPadding(0, 0, 0, -16), 0), QuestTranslation.translateQuestLineName(lineID, questLine)).setAlignment(1).setColor(PresetColor.TEXT_MAIN.getColor());
             cvLeft.addPanel(txtQuest);
         }
         
