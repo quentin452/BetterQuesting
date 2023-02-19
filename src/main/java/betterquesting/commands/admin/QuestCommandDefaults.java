@@ -33,10 +33,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nullable;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -225,47 +224,62 @@ public class QuestCommandDefaults extends QuestCommandBase {
 
         File langFile = new File(dataDir, LANG_FILE);
         try (
-                PrintWriter writer =
-                        new PrintWriter(
-                                new BufferedOutputStream(Files.newOutputStream(langFile.toPath())))) {
+                OutputStreamWriter writer =
+                        new OutputStreamWriter(Files.newOutputStream(langFile.toPath()))) {
 
-            writer.println("### Quest Lines ###\n");
+            Function<String, String> removeNewlines = s -> s.replaceAll("\n", "");
+            Function<String, String> escapeLangString =
+                    s -> s.replaceAll("%", "%%").replaceAll("\n", "%n");
+
+            writer.write("### Quest Lines ###\n");
 
             QuestLineDatabase.INSTANCE.getSortedEntries().stream()
                     .forEach(
                             entry -> {
-                                writer.println("# Quest Line: " + entry.getValue().getProperty(NativeProps.NAME));
-                                writer.println(
-                                        String.format(
-                                                "%s=%s",
-                                                QuestTranslation.buildQuestLineNameKey(entry.getID()),
-                                                entry.getValue().getProperty(NativeProps.NAME)));
-                                writer.println(
-                                        String.format(
-                                                "%s=%s",
-                                                QuestTranslation.buildQuestLineDescriptionKey(entry.getID()),
-                                                entry.getValue().getProperty(NativeProps.DESC)));
-                                writer.println();
+                                try {
+                                    writer.write(
+                                            String.format(
+                                                    "\n# Quest Line: %s\n",
+                                                    removeNewlines.apply(entry.getValue().getProperty(NativeProps.NAME))));
+                                    writer.write(
+                                            String.format(
+                                                    "%s=%s\n",
+                                                    QuestTranslation.buildQuestLineNameKey(entry.getID()),
+                                                    escapeLangString.apply(entry.getValue().getProperty(NativeProps.NAME))));
+                                    writer.write(
+                                            String.format(
+                                                    "%s=%s\n",
+                                                    QuestTranslation.buildQuestLineDescriptionKey(entry.getID()),
+                                                    escapeLangString.apply(entry.getValue().getProperty(NativeProps.DESC))));
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
                             });
 
-            writer.println("\n\n### Quests ###\n");
+            writer.write("\n\n### Quests ###\n");
 
             QuestDatabase.INSTANCE.entrySet().stream()
                     .sorted(Map.Entry.comparingByKey())
                     .forEach(
                             entry -> {
-                                writer.println("# Quest: " + entry.getValue().getProperty(NativeProps.NAME));
-                                writer.println(
-                                        String.format(
-                                                "%s=%s",
-                                                QuestTranslation.buildQuestNameKey(entry.getKey()),
-                                                entry.getValue().getProperty(NativeProps.NAME)));
-                                writer.println(
-                                        String.format(
-                                                "%s=%s",
-                                                QuestTranslation.buildQuestDescriptionKey(entry.getKey()),
-                                                entry.getValue().getProperty(NativeProps.DESC)));
-                                writer.println();
+                                try {
+                                    writer.write(
+                                            String.format(
+                                                    "\n# Quest: %s\n",
+                                                    removeNewlines.apply(entry.getValue().getProperty(NativeProps.NAME))));
+                                    writer.write(
+                                            String.format(
+                                                    "%s=%s\n",
+                                                    QuestTranslation.buildQuestNameKey(entry.getKey()),
+                                                    escapeLangString.apply(entry.getValue().getProperty(NativeProps.NAME))));
+                                    writer.write(
+                                            String.format(
+                                                    "%s=%s\n",
+                                                    QuestTranslation.buildQuestDescriptionKey(entry.getKey()),
+                                                    escapeLangString.apply(entry.getValue().getProperty(NativeProps.DESC))));
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
                             });
 
         } catch (IOException e) {
