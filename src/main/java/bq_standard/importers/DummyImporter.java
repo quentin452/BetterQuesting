@@ -13,7 +13,7 @@ import java.util.HashMap;
 /**
  * Dummy importer that doesn't actually do anything.
  *
- * <p>>Mostly just here to keep the package directory around. We should probably just remove the
+ * <p>Mostly just here to keep the package directory around. We should probably just remove the
  * importer feature entirely if we don't use it.
  */
 public class DummyImporter implements IImporter {
