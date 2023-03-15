@@ -621,9 +621,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
             PanelButtonStorage<DBEntry<IQuestLine>> btnLine = new PanelButtonStorage<>(new GuiRectangle(16, n * 16, listW - 16, 16, 0), 1, QuestTranslation.translateQuestLineName(entry), entry);
             btnLine.setTextAlignment(0);
             btnLine.setActive((vis & 4) == 0 && entry.getID() != selectedLineId);
-            btnLine.setCallback((q) -> {
-                openQuestLine(q);
-            });
+            btnLine.setCallback(this::openQuestLine);
             cvLines.addPanel(btnLine);
             btnListRef.add(btnLine);
         }
