@@ -7,7 +7,6 @@ import betterquesting.api.utils.JsonHelper;
 import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import betterquesting.api2.utils.Tuple2;
 import bq_standard.client.gui.tasks.PanelTaskFluid;
@@ -19,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.IntFunction;
@@ -92,13 +92,13 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
 
     @Override
     @SideOnly(Side.CLIENT)
-    public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest) {
+    public IGuiPanel getTaskGui(IGuiRect rect, Map.Entry<UUID, IQuest> quest) {
         return new PanelTaskFluid(rect, this);
     }
 
     @Override
     @SideOnly(Side.CLIENT)
-    public GuiScreen getTaskEditor(GuiScreen screen, DBEntry<IQuest> quest) {
+    public GuiScreen getTaskEditor(GuiScreen screen, Map.Entry<UUID, IQuest> quest) {
         return null;
     }
     // endregion Basic
@@ -136,7 +136,7 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
     // endregion Progress
 
     @Override
-    public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {
+    public void detect(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest) {
         if (isComplete(pInfo.UUID)) return;
 
         Detector detector = new Detector(this, consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
@@ -162,7 +162,7 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
         checkAndComplete(pInfo, quest, detector.updated);
     }
 
-    private void checkAndComplete(ParticipantInfo pInfo, DBEntry<IQuest> quest, boolean resync) {
+    private void checkAndComplete(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, boolean resync) {
         final List<Tuple2<UUID, int[]>> progress =
                 getBulkProgress(consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
         boolean updated = resync;
@@ -186,9 +186,9 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
 
         if (updated) {
             if (consume) {
-                pInfo.markDirty(Collections.singletonList(quest.getID()));
+                pInfo.markDirty(quest.getKey());
             } else {
-                pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
+                pInfo.markDirtyParty(quest.getKey());
             }
         }
     }
@@ -249,7 +249,7 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
 
     // region IFluidTask
     @Override
-    public boolean canAcceptFluid(UUID owner, DBEntry<IQuest> quest, FluidStack fluid) {
+    public boolean canAcceptFluid(UUID owner, Map.Entry<UUID, IQuest> quest, FluidStack fluid) {
         if (owner == null
                 || fluid == null
                 || fluid.getFluid() == null
@@ -271,7 +271,7 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
     }
 
     @Override
-    public FluidStack submitFluid(UUID owner, DBEntry<IQuest> quest, FluidStack input) {
+    public FluidStack submitFluid(UUID owner, Map.Entry<UUID, IQuest> quest, FluidStack input) {
         if (owner == null
                 || input == null
                 || input.amount <= 0
@@ -301,7 +301,7 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
     }
 
     @Override
-    public void retrieveFluids(ParticipantInfo pInfo, DBEntry<IQuest> quest, FluidStack[] fluids) {
+    public void retrieveFluids(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, FluidStack[] fluids) {
         if (consume || isComplete(pInfo.UUID)) return;
 
         Detector detector = new Detector(this, consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
@@ -319,7 +319,7 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
 
     // region IItemTask
     @Override
-    public boolean canAcceptItem(UUID owner, DBEntry<IQuest> quest, ItemStack item) {
+    public boolean canAcceptItem(UUID owner, Map.Entry<UUID, IQuest> quest, ItemStack item) {
         if (owner == null || item == null || !consume || isComplete(owner) || requiredFluids.size() <= 0) {
             return false;
         }
@@ -334,7 +334,7 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
     }
 
     @Override
-    public ItemStack submitItem(UUID owner, DBEntry<IQuest> quest, ItemStack input) {
+    public ItemStack submitItem(UUID owner, Map.Entry<UUID, IQuest> quest, ItemStack input) {
         if (owner == null || input == null || input.stackSize != 1 || !consume || isComplete(owner)) return input;
 
         Detector detector = new Detector(this, Collections.singletonList(owner));
@@ -361,7 +361,7 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
     }
 
     @Override
-    public void retrieveItems(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack[] stacks) {
+    public void retrieveItems(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, ItemStack[] stacks) {
         if (consume || isComplete(pInfo.UUID)) return;
 
         Detector detector = new Detector(this, consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
@@ -395,7 +395,7 @@ public class TaskFluid extends TaskProgressableBase<int[]> implements ITaskInven
     // endregion IItemTask
 
     @Override
-    public void onInventoryChange(@Nonnull DBEntry<IQuest> quest, @Nonnull ParticipantInfo pInfo) {
+    public void onInventoryChange(@Nonnull Map.Entry<UUID, IQuest> quest, @Nonnull ParticipantInfo pInfo) {
         if (!consume || autoConsume) {
             detect(pInfo, quest);
         }

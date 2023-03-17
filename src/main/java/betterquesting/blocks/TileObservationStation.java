@@ -28,6 +28,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class TileObservationStation extends TileEntity {
@@ -91,7 +92,7 @@ public class TileObservationStation extends TileEntity {
         final IQuestDatabase questDB = QuestingAPI.getAPI(ApiReference.QUEST_DB);
         if (questDB == null) return;
 
-        for (DBEntry<IQuest> questEntry : questDB.bulkLookup(pInfo.getSharedQuests())) {
+        for (Map.Entry<UUID, IQuest> questEntry : questDB.filterKeys(pInfo.getSharedQuests()).entrySet()) {
             for (DBEntry<ITask> taskEntry : questEntry.getValue().getTasks().getEntries()) {
                 final ITask task = taskEntry.getValue();
                 if (task instanceof IItemTask && !items.isEmpty()) {

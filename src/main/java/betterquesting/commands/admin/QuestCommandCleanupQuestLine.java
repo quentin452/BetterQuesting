@@ -14,7 +14,10 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentTranslation;
 
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.WeakHashMap;
 
 public class QuestCommandCleanupQuestLine extends QuestCommandBase {
@@ -36,14 +39,16 @@ public class QuestCommandCleanupQuestLine extends QuestCommandBase {
             synchronized (QuestDatabase.INSTANCE) {
                 for (DBEntry<IQuestLine> questLineDBEntry : QuestLineDatabase.INSTANCE.getEntries()) {
                     IQuestLine questLine = questLineDBEntry.getValue();
-                    for (DBEntry<IQuestLineEntry> questLineEntryDBEntry : questLine.getEntries()) {
-                        IQuest quest = QuestDatabase.INSTANCE.getValue(questLineEntryDBEntry.getID());
+                    Set<UUID> keysToRemove = new HashSet<>();
+                    for (Map.Entry<UUID, IQuestLineEntry> questLineEntryDBEntry : questLine.entrySet()) {
+                        IQuest quest = QuestDatabase.INSTANCE.get(questLineEntryDBEntry.getKey());
                         if (quest == null) {
                             removed++;
-                            BetterQuesting.logger.info("Removed QuestLineEntry {} in QuestLine {} pointing into nonexistent quest {}", questLineEntryDBEntry.getValue(), questLineDBEntry.getID(), questLineEntryDBEntry.getID());
-                            questLine.removeID(questLineEntryDBEntry.getID());
+                            BetterQuesting.logger.info("Removed QuestLineEntry {} in QuestLine {} pointing into nonexistent quest {}", questLineEntryDBEntry.getValue(), questLineDBEntry.getID(), questLineEntryDBEntry.getKey());
+                            keysToRemove.add(questLineEntryDBEntry.getKey());
                         }
                     }
+                    keysToRemove.forEach(questLine::remove);
                 }
             }
         }

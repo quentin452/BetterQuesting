@@ -2,6 +2,7 @@ package betterquesting.client.toolbox.tools;
 
 import betterquesting.api.client.toolbox.IToolboxTool;
 import betterquesting.api.properties.NativeProps;
+import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.controls.PanelButtonQuest;
 import betterquesting.api2.client.gui.panels.lists.CanvasQuestLine;
 import betterquesting.client.gui2.editors.designer.PanelToolController;
@@ -76,8 +77,7 @@ public class ToolboxToolFrame implements IToolboxTool
         {
             btn.getStoredValue().getValue().setProperty(NativeProps.MAIN, state);
             
-            NBTTagCompound entry = new NBTTagCompound();
-            entry.setInteger("questID", btn.getStoredValue().getID());
+            NBTTagCompound entry = NBTConverter.writeQuestId(btn.getStoredValue().getKey());
             entry.setTag("config", btn.getStoredValue().getValue().writeToNBT(new NBTTagCompound()));
             dataList.appendTag(entry);
         }

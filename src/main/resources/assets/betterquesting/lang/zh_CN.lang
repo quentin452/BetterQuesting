@@ -181,7 +181,7 @@ betterquesting.toolbox.tool.frame.name=编辑任务图标框
 betterquesting.toolbox.tool.frame.desc=更改任务图标框样式
 
 betterquesting.cmd.check_all=由 %s 完成的所有任务:
-betterquesting.cmd.check_all.line=%d %s
+betterquesting.cmd.check_all.line=%s %s
 betterquesting.cmd.check.true=%s 已完成 %s
 betterquesting.cmd.check.false=%s 未完成 %s
 betterquesting.cmd.complete=完成任务 %s 给 %s

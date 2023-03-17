@@ -42,13 +42,13 @@ public class ToolboxToolScale implements IToolboxTool
 	@Override
 	public void disableTool()
 	{
-		if(grabList.size() > 0)
+		if (!grabList.isEmpty())
 		{
-		    for(GrabEntry grab : grabList)
+		    for (GrabEntry grab : grabList)
             {
-                IQuestLineEntry qle = gui.getQuestLine().getValue(grab.btn.getStoredValue().getID());
+                IQuestLineEntry qle = gui.getQuestLine().get(grab.btn.getStoredValue().getKey());
     
-                if(qle != null)
+                if (qle != null)
                 {
                     grab.btn.rect.x = qle.getPosX();
                     grab.btn.rect.y = qle.getPosY();
@@ -66,11 +66,11 @@ public class ToolboxToolScale implements IToolboxTool
     {
         List<GrabEntry> tmp = new ArrayList<>();
         
-        for(GrabEntry grab : grabList)
+        for (GrabEntry grab : grabList)
         {
-            for(PanelButtonQuest btn : PanelToolController.selected)
+            for (PanelButtonQuest btn : PanelToolController.selected)
             {
-                if(btn.getStoredValue().getID() == grab.btn.getStoredValue().getID())
+                if (btn.getStoredValue().getKey().equals(grab.btn.getStoredValue().getKey()))
                 {
                     tmp.add(new GrabEntry(btn, grab.anchor));
                     break;
@@ -137,13 +137,13 @@ public class ToolboxToolScale implements IToolboxTool
 	@Override
 	public boolean onMouseClick(int mx, int my, int click)
 	{
-		if(click == 1 && grabList.size() > 0)
+		if (click == 1 && !grabList.isEmpty())
 		{
-		    for(GrabEntry grab : grabList)
+		    for (GrabEntry grab : grabList)
             {
-                IQuestLineEntry qle = gui.getQuestLine().getValue(grab.btn.getStoredValue().getID());
+                IQuestLineEntry qle = gui.getQuestLine().get(grab.btn.getStoredValue().getKey());
                 
-                if(qle != null)
+                if (qle != null)
                 {
                     grab.btn.rect.x = qle.getPosX();
                     grab.btn.rect.y = qle.getPosY();
@@ -159,14 +159,14 @@ public class ToolboxToolScale implements IToolboxTool
 			return false;
 		}
 		
-		if(grabList.size() > 0)
+		if (grabList.size() > 0)
 		{
             IQuestLine qLine = gui.getQuestLine();
 			int lID = QuestLineDatabase.INSTANCE.getID(qLine);
-            for(GrabEntry grab : grabList)
+            for (GrabEntry grab : grabList)
             {
-			    IQuestLineEntry qle = gui.getQuestLine().getValue(grab.btn.getStoredValue().getID());
-			    if(qle != null)
+			    IQuestLineEntry qle = gui.getQuestLine().get(grab.btn.getStoredValue().getKey());
+			    if (qle != null)
                 {
                     qle.setPosition(grab.btn.rect.x, grab.btn.rect.y);
                     qle.setSize(grab.btn.rect.w, grab.btn.rect.h);
@@ -259,7 +259,7 @@ public class ToolboxToolScale implements IToolboxTool
 	@Override
 	public boolean clampScrolling()
 	{
-		return grabList.size() <= 0;
+		return grabList.isEmpty();
 	}
 	
 	@Override
@@ -270,7 +270,7 @@ public class ToolboxToolScale implements IToolboxTool
 	@Override
     public boolean useSelection()
     {
-        return grabList.size() <= 0;
+        return grabList.isEmpty();
     }
 	
 	private class GrabEntry

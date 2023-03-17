@@ -11,7 +11,9 @@ import betterquesting.api2.utils.Tuple2;
 import bq_standard.tasks.TaskInteractItem;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.MathHelper;
@@ -36,12 +38,12 @@ public class NetTaskInteract {
         NBTTagCompound tag = message.getFirst();
 
         ParticipantInfo pInfo = new ParticipantInfo(sender);
-        List<DBEntry<IQuest>> actQuest =
-                QuestingAPI.getAPI(ApiReference.QUEST_DB).bulkLookup(pInfo.getSharedQuests());
+        Map<UUID, IQuest> actQuest =
+                QuestingAPI.getAPI(ApiReference.QUEST_DB).filterKeys(pInfo.getSharedQuests());
 
         boolean isHit = tag.getBoolean("isHit");
 
-        for (DBEntry<IQuest> entry : actQuest) {
+        for (Map.Entry<UUID, IQuest> entry : actQuest.entrySet()) {
             for (DBEntry<ITask> task : entry.getValue().getTasks().getEntries()) {
                 if (task.getValue() instanceof TaskInteractItem)
                     ((TaskInteractItem) task.getValue())

@@ -3,7 +3,6 @@ package bq_standard.tasks;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import bq_standard.client.gui.tasks.PanelTaskCheckbox;
 import bq_standard.core.BQ_Standard;
@@ -14,6 +13,9 @@ import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
+
+import java.util.Map;
+import java.util.UUID;
 
 public class TaskCheckbox extends TaskBase {
     // region Properties
@@ -39,17 +41,17 @@ public class TaskCheckbox extends TaskBase {
 
     @Override
     @SideOnly(Side.CLIENT)
-    public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest) {
+    public IGuiPanel getTaskGui(IGuiRect rect, Map.Entry<UUID, IQuest> quest) {
         return new PanelTaskCheckbox(rect, quest, this);
     }
 
     @Override
     @SideOnly(Side.CLIENT)
-    public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest) {
+    public GuiScreen getTaskEditor(GuiScreen parent, Map.Entry<UUID, IQuest> quest) {
         return null;
     }
     // endregion Basic
 
     @Override
-    public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {}
+    public void detect(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest) {}
 }

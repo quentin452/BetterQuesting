@@ -8,7 +8,6 @@ import betterquesting.api.utils.JsonHelper;
 import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import betterquesting.api2.utils.Tuple2;
 import bq_standard.client.gui.tasks.PanelTaskCrafting;
@@ -18,8 +17,8 @@ import bq_standard.tasks.factory.FactoryTaskCrafting;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.IntSupplier;
 import net.minecraft.client.gui.GuiScreen;
@@ -95,13 +94,13 @@ public class TaskCrafting extends TaskProgressableBase<int[]> implements ITaskIt
 
     @Override
     @SideOnly(Side.CLIENT)
-    public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> context) {
+    public IGuiPanel getTaskGui(IGuiRect rect, Map.Entry<UUID, IQuest> context) {
         return new PanelTaskCrafting(rect, this);
     }
 
     @Override
     @SideOnly(Side.CLIENT)
-    public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest) {
+    public GuiScreen getTaskEditor(GuiScreen parent, Map.Entry<UUID, IQuest> quest) {
         return null;
     }
     // endregion Basic
@@ -142,7 +141,7 @@ public class TaskCrafting extends TaskProgressableBase<int[]> implements ITaskIt
     // endregion Progress
 
     @Override
-    public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {
+    public void detect(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest) {
         pInfo.ALL_UUIDS.forEach((uuid) -> {
             if (isComplete(uuid)) return;
 
@@ -179,31 +178,31 @@ public class TaskCrafting extends TaskProgressableBase<int[]> implements ITaskIt
             }
         });
 
-        pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
+        pInfo.markDirtyParty(quest.getKey());
     }
 
     public void onItemCraft(
-            ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack, IntSupplier realStackSizeSupplier) {
+            ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, ItemStack stack, IntSupplier realStackSizeSupplier) {
         if (!allowCraft) return;
         onItemInternal(pInfo, quest, stack, realStackSizeSupplier);
     }
 
-    public void onItemSmelt(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack) {
+    public void onItemSmelt(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, ItemStack stack) {
         if (!allowSmelt) return;
         onItemInternal(pInfo, quest, stack);
     }
 
-    public void onItemAnvil(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack) {
+    public void onItemAnvil(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, ItemStack stack) {
         if (!allowAnvil) return;
         onItemInternal(pInfo, quest, stack);
     }
 
-    private void onItemInternal(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack) {
+    private void onItemInternal(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, ItemStack stack) {
         onItemInternal(pInfo, quest, stack, null);
     }
 
     private void onItemInternal(
-            ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack stack, IntSupplier realStackSizeSupplier) {
+            ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, ItemStack stack, IntSupplier realStackSizeSupplier) {
         // ignore null stack
         // ignore negatively sized stack only if it's indeed the real stack size
         if (stack == null || (stack.stackSize <= 0 && realStackSizeSupplier == null)) return;

@@ -4,7 +4,6 @@ import betterquesting.api.questing.IQuest;
 import betterquesting.api.utils.ItemComparison;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import bq_standard.client.gui.editors.tasks.GuiEditTaskMeeting;
 import bq_standard.client.gui.tasks.PanelTaskMeeting;
@@ -14,6 +13,8 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import javax.annotation.Nonnull;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.Entity;
@@ -70,19 +71,19 @@ public class TaskMeeting extends TaskBase implements ITaskTickable {
 
     @Override
     @SideOnly(Side.CLIENT)
-    public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest) {
+    public GuiScreen getTaskEditor(GuiScreen parent, Map.Entry<UUID, IQuest> quest) {
         return new GuiEditTaskMeeting(parent, quest, this);
     }
 
     @Override
     @SideOnly(Side.CLIENT)
-    public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest) {
+    public IGuiPanel getTaskGui(IGuiRect rect, Map.Entry<UUID, IQuest> quest) {
         return new PanelTaskMeeting(rect, this);
     }
     // endregion Basic
 
     @Override
-    public void detect(@Nonnull ParticipantInfo pInfo, DBEntry<IQuest> quest) {
+    public void detect(@Nonnull ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest) {
         if (!pInfo.PLAYER.isEntityAlive()) return;
 
         //noinspection unchecked
@@ -116,14 +117,14 @@ public class TaskMeeting extends TaskBase implements ITaskTickable {
                 pInfo.ALL_UUIDS.forEach((uuid) -> {
                     if (!isComplete(uuid)) setComplete(uuid);
                 });
-                pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
+                pInfo.markDirtyParty(quest.getKey());
                 return;
             }
         }
     }
 
     @Override
-    public void tickTask(@Nonnull ParticipantInfo pInfo, @Nonnull DBEntry<IQuest> quest) {
+    public void tickTask(@Nonnull ParticipantInfo pInfo, @Nonnull Map.Entry<UUID, IQuest> quest) {
         if (pInfo.PLAYER.ticksExisted % 60 == 0) detect(pInfo, quest);
     }
 

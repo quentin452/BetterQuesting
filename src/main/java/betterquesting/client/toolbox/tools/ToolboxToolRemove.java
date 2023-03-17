@@ -12,6 +12,7 @@ import net.minecraft.nbt.NBTTagList;
 import org.lwjgl.input.Keyboard;
 
 import java.util.List;
+import java.util.UUID;
 
 public class ToolboxToolRemove implements IToolboxTool
 {
@@ -49,11 +50,11 @@ public class ToolboxToolRemove implements IToolboxTool
 		    if(PanelToolController.selected.size() > 0)
             {
                 if(!PanelToolController.selected.contains(btn)) return false;
-                for(PanelButtonQuest b : PanelToolController.selected) line.removeID(b.getStoredValue().getID());
+                for(PanelButtonQuest b : PanelToolController.selected) line.remove(b.getStoredValue().getKey());
             } else
             {
-                int qID = btn.getStoredValue().getID();
-                line.removeID(qID);
+                UUID qID = btn.getStoredValue().getKey();
+                line.remove(qID);
             }
 		    
             // Sync Line
@@ -106,7 +107,7 @@ public class ToolboxToolRemove implements IToolboxTool
 	    if(PanelToolController.selected.size() > 0 && key == Keyboard.KEY_RETURN)
         {
             IQuestLine line = gui.getQuestLine();
-            for(PanelButtonQuest b : PanelToolController.selected) line.removeID(b.getStoredValue().getID());
+            for(PanelButtonQuest b : PanelToolController.selected) line.remove(b.getStoredValue().getKey());
 		    
             // Sync Line
             NBTTagCompound chPayload = new NBTTagCompound();

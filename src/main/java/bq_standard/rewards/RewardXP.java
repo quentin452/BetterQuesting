@@ -4,7 +4,6 @@ import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.rewards.IReward;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
-import betterquesting.api2.storage.DBEntry;
 import bq_standard.XPHelper;
 import bq_standard.client.gui.rewards.PanelRewardXP;
 import bq_standard.rewards.factory.FactoryRewardXP;
@@ -14,6 +13,9 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
+
+import java.util.Map;
+import java.util.UUID;
 
 public class RewardXP implements IReward {
     public int amount = 1;
@@ -30,12 +32,12 @@ public class RewardXP implements IReward {
     }
 
     @Override
-    public boolean canClaim(EntityPlayer player, DBEntry<IQuest> quest) {
+    public boolean canClaim(EntityPlayer player, Map.Entry<UUID, IQuest> quest) {
         return true;
     }
 
     @Override
-    public void claimReward(EntityPlayer player, DBEntry<IQuest> quest) {
+    public void claimReward(EntityPlayer player, Map.Entry<UUID, IQuest> quest) {
         XPHelper.addXP(player, !levels ? amount : XPHelper.getLevelXP(amount));
     }
 
@@ -54,13 +56,13 @@ public class RewardXP implements IReward {
 
     @Override
     @SideOnly(Side.CLIENT)
-    public IGuiPanel getRewardGui(IGuiRect rect, DBEntry<IQuest> quest) {
+    public IGuiPanel getRewardGui(IGuiRect rect, Map.Entry<UUID, IQuest> quest) {
         return new PanelRewardXP(rect, this);
     }
 
     @Override
     @SideOnly(Side.CLIENT)
-    public GuiScreen getRewardEditor(GuiScreen screen, DBEntry<IQuest> quest) {
+    public GuiScreen getRewardEditor(GuiScreen screen, Map.Entry<UUID, IQuest> quest) {
         return null;
     }
 }

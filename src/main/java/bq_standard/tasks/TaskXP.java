@@ -3,7 +3,6 @@ package bq_standard.tasks;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import bq_standard.XPHelper;
 import bq_standard.client.gui.tasks.PanelTaskXP;
@@ -11,7 +10,7 @@ import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskXP;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 import javax.annotation.Nonnull;
 import net.minecraft.client.gui.GuiScreen;
@@ -54,13 +53,13 @@ public class TaskXP extends TaskProgressableBase<Long> implements ITaskTickable 
 
     @Override
     @SideOnly(Side.CLIENT)
-    public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest) {
+    public IGuiPanel getTaskGui(IGuiRect rect, Map.Entry<UUID, IQuest> quest) {
         return new PanelTaskXP(rect, this);
     }
 
     @Override
     @SideOnly(Side.CLIENT)
-    public GuiScreen getTaskEditor(GuiScreen screen, DBEntry<IQuest> quest) {
+    public GuiScreen getTaskEditor(GuiScreen screen, Map.Entry<UUID, IQuest> quest) {
         return null;
     }
     // endregion Basic
@@ -84,7 +83,7 @@ public class TaskXP extends TaskProgressableBase<Long> implements ITaskTickable 
     // endregion Progress
 
     @Override
-    public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {
+    public void detect(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest) {
         if (isComplete(pInfo.UUID)) return;
 
         long progress = getUsersProgress(pInfo.UUID);
@@ -115,12 +114,12 @@ public class TaskXP extends TaskProgressableBase<Long> implements ITaskTickable 
         if (changed) // Needs to be here because even if no additional progress was added, a party memeber may have
         // completed the task anyway
         {
-            pInfo.markDirty(Collections.singletonList(quest.getID()));
+            pInfo.markDirty(quest.getKey());
         }
     }
 
     @Override
-    public void tickTask(@Nonnull ParticipantInfo pInfo, @Nonnull DBEntry<IQuest> quest) {
+    public void tickTask(@Nonnull ParticipantInfo pInfo, @Nonnull Map.Entry<UUID, IQuest> quest) {
         if (consume || pInfo.PLAYER.ticksExisted % 60 != 0) return; // Every 3 seconds
 
         long curProg = getUsersProgress(pInfo.UUID);
@@ -128,7 +127,7 @@ public class TaskXP extends TaskProgressableBase<Long> implements ITaskTickable 
 
         if (curProg != nxtProg) {
             setUserProgress(pInfo.UUID, XPHelper.getPlayerXP(pInfo.PLAYER));
-            pInfo.markDirty(Collections.singletonList(quest.getID()));
+            pInfo.markDirty(quest.getKey());
         }
 
         long rawXP = levels ? XPHelper.getLevelXP(amount) : amount;

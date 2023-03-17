@@ -5,7 +5,6 @@ import betterquesting.api.utils.ItemComparison;
 import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import betterquesting.api2.utils.Tuple2;
 import bq_standard.NbtBlockType;
@@ -15,8 +14,8 @@ import bq_standard.tasks.factory.FactoryTaskBlockBreak;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.GuiScreen;
@@ -91,13 +90,13 @@ public class TaskBlockBreak extends TaskProgressableBase<int[]> {
 
     @Override
     @SideOnly(Side.CLIENT)
-    public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest) {
+    public IGuiPanel getTaskGui(IGuiRect rect, Map.Entry<UUID, IQuest> quest) {
         return new PanelTaskBlockBreak(rect, this);
     }
 
     @Override
     @SideOnly(Side.CLIENT)
-    public GuiScreen getTaskEditor(GuiScreen screen, DBEntry<IQuest> quest) {
+    public GuiScreen getTaskEditor(GuiScreen screen, Map.Entry<UUID, IQuest> quest) {
         return null;
     }
     // endregion Basic
@@ -135,7 +134,7 @@ public class TaskBlockBreak extends TaskProgressableBase<int[]> {
     // endregion Progress
 
     @Override
-    public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {
+    public void detect(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest) {
         pInfo.ALL_UUIDS.forEach((uuid) -> {
             if (isComplete(uuid)) return;
 
@@ -147,10 +146,10 @@ public class TaskBlockBreak extends TaskProgressableBase<int[]> {
             setComplete(uuid);
         });
 
-        pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
+        pInfo.markDirtyParty(quest.getKey());
     }
 
-    public void onBlockBreak(ParticipantInfo pInfo, DBEntry<IQuest> quest, Block block, int meta, int x, int y, int z) {
+    public void onBlockBreak(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, Block block, int meta, int x, int y, int z) {
         TileEntity tile = block.hasTileEntity(meta) ? pInfo.PLAYER.worldObj.getTileEntity(x, y, z) : null;
         NBTTagCompound tags = null;
         if (tile != null) {

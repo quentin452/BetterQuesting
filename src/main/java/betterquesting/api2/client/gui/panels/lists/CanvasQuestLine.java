@@ -22,7 +22,7 @@ import betterquesting.api2.client.gui.resources.lines.IGuiLine;
 import betterquesting.api2.client.gui.resources.textures.SimpleTexture;
 import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.client.gui.themes.presets.PresetLine;
-import betterquesting.api2.storage.DBEntry;
+import com.google.common.collect.Maps;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
@@ -30,7 +30,6 @@ import net.minecraft.util.StringUtils;
 import org.lwjgl.input.Keyboard;
 
 import java.util.*;
-import java.util.Map.Entry;
 
 /**
  * My class for lazy quest line setup on a scrolling canvas
@@ -93,49 +92,57 @@ public class CanvasQuestLine extends CanvasScrolling
         this.btnList.clear();
         lastQL = line;
         
-        if(line == null) return;
+        if (line == null)
+        {
+            return;
+        }
         
         EntityPlayer player = Minecraft.getMinecraft().thePlayer;
         UUID pid = QuestingAPI.getQuestingUUID(player);
         
         String bgString = line.getProperty(NativeProps.BG_IMAGE);
         
-        if(!StringUtils.isNullOrEmpty(bgString))
+        if (!StringUtils.isNullOrEmpty(bgString))
         {
             int bgSize = line.getProperty(NativeProps.BG_SIZE);
             this.addPanel(new PanelGeneric(new GuiRectangle(0, 0, bgSize, bgSize, 1), new SimpleTexture(new ResourceLocation(bgString), new GuiRectangle(0, 0, 256, 256))));
         }
         
-        HashMap<Integer, PanelButtonQuest> questBtns = new HashMap<>();
+        HashMap<UUID, PanelButtonQuest> questBtns = new HashMap<>();
         
-        for(DBEntry<IQuestLineEntry> qle : line.getEntries())
+        for (Map.Entry<UUID, IQuestLineEntry> qle : line.entrySet())
         {
-            IQuest quest = QuestingAPI.getAPI(ApiReference.QUEST_DB).getValue(qle.getID());
+            IQuest quest = QuestingAPI.getAPI(ApiReference.QUEST_DB).get(qle.getKey());
             
-            if(!QuestCache.isQuestShown(quest, pid, player)) continue;
+            if (!QuestCache.isQuestShown(quest, pid, player)) continue;
             
             GuiRectangle rect = new GuiRectangle(qle.getValue().getPosX(), qle.getValue().getPosY(), qle.getValue().getSizeX(), qle.getValue().getSizeY());
-            PanelButtonQuest paBtn = new PanelButtonQuest(rect, buttonId, "", new DBEntry<>(qle.getID(), quest));
+            PanelButtonQuest paBtn = new PanelButtonQuest(rect, buttonId, "", Maps.immutableEntry(qle.getKey(), quest));
             
             this.addPanel(paBtn);
             this.btnList.add(paBtn);
-            questBtns.put(qle.getID(), paBtn);
+            questBtns.put(qle.getKey(), paBtn);
         }
         
-        for(Entry<Integer, PanelButtonQuest> entry : questBtns.entrySet())
+        for (Map.Entry<UUID, PanelButtonQuest> entry : questBtns.entrySet())
         {
-            DBEntry<IQuest> quest = entry.getValue().getStoredValue();
+            Map.Entry<UUID, IQuest> quest = entry.getValue().getStoredValue();
             
-            List<DBEntry<IQuest>> reqList = QuestingAPI.getAPI(ApiReference.QUEST_DB).bulkLookup(quest.getValue().getRequirements());
-            
-            if(reqList.size() <= 0) continue;
+            Map<UUID, IQuest> reqMap =
+                    QuestingAPI.getAPI(ApiReference.QUEST_DB)
+                            .filterKeys(quest.getValue().getRequirements());
+
+            if (reqMap.isEmpty())
+            {
+                continue;
+            }
             
             boolean main = quest.getValue().getProperty(NativeProps.MAIN);
             EnumQuestState qState = quest.getValue().getState(player);
             IGuiLine lineRender = null;
             IGuiColor defaultTxLineCol = null;
             
-            switch(qState)
+            switch (qState)
             {
                 case LOCKED:
                     lineRender = PresetLine.QUEST_LOCKED.getLine();
@@ -159,14 +166,14 @@ public class CanvasQuestLine extends CanvasScrolling
                     break;
             }
             
-            for(DBEntry<IQuest> req : reqList)
+            for (Map.Entry<UUID, IQuest> req : reqMap.entrySet())
             {
-                PanelButtonQuest parBtn = questBtns.get(req.getID());
+                PanelButtonQuest parBtn = questBtns.get(req.getKey());
                 IGuiColor txLineCol = defaultTxLineCol;
                 
-                if(parBtn != null)
+                if (parBtn != null)
                 {
-                    RequirementType type = quest.getValue().getRequirementType(req.getID());
+                    RequirementType type = quest.getValue().getRequirementType(req.getKey());
                     ShouldDrawPredicate predicate = null;
                     switch (type) {
                         case NORMAL:
@@ -174,7 +181,7 @@ public class CanvasQuestLine extends CanvasScrolling
                         case IMPLICIT:
                             if (BQ_Settings.alwaysDrawImplicit)
                                 break;
-                            predicate = (mx, my, partialTicks) -> questBtns.get(req.getID()).rect.contains(mx, my) || questBtns.get(quest.getID()).rect.contains(mx, my) || Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
+                            predicate = (mx, my, partialTicks) -> questBtns.get(req.getKey()).rect.contains(mx, my) || questBtns.get(quest.getKey()).rect.contains(mx, my) || Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
                             txLineCol = new GuiColorPulse(txLineCol, PresetColor.QUEST_LINE_IMPLICIT_MIXIN.getColor(), 2F, 0F);
                             break;
                         default:

@@ -55,10 +55,15 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.config.Configuration;
 import org.lwjgl.util.vector.Vector4f;
 
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.util.*;
+import java.util.List;
 
 import static betterquesting.api.storage.BQ_Settings.alwaysDrawImplicit;
 
@@ -246,7 +251,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
             cvDesc.resetCanvas();
             if(selectedLine != null)
             {
-                txDesc = new PanelTextBox(new GuiRectangle(0, 0, cvDesc.getTransform().getWidth(), 0, 0), QuestTranslation.translate(selectedLine.getUnlocalisedDescription()), true);
+                txDesc = new PanelTextBox(new GuiRectangle(0, 0, cvDesc.getTransform().getWidth(), 0, 0), QuestTranslation.translateQuestLineDescription(selectedLineId, selectedLine), true);
                 txDesc.setColor(PresetColor.TEXT_AUX_0.getColor());//.setFontSize(10);
                 cvDesc.addCulledPanel(txDesc, false);
                 cvDesc.refreshScrollBounds();
@@ -374,15 +379,35 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
                     boolean questExistsUnderMouse = cvQuest.getButtonAt(mx, my) != null;
 
                     if (questExistsUnderMouse) {
+                        UUID questId = cvQuest.getButtonAt(mx, my).getStoredValue().getKey();
                         int maxWidth = questExistsUnderMouse ? RenderUtils.getStringWidth(QuestTranslation.translate("betterquesting.btn.share_quest"), fr) : 0;
 
                         PopContextMenu popup = new PopContextMenu(new GuiRectangle(mx, my, maxWidth + 12, questExistsUnderMouse ? 48 : 16), true);
-
                         Runnable questSharer = () -> {
-                            mc.thePlayer.sendChatMessage("betterquesting.msg.sharequest:" + cvQuest.getButtonAt(mx, my).getStoredValue().getID());
+                            mc.thePlayer.sendChatMessage("betterquesting.msg.sharequest:" + questId);
                             mc.displayGuiScreen(null);
                         };
                         popup.addButton(QuestTranslation.translate("betterquesting.btn.share_quest"), null, questSharer);
+
+                        Runnable copyQuestId = () -> {
+                            StringSelection stringToCopy = new StringSelection(questId.toString());
+                            try {
+                                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringToCopy, null);
+                                mc.thePlayer.addChatMessage(
+                                        new ChatComponentText(
+                                                QuestTranslation.translate("betterquesting.msg.copy_quest_copied")));
+                                mc.thePlayer.addChatMessage(
+                                        new ChatComponentText(
+                                                "  " + EnumChatFormatting.AQUA + questId));
+                            } catch (IllegalStateException e) {
+                                mc.thePlayer.addChatMessage(
+                                        new ChatComponentText(
+                                                QuestTranslation.translate("betterquesting.msg.copy_quest_failed")));
+                            }
+                            closePopup();
+                        };
+                        popup.addButton(QuestTranslation.translate("betterquesting.btn.copy_quest"), null, copyQuestId);
+
                         openPopup(popup);
                         return true;
                     }
@@ -407,7 +432,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
             }
 
             refreshQuestCompletion();
-            txTitle.setText(QuestTranslation.translate(selectedLine.getUnlocalisedName()));
+            txTitle.setText(QuestTranslation.translateQuestLineName(selectedLineId, selectedLine));
             icoChapter.setTexture(new OreDictTexture(1F, selectedLine.getProperty(NativeProps.ICON), false, true), null);
         }
 
@@ -446,21 +471,22 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
     }
 
     private void claimAll() {
-        if(cvQuest.getQuestButtons().size() <= 0) return;
-        List<Integer> claimIdList = new ArrayList<>();
-        for(PanelButtonQuest pbQuest : cvQuest.getQuestButtons())
+        if (cvQuest.getQuestButtons().isEmpty())
+        {
+            return;
+        }
+
+        List<UUID> claimIdList = new ArrayList<>();
+        for (PanelButtonQuest pbQuest : cvQuest.getQuestButtons())
         {
             IQuest q = pbQuest.getStoredValue().getValue();
-            if(q.getRewards().size() > 0 && q.canClaim(mc.thePlayer)) claimIdList.add(pbQuest.getStoredValue().getID());
+            if (q.getRewards().size() > 0 && q.canClaim(mc.thePlayer))
+            {
+                claimIdList.add(pbQuest.getStoredValue().getKey());
+            }
         }
 
-        int[] cIDs = new int[claimIdList.size()];
-        for(int i = 0; i < cIDs.length; i++)
-        {
-            cIDs[i] = claimIdList.get(i);
-        }
-
-        NetQuestAction.requestClaim(cIDs);
+        NetQuestAction.requestClaim(claimIdList);
         claimAll.setIcon(PresetIcon.ICON_CHEST_ALL.getTexture(), new GuiColorStatic(0xFF444444), 0);
     }
 
@@ -482,8 +508,8 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
         if(btn.getButtonID() == 2 && btn instanceof PanelButtonStorage) // Quest Instance Select
         {
             @SuppressWarnings("unchecked")
-            DBEntry<IQuest> quest = ((PanelButtonStorage<DBEntry<IQuest>>)btn).getStoredValue();
-            GuiHome.bookmark = new GuiQuest(this, quest.getID());
+            Map.Entry<UUID, IQuest> quest = ((PanelButtonStorage<Map.Entry<UUID, IQuest>>)btn).getStoredValue();
+            GuiHome.bookmark = new GuiQuest(this, quest.getKey());
 
             mc.displayGuiScreen(GuiHome.bookmark);
         }
@@ -525,9 +551,9 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
                 unlocked = true;
             }
 
-            for(DBEntry<IQuestLineEntry> qID : ql.getEntries())
+            for(Map.Entry<UUID, IQuestLineEntry> qID : ql.entrySet())
             {
-                IQuest q = QuestDatabase.INSTANCE.getValue(qID.getID());
+                IQuest q = QuestDatabase.INSTANCE.get(qID.getKey());
                 if(q == null) continue;
 
                 if(allComplete && !isQuestCompletedForQuestline(playerID, q)) allComplete = false;
@@ -561,8 +587,8 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
         if (q.getProperty(NativeProps.VISIBILITY) == EnumQuestVisibility.HIDDEN) return true; // Always hidden quest
         if (q.getProperty(NativeProps.LOGIC_QUEST) == EnumLogic.XOR){ // Quest with choice
             int reqCount = 0;
-            for (int qRequirementId : q.getRequirements()) {
-                IQuest quest = QuestDatabase.INSTANCE.getValue(qRequirementId);
+            for (UUID qRequirementId : q.getRequirements()) {
+                IQuest quest = QuestDatabase.INSTANCE.get(qRequirementId);
                 if (quest.isComplete(playerID)) reqCount++;
                 if (reqCount == 2) return true;
             }
@@ -592,12 +618,10 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
             {
                 cvLines.addPanel(new PanelGeneric(new GuiRectangle(8, n * 16 + 8, 8, 8, -1), new GuiTextureColored(PresetIcon.ICON_TICK.getTexture(), new GuiColorStatic(0xFF00FF00))));
             }
-            PanelButtonStorage<DBEntry<IQuestLine>> btnLine = new PanelButtonStorage<>(new GuiRectangle(16, n * 16, listW - 16, 16, 0), 1, QuestTranslation.translate(entry.getValue().getUnlocalisedName()), entry);
+            PanelButtonStorage<DBEntry<IQuestLine>> btnLine = new PanelButtonStorage<>(new GuiRectangle(16, n * 16, listW - 16, 16, 0), 1, QuestTranslation.translateQuestLineName(entry), entry);
             btnLine.setTextAlignment(0);
             btnLine.setActive((vis & 4) == 0 && entry.getID() != selectedLineId);
-            btnLine.setCallback((q) -> {
-                openQuestLine(q);
-            });
+            btnLine.setCallback(this::openQuestLine);
             cvLines.addPanel(btnLine);
             btnListRef.add(btnLine);
         }
@@ -617,8 +641,8 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
         questsCompleted = 0;
         totalQuests = 0;
 
-        for(DBEntry<IQuestLineEntry> entry : selectedLine.getEntries()) {
-            IQuest quest = QuestingAPI.getAPI(ApiReference.QUEST_DB).getValue(entry.getID());
+        for(Map.Entry<UUID, IQuestLineEntry> entry : selectedLine.entrySet()) {
+            IQuest quest = QuestingAPI.getAPI(ApiReference.QUEST_DB).get(entry.getKey());
 
             totalQuests++;
 
@@ -638,7 +662,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
 
         cvQuest.setQuestLine(q.getValue());
         icoChapter.setTexture(new OreDictTexture(1F, q.getValue().getProperty(NativeProps.ICON), false, true), null);
-        txTitle.setText(QuestTranslation.translate(q.getValue().getUnlocalisedName()));
+        txTitle.setText(QuestTranslation.translateQuestLineName(q));
         refreshQuestCompletion();
 
         if(!trayLock)
@@ -673,7 +697,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
 
         if (selectedLine != null) {
             refreshQuestCompletion();
-            txTitle.setText(QuestTranslation.translate(selectedLine.getUnlocalisedName()));
+            txTitle.setText(QuestTranslation.translateQuestLineName(selectedLineId, selectedLine));
             icoChapter.setTexture(new OreDictTexture(1F, selectedLine.getProperty(NativeProps.ICON), false, true), null);
         } else
         {
@@ -711,8 +735,8 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
         GuiQuestSearch guiQuestSearch = new GuiQuestSearch(this);
         guiQuestSearch.setCallback(entry -> {
             openQuestLine(entry.getQuestLineEntry());
-            int selectedQuestId = entry.getQuest().getID();
-            Optional<PanelButtonQuest> targetQuestButton = cvQuest.getQuestButtons().stream().filter(panelButtonQuest -> panelButtonQuest.getStoredValue().getID() == selectedQuestId).findFirst();
+            UUID selectedQuestId = entry.getQuest().getKey();
+            Optional<PanelButtonQuest> targetQuestButton = cvQuest.getQuestButtons().stream().filter(panelButtonQuest -> panelButtonQuest.getStoredValue().getKey().equals(selectedQuestId)).findFirst();
             targetQuestButton.ifPresent(panelButtonQuest -> {
                 GuiTextureColored newTexture = new GuiTextureColored(panelButtonQuest.txFrame,
                         new GuiColorPulse(

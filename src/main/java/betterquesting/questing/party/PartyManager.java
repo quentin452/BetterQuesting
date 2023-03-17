@@ -43,12 +43,12 @@ public class PartyManager extends SimpleDatabase<IParty> implements IPartyDataba
 
             List<SyncPlayerContainer> t = targetUUIDs.stream().map(SyncPlayerContainer::new).collect(Collectors.toList());
 
-			for (DBEntry<IQuest> questEntry : QuestDatabase.INSTANCE.getEntries()) {
+			for (Map.Entry<UUID, IQuest> questEntry : QuestDatabase.INSTANCE.entrySet()) {
 				IQuest quest = questEntry.getValue();
 				long completionTime = -1;
 				for (UUID member : partyMembers) {
 					NBTTagCompound completionInfo = quest.getCompletionInfo(member);
-					if (completionInfo != null){
+					if (completionInfo != null) {
 						completionTime = completionInfo.getLong("timestamp");
 						break;
 					}
@@ -62,7 +62,7 @@ public class PartyManager extends SimpleDatabase<IParty> implements IPartyDataba
                             quest.setClaimed(target.uuid, completionTime);
                         }
                         if (target.isPlayerOnline()){
-                            target.questCache.markQuestDirty(questEntry.getID());
+                            target.questCache.markQuestDirty(questEntry.getKey());
                         }
 
                         target.questsCompleted += 1;

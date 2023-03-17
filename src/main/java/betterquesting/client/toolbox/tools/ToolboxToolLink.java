@@ -2,6 +2,7 @@ package betterquesting.client.toolbox.tools;
 
 import betterquesting.api.client.toolbox.IToolboxTool;
 import betterquesting.api.questing.IQuest;
+import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.controls.PanelButtonQuest;
 import betterquesting.api2.client.gui.misc.GuiRectangle;
 import betterquesting.api2.client.gui.panels.lists.CanvasQuestLine;
@@ -15,6 +16,7 @@ import net.minecraft.nbt.NBTTagList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 public class ToolboxToolLink implements IToolboxTool
 {
@@ -38,13 +40,22 @@ public class ToolboxToolLink implements IToolboxTool
 	@Override
     public void refresh(CanvasQuestLine gui)
     {
-        if(linking.size() <= 0) return;
+        if (linking.isEmpty())
+        {
+            return;
+        }
         
         List<PanelButtonQuest> tmp = new ArrayList<>();
         
-        for(PanelButtonQuest b1 : linking)
+        for (PanelButtonQuest b1 : linking)
         {
-            for(PanelButtonQuest b2 : gui.getQuestButtons()) if(b1.getStoredValue().getID() == b2.getStoredValue().getID()) tmp.add(b2);
+            for (PanelButtonQuest b2 : gui.getQuestButtons())
+            {
+                if (b1.getStoredValue().getKey().equals(b2.getStoredValue().getKey()))
+                {
+                    tmp.add(b2);
+                }
+            }
         }
         
         linking.clear();
@@ -122,28 +133,27 @@ public class ToolboxToolLink implements IToolboxTool
                     boolean mod1 = false;
                     
                     // Don't have to worry about the lines anymore. The panel is getting refereshed anyway
-                    if(!containsReq(q2, b1.getStoredValue().getID()) && !containsReq(q1, b2.getStoredValue().getID()))
+                    if (!containsReq(q2, b1.getStoredValue().getKey()) && !containsReq(q1, b2.getStoredValue().getKey()))
                     {
-                        mod2 = addReq(q2, b1.getStoredValue().getID()) || mod2;
-                    } else
+                        mod2 = addReq(q2, b1.getStoredValue().getKey()) || mod2;
+                    }
+                    else
                     {
-                        mod2 = removeReq(q2, b1.getStoredValue().getID()) || mod2;
-                        mod1 = removeReq(q1, b2.getStoredValue().getID());
+                        mod2 = removeReq(q2, b1.getStoredValue().getKey()) || mod2;
+                        mod1 = removeReq(q1, b2.getStoredValue().getKey());
                     }
                     
-                    if(mod1)
+                    if (mod1)
                     {
-                        NBTTagCompound entry = new NBTTagCompound();
-                        entry.setInteger("questID", b1.getStoredValue().getID());
+                        NBTTagCompound entry = NBTConverter.writeQuestId(b1.getStoredValue().getKey());
                         entry.setTag("config", b1.getStoredValue().getValue().writeToNBT(new NBTTagCompound()));
                         dataList.appendTag(entry);
                     }
                 }
 				
-                if(mod2)
+                if (mod2)
                 {
-                    NBTTagCompound entry = new NBTTagCompound();
-                    entry.setInteger("questID", b2.getStoredValue().getID());
+                    NBTTagCompound entry = NBTConverter.writeQuestId(b2.getStoredValue().getKey());
                     entry.setTag("config", q2.writeToNBT(new NBTTagCompound()));
                     dataList.appendTag(entry);
                 }
@@ -193,43 +203,21 @@ public class ToolboxToolLink implements IToolboxTool
 	@Override
     public boolean useSelection()
     {
-        return linking.size() <= 0;
+        return linking.isEmpty();
     }
     
-    private boolean containsReq(IQuest quest, int id)
+    private boolean containsReq(IQuest quest, UUID id)
     {
-        for(int reqID : quest.getRequirements()) if(id == reqID) return true;
-        return false;
+        return quest.getRequirements().contains(id);
     }
     
-    private boolean removeReq(IQuest quest, int id)
+    private boolean removeReq(IQuest quest, UUID id)
     {
-        int[] orig = quest.getRequirements();
-        if(orig.length <= 0) return false;
-        boolean hasRemoved = false;
-        int[] rem = new int[orig.length - 1];
-        for(int i = 0; i < orig.length; i++)
-        {
-            if(!hasRemoved && orig[i] == id)
-            {
-                hasRemoved = true;
-                continue;
-            } else if(!hasRemoved && i >= rem.length) break;
-            
-            rem[!hasRemoved ? i : (i - 1)] = orig[i];
-        }
-        
-        if(hasRemoved) quest.setRequirements(rem);
-        return hasRemoved;
+        return quest.getRequirements().remove(id);
     }
     
-    private boolean addReq(IQuest quest, int id)
+    private boolean addReq(IQuest quest, UUID id)
     {
-        if(containsReq(quest, id)) return false;
-        int[] orig = quest.getRequirements();
-        int[] added = Arrays.copyOf(orig, orig.length + 1);
-        added[orig.length] = id;
-        quest.setRequirements(added);
-        return true;
+        return quest.getRequirements().add(id);
     }
 }

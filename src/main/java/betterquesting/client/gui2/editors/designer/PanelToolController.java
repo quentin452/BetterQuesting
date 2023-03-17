@@ -105,9 +105,15 @@ public class PanelToolController implements IGuiPanel
     public void refreshCanvas()
     {
         List<PanelButtonQuest> tmp = new ArrayList<>();
-        for(PanelButtonQuest b1 : selected)
+        for (PanelButtonQuest b1 : selected)
         {
-            for(PanelButtonQuest b2 : questLine.getQuestButtons()) if(b1.getStoredValue().getID() == b2.getStoredValue().getID()) tmp.add(b2);
+            for (PanelButtonQuest b2 : questLine.getQuestButtons())
+            {
+                if (b1.getStoredValue().getKey().equals(b2.getStoredValue().getKey()))
+                {
+                    tmp.add(b2);
+                }
+            }
         }
         
         selected.clear();

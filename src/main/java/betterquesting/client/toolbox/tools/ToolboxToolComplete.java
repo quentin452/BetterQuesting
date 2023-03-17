@@ -1,6 +1,7 @@
 package betterquesting.client.toolbox.tools;
 
 import betterquesting.api.client.toolbox.IToolboxTool;
+import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.controls.PanelButtonQuest;
 import betterquesting.api2.client.gui.panels.lists.CanvasQuestLine;
 import betterquesting.client.gui2.editors.designer.PanelToolController;
@@ -8,8 +9,10 @@ import betterquesting.network.handlers.NetQuestEdit;
 import net.minecraft.nbt.NBTTagCompound;
 import org.lwjgl.input.Keyboard;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 public class ToolboxToolComplete implements IToolboxTool
 {
@@ -50,23 +53,32 @@ public class ToolboxToolComplete implements IToolboxTool
 	@Override
 	public boolean onMouseClick(int mx, int my, int click)
 	{
-		if(click != 0 || !gui.getTransform().contains(mx, my)) return false;
+		if (click != 0 || !gui.getTransform().contains(mx, my))
+        {
+            return false;
+        }
 		
 		PanelButtonQuest btn = gui.getButtonAt(mx, my);
 		
-		if(btn == null) return false;
-		if(PanelToolController.selected.size() > 0 && !PanelToolController.selected.contains(btn)) return false;
+		if (btn == null)
+        {
+            return false;
+        }
+		if (!PanelToolController.selected.isEmpty() && !PanelToolController.selected.contains(btn))
+        {
+            return false;
+        }
 		
         List<PanelButtonQuest> btnList = PanelToolController.selected.size() > 0 ? PanelToolController.selected : Collections.singletonList(btn);
-        int[] questIDs = new int[btnList.size()];
-        
-        for(int i = 0; i < btnList.size(); i++)
+        List<UUID> questIDs = new ArrayList<>();
+
+        for (int i = 0; i < btnList.size(); i++)
         {
-            questIDs[i] = btnList.get(i).getStoredValue().getID();
+            questIDs.add(btnList.get(i).getStoredValue().getKey());
         }
         
         NBTTagCompound payload = new NBTTagCompound();
-        payload.setIntArray("questIDs", questIDs);
+        payload.setTag("questIDs", NBTConverter.writeQuestIds(questIDs));
         payload.setBoolean("state", true);
         payload.setInteger("action", 2);
         NetQuestEdit.sendEdit(payload);
@@ -89,18 +101,21 @@ public class ToolboxToolComplete implements IToolboxTool
 	@Override
 	public boolean onKeyPressed(char c, int key)
 	{
-	    if(PanelToolController.selected.size() <= 0 || key != Keyboard.KEY_RETURN) return false;
+	    if (PanelToolController.selected.isEmpty() || key != Keyboard.KEY_RETURN)
+        {
+            return false;
+        }
 	    
         List<PanelButtonQuest> btnList = PanelToolController.selected;
-        int[] questIDs = new int[btnList.size()];
+        List<UUID> questIDs = new ArrayList<>();
         
-        for(int i = 0; i < btnList.size(); i++)
+        for (int i = 0; i < btnList.size(); i++)
         {
-            questIDs[i] = btnList.get(i).getStoredValue().getID();
+            questIDs.add(btnList.get(i).getStoredValue().getKey());
         }
         
         NBTTagCompound payload = new NBTTagCompound();
-        payload.setIntArray("questIDs", questIDs);
+        payload.setTag("questIDs", NBTConverter.writeQuestIds(questIDs));
         payload.setBoolean("state", true);
         payload.setInteger("action", 2);
         NetQuestEdit.sendEdit(payload);

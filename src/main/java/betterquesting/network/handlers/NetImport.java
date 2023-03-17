@@ -13,6 +13,8 @@ import betterquesting.network.PacketSender;
 import betterquesting.network.PacketTypeRegistry;
 import betterquesting.questing.QuestDatabase;
 import betterquesting.questing.QuestLineDatabase;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.mojang.realmsclient.gui.ChatFormatting;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
@@ -22,10 +24,12 @@ import net.minecraft.util.ResourceLocation;
 import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class NetImport
 {
@@ -47,11 +51,14 @@ public class NetImport
 	private static void onServer(Tuple2<NBTTagCompound, EntityPlayerMP> message)
 	{
 	    EntityPlayerMP sender = message.getSecond();
-		if(sender.mcServer == null) return;
+		if (sender.mcServer == null)
+        {
+            return;
+        }
 		
 		boolean isOP = sender.mcServer.getConfigurationManager().func_152596_g(sender.getGameProfile());
 		
-		if(!isOP)
+		if (!isOP)
 		{
 			BetterQuesting.logger.log(Level.WARN, "Player " + sender.getCommandSenderName() + " (UUID:" + QuestingAPI.getQuestingUUID(sender) + ") tried to import quests without OP permissions!");
 			sender.addChatComponentMessage(new ChatComponentText(ChatFormatting.RED + "You need to be OP to edit quests!"));
@@ -66,94 +73,70 @@ public class NetImport
 		
 		BetterQuesting.logger.log(Level.INFO, "Importing " + impQuestDB.size() + " quest(s) and " + impQuestLineDB.size() + " quest line(s) from " + sender.getGameProfile().getName());
 		
-		HashMap<Integer,Integer> remapped = getRemappedIDs(impQuestDB.getEntries());
-		
-		for(DBEntry<IQuest> entry : impQuestDB.getEntries())
+		BiMap<UUID, UUID> remapped = getRemappedIDs(impQuestDB.keySet());
+		for (Map.Entry<UUID, IQuest> entry : impQuestDB.entrySet())
 		{
-		    int[] oldIDs = Arrays.copyOf(entry.getValue().getRequirements(), entry.getValue().getRequirements().length);
-            
-            for(int n = 0; n < oldIDs.length; n++)
-            {
-                if(remapped.containsKey(oldIDs[n]))
-                {
-                    oldIDs[n] = remapped.get(oldIDs[n]);
-                }
-            }
-            
-            entry.getValue().setRequirements(oldIDs);
-            
-			QuestDatabase.INSTANCE.add(remapped.get(entry.getID()), entry.getValue());
+            Set<UUID> newRequirements =
+                    entry.getValue().getRequirements().stream()
+                            .map(req -> remapped.getOrDefault(req, req))
+                            .collect(Collectors.toCollection(HashSet::new));
+            entry.getValue().setRequirements(newRequirements);
+
+			QuestDatabase.INSTANCE.put(remapped.get(entry.getKey()), entry.getValue());
 		}
 		
-		for(DBEntry<IQuestLine> questLine : impQuestLineDB.getEntries())
+		for (DBEntry<IQuestLine> questLine : impQuestLineDB.getEntries())
 		{
-		    List<DBEntry<IQuestLineEntry>> pendingQLE = new ArrayList<>();
-		    
-			for(DBEntry<IQuestLineEntry> qle : questLine.getValue().getEntries())
-			{
-			    pendingQLE.add(qle);
-				questLine.getValue().removeID(qle.getID());
-			}
-			
-			for(DBEntry<IQuestLineEntry> qle : pendingQLE)
+            Set<Map.Entry<UUID, IQuestLineEntry>> pendingQLE =
+                    new HashSet<>(questLine.getValue().entrySet());
+            questLine.getValue().clear();
+
+			for (Map.Entry<UUID, IQuestLineEntry> qle : pendingQLE)
             {
-                if(!remapped.containsKey(qle.getID()))
+                if (!remapped.containsKey(qle.getKey()))
                 {
-                    BetterQuesting.logger.error("Failed to import quest into quest line. Unable to remap ID " + qle.getID());
+                    BetterQuesting.logger.error("Failed to import quest into quest line. Unable to remap ID " + qle.getKey());
                     continue;
                 }
                 
-                questLine.getValue().add(remapped.get(qle.getID()), qle.getValue());
+                questLine.getValue().put(remapped.get(qle.getKey()), qle.getValue());
             }
 			
 			QuestLineDatabase.INSTANCE.add(QuestLineDatabase.INSTANCE.nextID(), questLine.getValue());
 		}
         
         SaveLoadHandler.INSTANCE.markDirty();
-        NetQuestSync.quickSync(-1, true, true);
+        NetQuestSync.quickSync(null, true, true);
         NetChapterSync.sendSync(null, null);
 	}
 	
 	/**
 	 * Takes a list of imported IDs and returns a remapping to unused IDs
 	 */
-	private static HashMap<Integer,Integer> getRemappedIDs(List<DBEntry<IQuest>> idList)
+	private static BiMap<UUID, UUID> getRemappedIDs(Set<UUID> ids)
 	{
-	    int[] nextIDs = getNextIDs(idList.size());
-		HashMap<Integer,Integer> remapped = new HashMap<>();
-	    
-	    for(int i = 0; i < nextIDs.length; i++)
+	    Set<UUID> nextIDs = getNextIDs(ids.size());
+		BiMap<UUID, UUID> remapped = HashBiMap.create(ids.size());
+
+        Iterator<UUID> nextIDIterator = nextIDs.iterator();
+        for (UUID id : ids)
         {
-            remapped.put(idList.get(i).getID(), nextIDs[i]);
+            remapped.put(id, nextIDIterator.next());
         }
-		
+
 		return remapped;
 	}
-	
-	private static int[] getNextIDs(int num)
+
+
+    private static Set<UUID> getNextIDs(int num)
     {
-        List<DBEntry<IQuest>> listDB = QuestDatabase.INSTANCE.getEntries();
-        int[] nxtIDs = new int[num];
-        
-        if(listDB.size() <= 0 || listDB.get(listDB.size() - 1).getID() == listDB.size() - 1)
+        Set<UUID> nextIds = new HashSet<>();
+        while (nextIds.size() < num)
         {
-            for(int i = 0; i < num; i++) nxtIDs[i] = listDB.size() + i;
-            return nxtIDs;
+            // In the extremely unlikely event of a collision,
+            // we'll handle it automatically due to nextIds being a Set
+            nextIds.add(QuestDatabase.INSTANCE.generateKey());
         }
-        
-        int n1 = 0;
-        int n2 = 0;
-        for(int i = 0; i < num; i++)
-        {
-            while(n2 < listDB.size() && listDB.get(n2).getID() == n1)
-            {
-                n1++;
-                n2++;
-            }
-            
-            nxtIDs[i] = n1++;
-        }
-        
-        return nxtIDs;
+        return nextIds;
     }
 }

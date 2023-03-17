@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 public class ImportedQuestLines extends SimpleDatabase<IQuestLine> implements IQuestLineDatabase
 {
@@ -114,11 +115,11 @@ public class ImportedQuestLines extends SimpleDatabase<IQuestLine> implements IQ
 	}
 	
 	@Override
-	public void removeQuest(int questID)
+	public void removeQuest(UUID questID)
 	{
 		for(DBEntry<IQuestLine> ql : getEntries())
 		{
-			ql.getValue().removeID(questID);
+			ql.getValue().remove(questID);
 		}
 	}
 	
