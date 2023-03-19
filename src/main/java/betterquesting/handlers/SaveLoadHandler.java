@@ -157,7 +157,7 @@ public class SaveLoadHandler {
 
         QuestSettings.INSTANCE.reset();
         QuestDatabase.INSTANCE.clear();
-        QuestLineDatabase.INSTANCE.reset();
+        QuestLineDatabase.INSTANCE.clear();
         LifeDatabase.INSTANCE.reset();
         NameCache.INSTANCE.reset();
 
@@ -172,7 +172,7 @@ public class SaveLoadHandler {
     private void loadConfig() {
         QuestSettings.INSTANCE.reset();
         QuestDatabase.INSTANCE.clear();
-        QuestLineDatabase.INSTANCE.reset();
+        QuestLineDatabase.INSTANCE.clear();
 
         int packVer = 0;
         String packName = "";

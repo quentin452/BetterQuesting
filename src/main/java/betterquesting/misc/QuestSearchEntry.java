@@ -2,13 +2,12 @@ package betterquesting.misc;
 
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.IQuestLine;
-import betterquesting.api2.storage.DBEntry;
 
 import java.util.Map;
 import java.util.UUID;
 
 public class QuestSearchEntry {
-    public QuestSearchEntry(Map.Entry<UUID, IQuest> quest, DBEntry<IQuestLine> questLineEntry) {
+    public QuestSearchEntry(Map.Entry<UUID, IQuest> quest, Map.Entry<UUID, IQuestLine> questLineEntry) {
         this.quest = quest;
         this.questLineEntry = questLineEntry;
     }
@@ -23,13 +22,13 @@ public class QuestSearchEntry {
         this.quest = quest;
     }
 
-    public DBEntry<IQuestLine> getQuestLineEntry() {
+    public Map.Entry<UUID, IQuestLine> getQuestLineEntry() {
         return questLineEntry;
     }
 
-    public void setQuestLineEntry(DBEntry<IQuestLine> questLineEntry) {
+    public void setQuestLineEntry(Map.Entry<UUID, IQuestLine> questLineEntry) {
         this.questLineEntry = questLineEntry;
     }
 
-    private DBEntry<IQuestLine> questLineEntry;
+    private Map.Entry<UUID, IQuestLine> questLineEntry;
 }

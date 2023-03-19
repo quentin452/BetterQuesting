@@ -71,29 +71,29 @@ public class QuestTranslation {
         return translateQuestDescription(entry.getKey(), entry.getValue());
     }
 
-    public static String buildQuestLineNameKey(int questLineId) {
+    public static String buildQuestLineNameKey(UUID questLineId) {
         return String.format(QUEST_LINE_NAME_KEY, questLineId);
     }
 
-    public static String translateQuestLineName(int questLineId, IQuestLine questLine) {
+    public static String translateQuestLineName(UUID questLineId, IQuestLine questLine) {
         return translateProperty(buildQuestLineNameKey(questLineId), questLine, NativeProps.NAME);
     }
 
-    public static String translateQuestLineName(DBEntry<IQuestLine> entry) {
-        return translateQuestLineName(entry.getID(), entry.getValue());
+    public static String translateQuestLineName(Map.Entry<UUID, IQuestLine> entry) {
+        return translateQuestLineName(entry.getKey(), entry.getValue());
     }
 
-    public static String buildQuestLineDescriptionKey(int questLineId) {
+    public static String buildQuestLineDescriptionKey(UUID questLineId) {
         return String.format(QUEST_LINE_DESCRIPTION_KEY, questLineId);
     }
 
-    public static String translateQuestLineDescription(int questLineId, IQuestLine questLine) {
+    public static String translateQuestLineDescription(UUID questLineId, IQuestLine questLine) {
         return translateProperty(
                 buildQuestLineDescriptionKey(questLineId), questLine, NativeProps.DESC);
     }
 
-    public static String translateQuestLineDescription(DBEntry<IQuestLine> entry) {
-        return translateQuestLineDescription(entry.getID(), entry.getValue());
+    public static String translateQuestLineDescription(Map.Entry<UUID, IQuestLine> entry) {
+        return translateQuestLineDescription(entry.getKey(), entry.getValue());
     }
 
     /**
