@@ -42,7 +42,6 @@ import betterquesting.api2.client.gui.resources.textures.OreDictTexture;
 import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.client.gui.themes.presets.PresetIcon;
 import betterquesting.api2.client.gui.themes.presets.PresetTexture;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.QuestTranslation;
 import betterquesting.api2.utils.Tuple2;
 import betterquesting.client.gui2.editors.GuiQuestLinesEditor;
@@ -88,9 +87,9 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
     }
 
     private IQuestLine selectedLine = null;
-    private static int selectedLineId = -1;
+    private static UUID selectedLineId = null;
 
-    private final List<Tuple2<DBEntry<IQuestLine>, Integer>> visChapters = new ArrayList<>();
+    private final List<Tuple2<Map.Entry<UUID, IQuestLine>, Integer>> visChapters = new ArrayList<>();
 
     private CanvasQuestLine cvQuest;
 
@@ -116,7 +115,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
     private int questsCompleted = 0;
     private int totalQuests = 0;
 
-    private final List<PanelButtonStorage<DBEntry<IQuestLine>>> btnListRef = new ArrayList<>();
+    private final List<PanelButtonStorage<Map.Entry<UUID, IQuestLine>>> btnListRef = new ArrayList<>();
 
     public GuiQuestLines(GuiScreen parent)
     {
@@ -143,17 +142,22 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
 
         GuiHome.bookmark = this;
         // If we come to quests gui - we set skip home to true
-        if (!BQ_Settings.skipHome){
+        if (!BQ_Settings.skipHome)
+        {
             ConfigHandler.config.get(Configuration.CATEGORY_GENERAL, "Skip home", false).set(true);
             ConfigHandler.config.save();
             BQ_Settings.skipHome = true;
         }
 
-        if(selectedLineId >= 0)
+        if (selectedLineId != null)
         {
-            selectedLine = QuestLineDatabase.INSTANCE.getValue(selectedLineId);
-            if(selectedLine == null) selectedLineId = -1;
-        } else
+            selectedLine = QuestLineDatabase.INSTANCE.get(selectedLineId);
+            if (selectedLine == null)
+            {
+                selectedLineId = null;
+            }
+        }
+        else
         {
             selectedLine = null;
         }
@@ -273,7 +277,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
         // === LEFT SIDEBAR ===
         int yOff = 24;
         PanelButton btnTrayToggle = new PanelButton(new GuiTransform(GuiAlign.TOP_LEFT, 8, yOff, 32, 16, 0), -1, "");
-        btnTrayToggle.setIcon(PresetIcon.ICON_BOOKMARK.getTexture(), selectedLineId < 0 && !chapterTrayOpened ? new GuiColorPulse(0xFFFFFFFF, 0xFF444444, 2F, 0F) : new GuiColorStatic(0xFFFFFFFF), 0);
+        btnTrayToggle.setIcon(PresetIcon.ICON_BOOKMARK.getTexture(), selectedLineId == null && !chapterTrayOpened ? new GuiColorPulse(0xFFFFFFFF, 0xFF444444, 2F, 0F) : new GuiColorStatic(0xFFFFFFFF), 0);
         btnTrayToggle.setClickAction((b) -> {
             cvFrame.setTrayState(cvChapterTray.isTrayOpen(), 200);
             cvChapterTray.setTrayState(!cvChapterTray.isTrayOpen(), 200);
@@ -518,15 +522,18 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
     private void refreshChapterVisibility()
     {
         boolean canEdit = QuestingAPI.getAPI(ApiReference.SETTINGS).canUserEdit(mc.thePlayer);
-        List<DBEntry<IQuestLine>> lineList = QuestLineDatabase.INSTANCE.getSortedEntries();
+        List<Map.Entry<UUID, IQuestLine>> lineList = QuestLineDatabase.INSTANCE.getOrderedEntries();
         this.visChapters.clear();
         UUID playerID = QuestingAPI.getQuestingUUID(mc.thePlayer);
 
-        for(DBEntry<IQuestLine> dbEntry : lineList)
+        for (Map.Entry<UUID, IQuestLine> entry : lineList)
         {
-            IQuestLine ql = dbEntry.getValue();
+            IQuestLine ql = entry.getValue();
             EnumQuestVisibility vis = ql.getProperty(NativeProps.VISIBILITY);
-            if(!canEdit && vis == EnumQuestVisibility.HIDDEN) continue;
+            if (!canEdit && vis == EnumQuestVisibility.HIDDEN)
+            {
+                continue;
+            }
 
             boolean show = false;
             boolean unlocked = false;
@@ -534,24 +541,24 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
             boolean allComplete = true;
             boolean pendingClaim = false;
 
-            if(canEdit)
+            if (canEdit)
             {
                 show = true;
                 unlocked = true;
                 complete = true;
             }
 
-            if(BQ_Settings.viewMode)
+            if (BQ_Settings.viewMode)
             {
                 show = true;
             }
 
-            if(BQ_Settings.viewModeAllQuestLine)
+            if (BQ_Settings.viewModeAllQuestLine)
             {
                 unlocked = true;
             }
 
-            for(Map.Entry<UUID, IQuestLineEntry> qID : ql.entrySet())
+            for (Map.Entry<UUID, IQuestLineEntry> qID : ql.entrySet())
             {
                 IQuest q = QuestDatabase.INSTANCE.get(qID.getKey());
                 if(q == null) continue;
@@ -564,19 +571,26 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
                 if(unlocked && complete && show && pendingClaim && !allComplete) break;
             }
 
-            if(vis == EnumQuestVisibility.COMPLETED && !complete)
+            if (vis == EnumQuestVisibility.COMPLETED && !complete)
             {
                 continue;
-            } else if(vis == EnumQuestVisibility.UNLOCKED && !unlocked)
+            }
+            else if (vis == EnumQuestVisibility.UNLOCKED && !unlocked)
             {
                 continue;
             }
 
             int val = pendingClaim ? 1 : 0;
-            if(allComplete) val |= 2;
-            if(!show) val |= 4;
+            if (allComplete)
+            {
+                val |= 2;
+            }
+            if (!show)
+            {
+                val |= 4;
+            }
 
-            visChapters.add(new Tuple2<>(dbEntry, val));
+            visChapters.add(new Tuple2<>(entry, val));
         }
 
         if(cvChapterTray.isTrayOpen()) buildChapterList();
@@ -606,7 +620,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
 
         for(int n = 0; n < visChapters.size(); n++)
         {
-            DBEntry<IQuestLine> entry = visChapters.get(n).getFirst();
+            Map.Entry<UUID, IQuestLine> entry = visChapters.get(n).getFirst();
             int vis = visChapters.get(n).getSecond();
 
             cvLines.addPanel(new PanelGeneric(new GuiRectangle(0, n * 16, 16, 16, 0), new OreDictTexture(1F, entry.getValue().getProperty(NativeProps.ICON), false, true)));
@@ -618,9 +632,9 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
             {
                 cvLines.addPanel(new PanelGeneric(new GuiRectangle(8, n * 16 + 8, 8, 8, -1), new GuiTextureColored(PresetIcon.ICON_TICK.getTexture(), new GuiColorStatic(0xFF00FF00))));
             }
-            PanelButtonStorage<DBEntry<IQuestLine>> btnLine = new PanelButtonStorage<>(new GuiRectangle(16, n * 16, listW - 16, 16, 0), 1, QuestTranslation.translateQuestLineName(entry), entry);
+            PanelButtonStorage<Map.Entry<UUID, IQuestLine>> btnLine = new PanelButtonStorage<>(new GuiRectangle(16, n * 16, listW - 16, 16, 0), 1, QuestTranslation.translateQuestLineName(entry), entry);
             btnLine.setTextAlignment(0);
-            btnLine.setActive((vis & 4) == 0 && entry.getID() != selectedLineId);
+            btnLine.setActive((vis & 4) == 0 && !entry.getKey().equals(selectedLineId));
             btnLine.setCallback(this::openQuestLine);
             cvLines.addPanel(btnLine);
             btnListRef.add(btnLine);
@@ -653,11 +667,11 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
         completionText.setText(QuestTranslation.translate("betterquesting.title.completion", questsCompleted, totalQuests));
     }
 
-    private void openQuestLine(DBEntry<IQuestLine> q) {
+    private void openQuestLine(Map.Entry<UUID, IQuestLine> q) {
         selectedLine = q.getValue();
-        selectedLineId = q.getID();
+        selectedLineId = q.getKey();
         for (int i = 0; i < btnListRef.size(); i++) {
-            btnListRef.get(i).setActive((visChapters.get(i).getSecond() & 4) == 0 && btnListRef.get(i).getStoredValue().getID() != selectedLineId);
+            btnListRef.get(i).setActive((visChapters.get(i).getSecond() & 4) == 0 && !btnListRef.get(i).getStoredValue().getKey().equals(selectedLineId));
         }
 
         cvQuest.setQuestLine(q.getValue());
@@ -665,7 +679,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
         txTitle.setText(QuestTranslation.translateQuestLineName(q));
         refreshQuestCompletion();
 
-        if(!trayLock)
+        if (!trayLock)
         {
             cvFrame.setTrayState(true, 200);
             cvChapterTray.setTrayState(false, 200);
@@ -676,11 +690,15 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
 
     private void refreshContent()
     {
-        if(selectedLineId >= 0)
+        if (selectedLineId != null)
         {
-            selectedLine = QuestLineDatabase.INSTANCE.getValue(selectedLineId);
-            if(selectedLine == null) selectedLineId = -1;
-        } else
+            selectedLine = QuestLineDatabase.INSTANCE.get(selectedLineId);
+            if (selectedLine == null)
+            {
+                selectedLineId = null;
+            }
+        }
+        else
         {
             selectedLine = null;
         }

@@ -49,13 +49,13 @@ public class CanvasQuestSearch extends CanvasSearch<QuestSearchEntry, QuestSearc
     }
 
     private List<QuestSearchEntry> collectQuests() {
-        return QuestLineDatabase.INSTANCE.getEntries().stream().flatMap(iQuestLineDBEntry ->
+        return QuestLineDatabase.INSTANCE.entrySet().stream().flatMap(iQuestLineDBEntry ->
                 iQuestLineDBEntry.getValue().entrySet().stream().map(iQuestLineEntryDBEntry ->
                         createQuestSearchEntry(iQuestLineEntryDBEntry, iQuestLineDBEntry)
                 )).collect(Collectors.toList());
     }
 
-    private QuestSearchEntry createQuestSearchEntry(Map.Entry<UUID, IQuestLineEntry> iQuestLineEntryDBEntry, DBEntry<IQuestLine> iQuestLineDBEntry){
+    private QuestSearchEntry createQuestSearchEntry(Map.Entry<UUID, IQuestLineEntry> iQuestLineEntryDBEntry, Map.Entry<UUID, IQuestLine> iQuestLineDBEntry){
         UUID questId = iQuestLineEntryDBEntry.getKey();
         Map.Entry<UUID, IQuest> quest = Maps.immutableEntry(questId, QuestDatabase.INSTANCE.get(questId));
         return new QuestSearchEntry(quest, iQuestLineDBEntry);

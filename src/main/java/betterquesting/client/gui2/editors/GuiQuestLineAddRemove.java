@@ -51,7 +51,7 @@ public class GuiQuestLineAddRemove extends GuiScreenCanvas implements IPEventLis
 {
     @Nullable
     private IQuestLine questLine;
-    private final int lineID;
+    private final UUID lineID;
     
     private CanvasQuestDatabase canvasDB;
     private CanvasScrolling canvasQL;
@@ -60,15 +60,18 @@ public class GuiQuestLineAddRemove extends GuiScreenCanvas implements IPEventLis
     {
         super(parent);
         this.questLine = questLine;
-        this.lineID = QuestLineDatabase.INSTANCE.getID(questLine);
+        this.lineID = QuestLineDatabase.INSTANCE.lookupKey(questLine);
     }
     
     @Override
     public void refreshGui()
     {
-        questLine = lineID < 0 ? null : QuestLineDatabase.INSTANCE.getValue(lineID);
+        questLine = lineID == null ? null : QuestLineDatabase.INSTANCE.get(lineID);
         canvasDB.refreshSearch();
-        if(questLine != null) refreshQuestList();
+        if (questLine != null)
+        {
+            refreshQuestList();
+        }
     }
     
     @Override
@@ -288,12 +291,15 @@ public class GuiQuestLineAddRemove extends GuiScreenCanvas implements IPEventLis
 	
 	private void SendChanges()
 	{
-	    if(questLine == null) return;
+	    if (questLine == null)
+        {
+            return;
+        }
 	    
 	    NBTTagCompound payload = new NBTTagCompound();
         NBTTagList dataList = new NBTTagList();
         NBTTagCompound entry = new NBTTagCompound();
-        entry.setInteger("chapterID", lineID);
+        NBTConverter.UuidValueType.QUEST_LINE.writeId(lineID, entry);
         entry.setTag("config", questLine.writeToNBT(new NBTTagCompound(), null));
         dataList.appendTag(entry);
         payload.setTag("data", dataList);
