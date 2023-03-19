@@ -5,6 +5,7 @@ import betterquesting.api.events.DatabaseEvent;
 import betterquesting.api.events.DatabaseEvent.DBType;
 import betterquesting.api.network.QuestingPacket;
 import betterquesting.api.questing.IQuestLine;
+import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.utils.Tuple2;
 import betterquesting.core.BetterQuesting;
 import betterquesting.handlers.SaveLoadHandler;
@@ -22,6 +23,12 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import org.apache.logging.log4j.Level;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public class NetChapterEdit
 {
@@ -70,12 +77,12 @@ public class NetChapterEdit
             }
             case 1:
             {
-                deleteChapters(tag.getIntArray("chapterIDs"));
+                deleteChapters(NBTConverter.UuidValueType.QUEST_LINE.readIds(tag, "questLineIDs"));
                 break;
             }
             case 2:
             {
-                reorderChapters(tag.getIntArray("chapterIDs"));
+                reorderChapters(NBTConverter.UuidValueType.QUEST_LINE.readIds(tag, "questLineIDs"));
                 break;
             }
             case 3:
@@ -92,64 +99,81 @@ public class NetChapterEdit
     
     private static void editChapters(NBTTagList data)
     {
-        int[] ids = new int[data.tagCount()];
-        for(int i = 0; i < data.tagCount(); i++)
+        List<UUID> ids = new ArrayList<>(data.tagCount());
+        for (int i = 0; i < data.tagCount(); i++)
         {
             NBTTagCompound entry = data.getCompoundTagAt(i);
-            int chapterID = entry.getInteger("chapterID");
-            ids[i] = chapterID;
-            
-            IQuestLine chapter = QuestLineDatabase.INSTANCE.getValue(chapterID);
-            if(chapter != null) chapter.readFromNBT(entry.getCompoundTag("config"), false);
+            UUID chapterID = NBTConverter.UuidValueType.QUEST_LINE.readId(entry);
+            ids.add(chapterID);
+
+            IQuestLine chapter = QuestLineDatabase.INSTANCE.get(chapterID);
+            if (chapter != null)
+            {
+                chapter.readFromNBT(entry.getCompoundTag("config"), false);
+            }
         }
     
         SaveLoadHandler.INSTANCE.markDirty();
         NetChapterSync.sendSync(null, ids);
     }
     
-    private static void deleteChapters(int[] chapterIDs)
+    private static void deleteChapters(Collection<UUID> chapterIDs)
     {
-        for(int id : chapterIDs)
+        for (UUID id : chapterIDs)
         {
-            QuestLineDatabase.INSTANCE.removeID(id);
+            QuestLineDatabase.INSTANCE.remove(id);
         }
         
         SaveLoadHandler.INSTANCE.markDirty();
         
         NBTTagCompound payload = new NBTTagCompound();
-        payload.setIntArray("chapterIDs", chapterIDs);
+        payload.setTag("questLineIDs", NBTConverter.UuidValueType.QUEST_LINE.writeIds(chapterIDs));
         payload.setInteger("action", 1);
         PacketSender.INSTANCE.sendToAll(new QuestingPacket(ID_NAME, payload));
     }
     
-    private static void reorderChapters(int[] chapterIDs)
+    private static void reorderChapters(List<UUID> chapterIDs)
     {
-        for(int n = 0; n < chapterIDs.length; n++)
+        for (int n = 0; n < chapterIDs.size(); n++)
         {
-            QuestLineDatabase.INSTANCE.setOrderIndex(chapterIDs[n], n);
+            QuestLineDatabase.INSTANCE.setOrderIndex(chapterIDs.get(n), n);
         }
         
         SaveLoadHandler.INSTANCE.markDirty();
         
         NBTTagCompound payload = new NBTTagCompound();
-        payload.setIntArray("chapterIDs", chapterIDs);
+        payload.setTag("questLineIDs", NBTConverter.UuidValueType.QUEST_LINE.writeIds(chapterIDs));
         payload.setInteger("action", 2);
         PacketSender.INSTANCE.sendToAll(new QuestingPacket(ID_NAME, payload));
     }
     
     private static void createChapters(NBTTagList data) // Includes future copy potential
     {
-        int[] ids = new int[data.tagCount()];
-        for(int i = 0; i < data.tagCount(); i++)
+        List<UUID> ids = new ArrayList<>(data.tagCount());
+        for (int i = 0; i < data.tagCount(); i++)
         {
             NBTTagCompound entry = data.getCompoundTagAt(i);
-            int chapterID = entry.hasKey("chapterID", 99) ? entry.getInteger("chapterID") : -1;
-            if(chapterID < 0) chapterID = QuestLineDatabase.INSTANCE.nextID();
-            ids[i] = chapterID;
-            
-            IQuestLine chapter = QuestLineDatabase.INSTANCE.getValue(chapterID);
-            if(chapter == null) chapter = QuestLineDatabase.INSTANCE.createNew(chapterID);
-            if(entry.hasKey("config", 10)) chapter.readFromNBT(entry.getCompoundTag("config"), false);
+            Optional<UUID> chapterIDOptional = NBTConverter.UuidValueType.QUEST_LINE.tryReadId(entry);
+            UUID chapterID;
+            if (chapterIDOptional.isPresent())
+            {
+                chapterID = chapterIDOptional.get();
+            }
+            else
+            {
+                chapterID = QuestLineDatabase.INSTANCE.generateKey();
+            }
+            ids.add(chapterID);
+
+            IQuestLine chapter = QuestLineDatabase.INSTANCE.get(chapterID);
+            if (chapter == null)
+            {
+                chapter = QuestLineDatabase.INSTANCE.createNew(chapterID);
+            }
+            if (entry.hasKey("config", 10))
+            {
+                chapter.readFromNBT(entry.getCompoundTag("config"), false);
+            }
         }
         
         SaveLoadHandler.INSTANCE.markDirty();
@@ -161,13 +185,13 @@ public class NetChapterEdit
     {
 		int action = !message.hasKey("action", 99) ? -1 : message.getInteger("action");
 		
-		switch(action) // Change to a switch statement when more actions are required
+		switch (action) // Change to a switch statement when more actions are required
         {
             case 1: // Delete
             {
-                for(int id : message.getIntArray("chapterIDs"))
+                for (UUID id : NBTConverter.UuidValueType.QUEST_LINE.readIds(message, "questLineIDs"))
                 {
-                    QuestLineDatabase.INSTANCE.removeID(id);
+                    QuestLineDatabase.INSTANCE.remove(id);
                 }
         
 		        MinecraftForge.EVENT_BUS.post(new DatabaseEvent.Update(DBType.CHAPTER));
@@ -175,10 +199,10 @@ public class NetChapterEdit
             }
             case 2: // Reorder
             {
-                int[] chapterIDs = message.getIntArray("chapterIDs");
-                for(int n = 0; n < chapterIDs.length; n++)
+                List<UUID> chapterIDs = NBTConverter.UuidValueType.QUEST_LINE.readIds(message, "questLineIDs");
+                for (int n = 0; n < chapterIDs.size(); n++)
                 {
-                    QuestLineDatabase.INSTANCE.setOrderIndex(chapterIDs[n], n);
+                    QuestLineDatabase.INSTANCE.setOrderIndex(chapterIDs.get(n), n);
                 }
                 
 		        MinecraftForge.EVENT_BUS.post(new DatabaseEvent.Update(DBType.CHAPTER));

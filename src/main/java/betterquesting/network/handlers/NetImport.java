@@ -3,7 +3,6 @@ package betterquesting.network.handlers;
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.network.QuestingPacket;
 import betterquesting.api.questing.*;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.Tuple2;
 import betterquesting.client.importers.ImportedQuestLines;
 import betterquesting.client.importers.ImportedQuests;
@@ -85,11 +84,10 @@ public class NetImport
 			QuestDatabase.INSTANCE.put(remapped.get(entry.getKey()), entry.getValue());
 		}
 		
-		for (DBEntry<IQuestLine> questLine : impQuestLineDB.getEntries())
+		for (IQuestLine questLine : impQuestLineDB.values())
 		{
-            Set<Map.Entry<UUID, IQuestLineEntry>> pendingQLE =
-                    new HashSet<>(questLine.getValue().entrySet());
-            questLine.getValue().clear();
+            Set<Map.Entry<UUID, IQuestLineEntry>> pendingQLE = new HashSet<>(questLine.entrySet());
+            questLine.clear();
 
 			for (Map.Entry<UUID, IQuestLineEntry> qle : pendingQLE)
             {
@@ -99,10 +97,10 @@ public class NetImport
                     continue;
                 }
                 
-                questLine.getValue().put(remapped.get(qle.getKey()), qle.getValue());
+                questLine.put(remapped.get(qle.getKey()), qle.getValue());
             }
 			
-			QuestLineDatabase.INSTANCE.add(QuestLineDatabase.INSTANCE.nextID(), questLine.getValue());
+			QuestLineDatabase.INSTANCE.put(QuestLineDatabase.INSTANCE.generateKey(), questLine);
 		}
         
         SaveLoadHandler.INSTANCE.markDirty();
