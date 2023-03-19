@@ -218,7 +218,7 @@ public class GuiRewardEditor extends GuiScreenCanvas implements IPEventListener,
 	{
 	    NBTTagCompound payload = new NBTTagCompound();
 	    NBTTagList dataList = new NBTTagList();
-	    NBTTagCompound entry = NBTConverter.writeQuestId(qID);
+	    NBTTagCompound entry = NBTConverter.UuidValueType.QUEST.writeId(qID);
 	    entry.setTag("config", quest.writeToNBT(new NBTTagCompound()));
 	    dataList.appendTag(entry);
 	    payload.setTag("data", dataList);

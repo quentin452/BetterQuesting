@@ -27,7 +27,7 @@ public class NetTaskCheckbox {
 
     @SideOnly(Side.CLIENT)
     public static void requestClick(UUID questID, int taskID) {
-        NBTTagCompound payload = NBTConverter.writeQuestId(questID);
+        NBTTagCompound payload = NBTConverter.UuidValueType.QUEST.writeId(questID);
         payload.setInteger("taskID", taskID);
         QuestingAPI.getAPI(ApiReference.PACKET_SENDER).sendToServer(new QuestingPacket(ID_NAME, payload));
     }
@@ -36,7 +36,7 @@ public class NetTaskCheckbox {
         NBTTagCompound data = message.getFirst();
         EntityPlayerMP sender = message.getSecond();
 
-        Optional<UUID> qId = NBTConverter.tryReadQuestId(data);
+        Optional<UUID> qId = NBTConverter.UuidValueType.QUEST.tryReadId(data);
         int tId = !data.hasKey("taskID", 99) ? -1 : data.getInteger("taskID");
 
         if (qId.isPresent() && tId >= 0) {

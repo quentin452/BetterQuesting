@@ -230,7 +230,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
             }
 
             NBTTagCompound questTag = quest.writeToNBT(new NBTTagCompound());
-            NBTConverter.writeQuestId(questId, questTag);
+            NBTConverter.UuidValueType.QUEST.writeId(questId, questTag);
             JsonHelper.WriteToFile(questFile, NBTConverter.NBTtoJSON_Compound(questTag, new JsonObject(), true));
         }
 
@@ -373,7 +373,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
                     path -> {
                         File questFile = path.toFile();
                         NBTTagCompound questTag = readNbt.apply(questFile);
-                        UUID questId = NBTConverter.readQuestId(questTag);
+                        UUID questId = NBTConverter.UuidValueType.QUEST.readId(questTag);
 
                         IQuest quest = new QuestInstance();
                         quest.readFromNBT(questTag);

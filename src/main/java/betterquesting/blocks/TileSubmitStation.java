@@ -416,7 +416,7 @@ public class TileSubmitStation extends TileEntity implements IFluidHandler, ISid
 		}
 
         questID = null;
-        Optional<UUID> questIDOptional = NBTConverter.tryReadQuestId(tags);
+        Optional<UUID> questIDOptional = NBTConverter.UuidValueType.QUEST.tryReadId(tags);
         if (questIDOptional.isPresent())
         {
             questID = questIDOptional.get();
@@ -441,7 +441,7 @@ public class TileSubmitStation extends TileEntity implements IFluidHandler, ISid
 	{
 		super.writeToNBT(tags);
 		tags.setString("owner", owner != null ? owner.toString() : "");
-        NBTConverter.writeQuestId(questID, tags);
+        NBTConverter.UuidValueType.QUEST.writeId(questID, tags);
 		tags.setInteger("task", taskID);
 		tags.setTag("input", itemStack[SLOT_INPUT] != null? itemStack[SLOT_INPUT].writeToNBT(new NBTTagCompound()) : new NBTTagCompound());
 		tags.setTag("output", itemStack[SLOT_OUTPUT] != null? itemStack[SLOT_OUTPUT].writeToNBT(new NBTTagCompound()) : new NBTTagCompound());

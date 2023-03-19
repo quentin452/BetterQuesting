@@ -84,13 +84,13 @@ public class NetQuestEdit
             }
             case 1:
             {
-                deleteQuests(NBTConverter.readQuestIds(tag, "questIDs"));
+                deleteQuests(NBTConverter.UuidValueType.QUEST.readIds(tag, "questIDs"));
                 break;
             }
             case 2:
             {
                 // TODO: Allow the editor to send a target player name/UUID
-                setQuestStates(NBTConverter.readQuestIds(tag, "questIDs"), tag.getBoolean("state"), senderID);
+                setQuestStates(NBTConverter.UuidValueType.QUEST.readIds(tag, "questIDs"), tag.getBoolean("state"), senderID);
                 break;
             }
             case 3:
@@ -112,7 +112,7 @@ public class NetQuestEdit
         for(int i = 0; i < data.tagCount(); i++)
         {
             NBTTagCompound entry = data.getCompoundTagAt(i);
-            UUID questID = NBTConverter.readQuestId(entry);
+            UUID questID = NBTConverter.UuidValueType.QUEST.readId(entry);
             questIDs.add(questID);
 
             IQuest quest = QuestDatabase.INSTANCE.get(questID);
@@ -138,7 +138,7 @@ public class NetQuestEdit
         SaveLoadHandler.INSTANCE.markDirty();
         
         NBTTagCompound payload = new NBTTagCompound();
-        payload.setTag("questIDs", NBTConverter.writeQuestIds(questIDs));
+        payload.setTag("questIDs", NBTConverter.UuidValueType.QUEST.writeIds(questIDs));
         payload.setInteger("action", 1);
         PacketSender.INSTANCE.sendToAll(new QuestingPacket(ID_NAME, payload));
     }
@@ -216,7 +216,7 @@ public class NetQuestEdit
             NBTTagCompound entry = data.getCompoundTagAt(i);
 
             UUID questID =
-                    NBTConverter.tryReadQuestId(entry)
+                    NBTConverter.UuidValueType.QUEST.tryReadId(entry)
                             .orElseGet(QuestDatabase.INSTANCE::generateKey);
             questIDs.add(questID);
             
@@ -243,7 +243,7 @@ public class NetQuestEdit
 		
 		if (action == 1) // Change to a switch statement when more actions are required
         {
-            for (UUID uuid : NBTConverter.readQuestIds(message, "questIDs"))
+            for (UUID uuid : NBTConverter.UuidValueType.QUEST.readIds(message, "questIDs"))
             {
                 QuestDatabase.INSTANCE.remove(uuid);
                 QuestLineDatabase.INSTANCE.removeQuest(uuid);

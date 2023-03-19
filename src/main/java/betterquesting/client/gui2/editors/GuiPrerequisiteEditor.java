@@ -227,7 +227,7 @@ public class GuiPrerequisiteEditor extends GuiScreenCanvas implements IPEventLis
         {
             Map.Entry<UUID, IQuest> entry = ((PanelButtonStorage<Map.Entry<UUID, IQuest>>) btn).getStoredValue();
             NBTTagCompound payload = new NBTTagCompound();
-            payload.setTag("questIDs", NBTConverter.writeQuestIds(Collections.singletonList(entry.getKey())));
+            payload.setTag("questIDs", NBTConverter.UuidValueType.QUEST.writeIds(Collections.singletonList(entry.getKey())));
             payload.setInteger("action", 1);
             NetQuestEdit.sendEdit(payload);
         }
@@ -268,7 +268,7 @@ public class GuiPrerequisiteEditor extends GuiScreenCanvas implements IPEventLis
 	    NBTTagCompound payload = new NBTTagCompound();
 	    NBTTagList dataList = new NBTTagList();
 	    NBTTagCompound entry = new NBTTagCompound();
-        NBTConverter.writeQuestId(questID, entry);
+        NBTConverter.UuidValueType.QUEST.writeId(questID, entry);
 	    entry.setTag("config", quest.writeToNBT(new NBTTagCompound()));
 	    dataList.appendTag(entry);
 	    payload.setTag("data", dataList);

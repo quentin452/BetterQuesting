@@ -136,7 +136,7 @@ public class GuiEditTaskScoreboard extends GuiScreenCanvas {
     private void sendChanges() {
         NBTTagCompound payload = new NBTTagCompound();
         NBTTagList dataList = new NBTTagList();
-        NBTTagCompound entry = NBTConverter.writeQuestId(quest.getKey());
+        NBTTagCompound entry = NBTConverter.UuidValueType.QUEST.writeId(quest.getKey());
         entry.setTag("config", quest.getValue().writeToNBT(new NBTTagCompound()));
         dataList.appendTag(entry);
         payload.setTag("data", dataList);

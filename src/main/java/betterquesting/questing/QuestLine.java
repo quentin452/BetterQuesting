@@ -139,7 +139,7 @@ public class QuestLine extends UuidDatabase<IQuestLineEntry> implements IQuestLi
 		for(Map.Entry<UUID, IQuestLineEntry> entry : entrySet())
 		{
 			NBTTagCompound qle = entry.getValue().writeToNBT(new NBTTagCompound());
-            NBTConverter.writeQuestId(entry.getKey(), qle);
+            NBTConverter.UuidValueType.QUEST.writeId(entry.getKey(), qle);
 			jArr.appendTag(qle);
 		}
 		
@@ -162,7 +162,7 @@ public class QuestLine extends UuidDatabase<IQuestLineEntry> implements IQuestLi
 		{
 			NBTTagCompound qTag = qList.getCompoundTagAt(i);
 
-            Optional<UUID> questIDOptional = NBTConverter.tryReadQuestId(qTag);
+            Optional<UUID> questIDOptional = NBTConverter.UuidValueType.QUEST.tryReadId(qTag);
             UUID questID;
             if (questIDOptional.isPresent())
             {

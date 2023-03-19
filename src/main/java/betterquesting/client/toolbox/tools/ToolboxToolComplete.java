@@ -78,7 +78,7 @@ public class ToolboxToolComplete implements IToolboxTool
         }
         
         NBTTagCompound payload = new NBTTagCompound();
-        payload.setTag("questIDs", NBTConverter.writeQuestIds(questIDs));
+        payload.setTag("questIDs", NBTConverter.UuidValueType.QUEST.writeIds(questIDs));
         payload.setBoolean("state", true);
         payload.setInteger("action", 2);
         NetQuestEdit.sendEdit(payload);
@@ -115,7 +115,7 @@ public class ToolboxToolComplete implements IToolboxTool
         }
         
         NBTTagCompound payload = new NBTTagCompound();
-        payload.setTag("questIDs", NBTConverter.writeQuestIds(questIDs));
+        payload.setTag("questIDs", NBTConverter.UuidValueType.QUEST.writeIds(questIDs));
         payload.setBoolean("state", true);
         payload.setInteger("action", 2);
         NetQuestEdit.sendEdit(payload);

@@ -39,7 +39,7 @@ public class NetQuestAction
 
         NBTTagCompound payload = new NBTTagCompound();
         payload.setInteger("action", 0);
-        payload.setTag("questIDs", NBTConverter.writeQuestIds(questIDs));
+        payload.setTag("questIDs", NBTConverter.UuidValueType.QUEST.writeIds(questIDs));
 
         PacketSender.INSTANCE.sendToServer(new QuestingPacket(ID_NAME, payload));
     }
@@ -54,7 +54,7 @@ public class NetQuestAction
 
         NBTTagCompound payload = new NBTTagCompound();
         payload.setInteger("action", 1);
-        payload.setTag("questIDs", NBTConverter.writeQuestIds(questIDs));
+        payload.setTag("questIDs", NBTConverter.UuidValueType.QUEST.writeIds(questIDs));
 
         PacketSender.INSTANCE.sendToServer(new QuestingPacket(ID_NAME, payload));
     }
@@ -64,7 +64,7 @@ public class NetQuestAction
 		int action = !message.getFirst().hasKey("action", 99) ? -1 : message.getFirst().getInteger("action");
 
         Supplier<List<UUID>> getQuestIDs =
-                () -> NBTConverter.readQuestIds(message.getFirst(), "questIDs");
+                () -> NBTConverter.UuidValueType.QUEST.readIds(message.getFirst(), "questIDs");
 
 		switch (action)
         {

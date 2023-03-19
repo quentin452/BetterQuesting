@@ -227,7 +227,7 @@ public class GuiQuestLineAddRemove extends GuiScreenCanvas implements IPEventLis
         {
             Map.Entry<UUID, IQuest> entry = ((PanelButtonStorage<Map.Entry<UUID, IQuest>>)btn).getStoredValue();
             NBTTagCompound payload = new NBTTagCompound();
-            payload.setTag("questIDs", NBTConverter.writeQuestIds(Collections.singletonList(entry.getKey())));
+            payload.setTag("questIDs", NBTConverter.UuidValueType.QUEST.writeIds(Collections.singletonList(entry.getKey())));
             payload.setInteger("action", 1);
             NetQuestEdit.sendEdit(payload);
         }
@@ -244,7 +244,7 @@ public class GuiQuestLineAddRemove extends GuiScreenCanvas implements IPEventLis
         else if (btn.getButtonID() == 6) // Error resolve
         {
             NBTTagCompound payload = new NBTTagCompound();
-            payload.setTag("questIDs", NBTConverter.writeQuestIds(Collections.singletonList(((PanelButtonStorage<UUID>) btn).getStoredValue())));
+            payload.setTag("questIDs", NBTConverter.UuidValueType.QUEST.writeIds(Collections.singletonList(((PanelButtonStorage<UUID>) btn).getStoredValue())));
             payload.setInteger("action", 1);
             NetQuestEdit.sendEdit(payload);
         }

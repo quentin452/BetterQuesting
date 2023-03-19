@@ -77,7 +77,7 @@ public class ToolboxToolFrame implements IToolboxTool
         {
             btn.getStoredValue().getValue().setProperty(NativeProps.MAIN, state);
             
-            NBTTagCompound entry = NBTConverter.writeQuestId(btn.getStoredValue().getKey());
+            NBTTagCompound entry = NBTConverter.UuidValueType.QUEST.writeId(btn.getStoredValue().getKey());
             entry.setTag("config", btn.getStoredValue().getValue().writeToNBT(new NBTTagCompound()));
             dataList.appendTag(entry);
         }

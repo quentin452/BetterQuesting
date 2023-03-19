@@ -33,7 +33,7 @@ public class NetStationEdit
     {
         NBTTagCompound payload = new NBTTagCompound();
         payload.setInteger("action", 1);
-        NBTConverter.writeQuestId(questID, payload);
+        NBTConverter.UuidValueType.QUEST.writeId(questID, payload);
         payload.setInteger("taskID", taskID);
         payload.setInteger("tilePosX", posX);
         payload.setInteger("tilePosY", posY);
@@ -72,7 +72,7 @@ public class NetStationEdit
                 } else if(action == 1)
                 {
                     UUID QID = QuestingAPI.getQuestingUUID(message.getSecond());
-                    IQuest quest = QuestDatabase.INSTANCE.get(NBTConverter.readQuestId(data));
+                    IQuest quest = QuestDatabase.INSTANCE.get(NBTConverter.UuidValueType.QUEST.readId(data));
                     ITask task = quest == null ? null : quest.getTasks().getValue(data.getInteger("taskID"));
                     if(quest != null && task != null) oss.setupTask(QID, quest, task);
                 }

@@ -179,7 +179,7 @@ public class ToolboxToolCopy implements IToolboxTool
             NBTTagList tagList = new NBTTagList();
             for (UUID questID : reqs)
             {
-                NBTTagCompound tag = NBTConverter.writeQuestId(questID);
+                NBTTagCompound tag = NBTConverter.UuidValueType.QUEST.writeId(questID);
 
                 // We need the pre-remapped ID so that we can look up the prerequisite type.
                 UUID oldID = remappedIDs.inverse().getOrDefault(questID, questID);
@@ -194,7 +194,7 @@ public class ToolboxToolCopy implements IToolboxTool
             questTags.setTag("preRequisites", tagList);
 
             NBTTagCompound tagEntry = new NBTTagCompound();
-            NBTConverter.writeQuestId(qID, tagEntry);
+            NBTConverter.UuidValueType.QUEST.writeId(qID, tagEntry);
             tagEntry.setTag("config", questTags);
             qdList.appendTag(tagEntry);
         }

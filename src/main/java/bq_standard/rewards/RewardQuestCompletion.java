@@ -56,7 +56,7 @@ public class RewardQuestCompletion implements IReward {
 
     @Override
     public void readFromNBT(NBTTagCompound nbt) {
-        Optional<UUID> uuid = NBTConverter.tryReadQuestIdString(nbt);
+        Optional<UUID> uuid = NBTConverter.UuidValueType.QUEST.tryReadIdString(nbt);
         if (uuid.isPresent()) {
             questNum = uuid.get();
         } else if (nbt.hasKey("quest", 99)) {
@@ -69,7 +69,7 @@ public class RewardQuestCompletion implements IReward {
 
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
-        NBTConverter.writeQuestIdString(questNum, nbt);
+        NBTConverter.UuidValueType.QUEST.writeIdString(questNum, nbt);
         return nbt;
     }
 

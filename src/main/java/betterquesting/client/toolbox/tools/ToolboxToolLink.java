@@ -145,7 +145,7 @@ public class ToolboxToolLink implements IToolboxTool
                     
                     if (mod1)
                     {
-                        NBTTagCompound entry = NBTConverter.writeQuestId(b1.getStoredValue().getKey());
+                        NBTTagCompound entry = NBTConverter.UuidValueType.QUEST.writeId(b1.getStoredValue().getKey());
                         entry.setTag("config", b1.getStoredValue().getValue().writeToNBT(new NBTTagCompound()));
                         dataList.appendTag(entry);
                     }
@@ -153,7 +153,7 @@ public class ToolboxToolLink implements IToolboxTool
 				
                 if (mod2)
                 {
-                    NBTTagCompound entry = NBTConverter.writeQuestId(b2.getStoredValue().getKey());
+                    NBTTagCompound entry = NBTConverter.UuidValueType.QUEST.writeId(b2.getStoredValue().getKey());
                     entry.setTag("config", q2.writeToNBT(new NBTTagCompound()));
                     dataList.appendTag(entry);
                 }

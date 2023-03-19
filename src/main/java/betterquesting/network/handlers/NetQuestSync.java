@@ -106,7 +106,7 @@ public class NetQuestSync
                     tag.setTag("progress", entry.getValue().writeProgressToNBT(new NBTTagCompound(), pidList));
                 }
 
-                NBTConverter.writeQuestId(entry.getKey(), tag);
+                NBTConverter.UuidValueType.QUEST.writeId(entry.getKey(), tag);
                 dataList.appendTag(tag);
             }
             
@@ -134,7 +134,7 @@ public class NetQuestSync
 
         if (questIDs != null)
         {
-            payload.setTag("requestIDs", NBTConverter.writeQuestIds(questIDs));
+            payload.setTag("requestIDs", NBTConverter.UuidValueType.QUEST.writeIds(questIDs));
         }
 
         payload.setBoolean("getConfig", configs);
@@ -149,7 +149,7 @@ public class NetQuestSync
         Collection<UUID> reqIDs = null;
         if (payload.hasKey("requestIDs", Constants.NBT.TAG_LIST))
         {
-            reqIDs = NBTConverter.readQuestIds(payload, "requestIDs");
+            reqIDs = NBTConverter.UuidValueType.QUEST.readIds(payload, "requestIDs");
         }
 
         sendSync(message.getSecond(), reqIDs, payload.getBoolean("getConfig"), payload.getBoolean("getProgress"));
@@ -169,7 +169,7 @@ public class NetQuestSync
         for (int i = 0; i < data.tagCount(); i++)
         {
             NBTTagCompound tag = data.getCompoundTagAt(i);
-            Optional<UUID> questIDOptional = NBTConverter.tryReadQuestId(tag);
+            Optional<UUID> questIDOptional = NBTConverter.UuidValueType.QUEST.tryReadId(tag);
             if (!questIDOptional.isPresent())
             {
                 continue;
