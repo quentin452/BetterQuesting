@@ -86,10 +86,15 @@ public class QuestCache implements IExtendedEntityProperties
     {
         markedDirty.clear();
     }
-    
+
+    /**
+     * This method must return a copy of {@code markedDirty}, because {@code markedDirty} gets
+     * cleared every tick. Returning it directly means introducing a potential race condition where
+     * any callers that run code on separate threads may run after {@code markedDirty} gets cleared.
+     */
     public synchronized Set<UUID> getDirtyQuests()
     {
-        return markedDirty;
+        return new HashSet<>(markedDirty);
     }
     
     // TODO: Ensure this is thread safe because we're likely going to run this in the background
