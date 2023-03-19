@@ -139,7 +139,7 @@ public class ToolboxToolCopy implements IToolboxTool
 		
         // Pre-sync
         IQuestLine qLine = gui.getQuestLine();
-        int lID = QuestLineDatabase.INSTANCE.getID(qLine);
+        UUID lID = QuestLineDatabase.INSTANCE.lookupKey(qLine);
 
         // Turn Set into List so that we can access by index.
         List<UUID> nextIDs = new ArrayList<>(getNextIDs(grabList.size()));
@@ -211,7 +211,7 @@ public class ToolboxToolCopy implements IToolboxTool
         NBTTagCompound chPayload = new NBTTagCompound();
         NBTTagList cdList = new NBTTagList();
         NBTTagCompound tagEntry = new NBTTagCompound();
-        tagEntry.setInteger("chapterID", lID);
+        NBTConverter.UuidValueType.QUEST_LINE.writeId(lID, tagEntry);
         tagEntry.setTag("config", qLine.writeToNBT(new NBTTagCompound(), null));
         cdList.appendTag(tagEntry);
         chPayload.setTag("data", cdList);

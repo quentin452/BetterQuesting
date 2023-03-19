@@ -3,6 +3,7 @@ package betterquesting.client.toolbox.tools;
 import betterquesting.api.client.toolbox.IToolboxTool;
 import betterquesting.api.questing.IQuestLine;
 import betterquesting.api.questing.IQuestLineEntry;
+import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.controls.PanelButtonQuest;
 import betterquesting.api2.client.gui.panels.lists.CanvasQuestLine;
 import betterquesting.client.gui2.editors.designer.PanelToolController;
@@ -15,6 +16,7 @@ import net.minecraft.nbt.NBTTagList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 public class ToolboxToolGrab implements IToolboxTool
 {
@@ -148,7 +150,7 @@ public class ToolboxToolGrab implements IToolboxTool
 		if (grabList.size() > 0) // Apply positioning
         {
             IQuestLine qLine = gui.getQuestLine();
-			int lID = QuestLineDatabase.INSTANCE.getID(qLine);
+			UUID lID = QuestLineDatabase.INSTANCE.lookupKey(qLine);
             for (GrabEntry grab : grabList)
             {
 			    IQuestLineEntry qle = gui.getQuestLine().get(grab.btn.getStoredValue().getKey());
@@ -162,7 +164,7 @@ public class ToolboxToolGrab implements IToolboxTool
             NBTTagCompound chPayload = new NBTTagCompound();
             NBTTagList cdList = new NBTTagList();
             NBTTagCompound tagEntry = new NBTTagCompound();
-            tagEntry.setInteger("chapterID", lID);
+            NBTConverter.UuidValueType.QUEST_LINE.writeId(lID, tagEntry);
             tagEntry.setTag("config", qLine.writeToNBT(new NBTTagCompound(), null));
             cdList.appendTag(tagEntry);
             chPayload.setTag("data", cdList);

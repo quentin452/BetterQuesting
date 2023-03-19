@@ -86,7 +86,7 @@ public class ToolboxToolNew implements IToolboxTool
 		// Pre-sync
 		IQuestLine qLine = gui.getQuestLine();
 		UUID qID = QuestDatabase.INSTANCE.generateKey();
-		int lID = QuestLineDatabase.INSTANCE.getID(qLine);
+		UUID lID = QuestLineDatabase.INSTANCE.lookupKey(qLine);
 		IQuestLineEntry qe = qLine.get(qID);//new QuestLineEntry(mx, my, 24);
 		
 		
@@ -114,7 +114,7 @@ public class ToolboxToolNew implements IToolboxTool
 		NBTTagCompound chPayload = new NBTTagCompound();
         NBTTagList cdList = new NBTTagList();
         NBTTagCompound cTag = new NBTTagCompound();
-        cTag.setInteger("chapterID", lID);
+        NBTConverter.UuidValueType.QUEST_LINE.writeId(lID, cTag);
         cTag.setTag("config", qLine.writeToNBT(new NBTTagCompound(), null));
         cdList.appendTag(cTag);
         chPayload.setTag("data", cdList);
