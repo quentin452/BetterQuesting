@@ -9,6 +9,7 @@ import betterquesting.api.storage.BQ_Settings;
 import betterquesting.api.utils.NBTConverter;
 import betterquesting.network.handlers.NetCacheSync;
 import betterquesting.questing.QuestDatabase;
+import com.google.common.collect.ImmutableSet;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -51,20 +52,32 @@ public class QuestCache implements IExtendedEntityProperties
     public void init(Entity entity, World world)
     {
     }
-    
-    public synchronized Set<UUID> getActiveQuests()
+
+    /**
+     * I don't think that it's currently necessary for this method to return a copy, but let's do so
+     * anyway in case of future concurrency changes.
+     */
+    public synchronized ImmutableSet<UUID> getActiveQuests()
     {
-        return activeQuests;
+        return ImmutableSet.copyOf(activeQuests);
     }
-    
-    public synchronized Set<UUID> getVisibleQuests()
+
+    /**
+     * I don't think that it's currently necessary for this method to return a copy, but let's do so
+     * anyway in case of future concurrency changes.
+     */
+    public synchronized ImmutableSet<UUID> getVisibleQuests()
     {
-        return visibleQuests;
+        return ImmutableSet.copyOf(visibleQuests);
     }
-    
-    public synchronized Set<UUID> getPendingAutoClaims()
+
+    /**
+     * I don't think that it's currently necessary for this method to return a copy, but let's do so
+     * anyway in case of future concurrency changes.
+     */
+    public synchronized ImmutableSet<UUID> getPendingAutoClaims()
     {
-        return autoClaims;
+        return ImmutableSet.copyOf(autoClaims);
     }
     
     public synchronized QResetTime[] getScheduledResets() // Already sorted by time
@@ -92,9 +105,9 @@ public class QuestCache implements IExtendedEntityProperties
      * cleared every tick. Returning it directly means introducing a potential race condition where
      * any callers that run code on separate threads may run after {@code markedDirty} gets cleared.
      */
-    public synchronized Set<UUID> getDirtyQuests()
+    public synchronized ImmutableSet<UUID> getDirtyQuests()
     {
-        return new HashSet<>(markedDirty);
+        return ImmutableSet.copyOf(markedDirty);
     }
     
     // TODO: Ensure this is thread safe because we're likely going to run this in the background
