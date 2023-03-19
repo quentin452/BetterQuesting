@@ -27,7 +27,7 @@ public class QuestTranslation {
      *
      * <p>This must be a supplier, because this class is called on the server (in order to build
      * quest translation keys during saving). The {@link I18n} class is not available on the server,
-     * so attempting to build this map will cause a crash.
+     * so attempting to fetch this map will cause a crash.
      */
     private static final Supplier<Map<String, String>> translations =
             Suppliers.memoize(
