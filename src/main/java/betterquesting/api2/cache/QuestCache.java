@@ -7,7 +7,6 @@ import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.storage.BQ_Settings;
 import betterquesting.api.utils.NBTConverter;
-import betterquesting.api2.storage.IUuidDatabase;
 import betterquesting.network.handlers.NetCacheSync;
 import betterquesting.questing.QuestDatabase;
 import net.minecraft.entity.Entity;
@@ -22,14 +21,12 @@ import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 
 public class QuestCache implements IExtendedEntityProperties
 {
@@ -187,25 +184,10 @@ public class QuestCache implements IExtendedEntityProperties
         autoClaims.clear();
         markedDirty.clear();
 
-        BiConsumer<String, Set<UUID>> handleTag =
-                (tagName, map) -> {
-                    if (nbt.func_150299_b(tagName) == Constants.NBT.TAG_LIST)
-                    {
-                        map.addAll(NBTConverter.UuidValueType.QUEST.readIds(nbt, tagName));
-                    }
-                    else
-                    {
-                        // TODO is this NBT ever persisted? We only need this block if it is.
-                        Arrays.stream(nbt.getIntArray(tagName))
-                                .mapToObj(IUuidDatabase::convertLegacyId)
-                                .forEach(map::add);
-                    }
-                };
-
-        handleTag.accept("visibleQuests", visibleQuests);
-        handleTag.accept("activeQuests", activeQuests);
-        handleTag.accept("autoClaims", autoClaims);
-        handleTag.accept("markedDirty", markedDirty);
+        visibleQuests.addAll(NBTConverter.UuidValueType.QUEST.readIds(nbt, "visibleQuests"));
+        activeQuests.addAll(NBTConverter.UuidValueType.QUEST.readIds(nbt, "activeQuests"));
+        autoClaims.addAll(NBTConverter.UuidValueType.QUEST.readIds(nbt, "autoClaims"));
+        markedDirty.addAll(NBTConverter.UuidValueType.QUEST.readIds(nbt, "markedDirty"));
 
         NBTTagList tagList = nbt.getTagList("resetSchedule", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < tagList.tagCount(); i++)
