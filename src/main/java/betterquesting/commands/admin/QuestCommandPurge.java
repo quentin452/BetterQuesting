@@ -1,6 +1,5 @@
 package betterquesting.commands.admin;
 
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.storage.IUuidDatabase;
 import betterquesting.commands.QuestCommandBase;
 import betterquesting.network.handlers.NetQuestEdit;
@@ -29,8 +28,7 @@ public class QuestCommandPurge extends QuestCommandBase
     public void runCommand(MinecraftServer server, CommandBase command, ICommandSender sender, String[] args)
     {
         HashSet<UUID> knownKeys =
-                QuestLineDatabase.INSTANCE.getEntries().stream()
-                        .map(DBEntry::getValue)
+                QuestLineDatabase.INSTANCE.values().stream()
                         .map(IUuidDatabase::keySet)
                         .flatMap(Set::stream)
                         .collect(Collectors.toCollection(HashSet::new));

@@ -63,7 +63,7 @@ public class QuestCommandDelete extends QuestCommandBase
 		if (args[1].equalsIgnoreCase("all"))
 		{
 			QuestDatabase.INSTANCE.clear();
-			QuestLineDatabase.INSTANCE.reset();
+			QuestLineDatabase.INSTANCE.clear();
             NetQuestSync.sendSync(null, null, true, true);
             NetChapterSync.sendSync(null, null);
             SaveLoadHandler.INSTANCE.markDirty();

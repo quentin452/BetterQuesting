@@ -7,7 +7,6 @@ import betterquesting.api.questing.IQuestLine;
 import betterquesting.api.storage.BQ_Settings;
 import betterquesting.api.utils.JsonHelper;
 import betterquesting.api.utils.NBTConverter;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.QuestTranslation;
 import betterquesting.commands.QuestCommandBase;
 import betterquesting.core.BetterQuesting;
@@ -41,7 +40,6 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -184,13 +182,10 @@ public class QuestCommandDefaults extends QuestCommandBase {
         questLinesTag.setTag("questLines", QuestLineDatabase.INSTANCE.writeToNBT(new NBTTagList(), null));
         JsonHelper.WriteToFile(questLinesFile, NBTConverter.NBTtoJSON_Compound(questLinesTag, new JsonObject(), true));
 
-        Map<IQuestLine, Integer> questLineToIdMap = new HashMap<>();
         ListMultimap<UUID, IQuestLine> questToQuestLineMultimap =
                 MultimapBuilder.hashKeys().arrayListValues().build();
-        for (DBEntry<IQuestLine> entry : QuestLineDatabase.INSTANCE.getEntries()) {
-            questLineToIdMap.put(entry.getValue(), entry.getID());
-            entry.getValue().keySet()
-                    .forEach(key -> questToQuestLineMultimap.put(key, entry.getValue()));
+        for (IQuestLine questLine : QuestLineDatabase.INSTANCE.values()) {
+            questLine.keySet().forEach(key -> questToQuestLineMultimap.put(key, questLine));
         }
 
         SortedMap<UUID, IQuest> questsInMultipleQuestLines = new TreeMap<>();
@@ -210,9 +205,9 @@ public class QuestCommandDefaults extends QuestCommandBase {
 
                 case 1:
                     IQuestLine questLine = questLines.get(0);
-                    String questLineId = Integer.toString(questLineToIdMap.get(questLine));
+                    UUID questLineId = QuestLineDatabase.INSTANCE.lookupKey(questLine);
                     String questLineName = questLine.getProperty(NativeProps.NAME);
-                    questDir = new File(questDir, buildFileName.apply(questLineName, questLineId));
+                    questDir = new File(questDir, buildFileName.apply(questLineName, questLineId.toString()));
                     break;
 
                 default:
@@ -269,8 +264,8 @@ public class QuestCommandDefaults extends QuestCommandBase {
 
             writer.write("### Quest Lines ###\n");
 
-            for (DBEntry<IQuestLine> entry : QuestLineDatabase.INSTANCE.getSortedEntries()) {
-                int questLineId = entry.getID();
+            for (Map.Entry<UUID, IQuestLine> entry : QuestLineDatabase.INSTANCE.getOrderedEntries()) {
+                UUID questLineId = entry.getKey();
                 IQuestLine questLine = entry.getValue();
 
                 writer.write(
