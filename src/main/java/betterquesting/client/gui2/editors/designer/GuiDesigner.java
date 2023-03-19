@@ -32,12 +32,13 @@ import org.lwjgl.util.vector.Vector4f;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class GuiDesigner extends GuiScreenCanvas implements IVolatileScreen, INeedsRefresh, IPEventListener
 {
     // Not final because I hope to support hot swapping in future
     private IQuestLine questLine;
-    private final int lineID;
+    private final UUID lineID;
     
     private PanelToolController toolController;
     private IGuiCanvas cvTray;
@@ -53,14 +54,14 @@ public class GuiDesigner extends GuiScreenCanvas implements IVolatileScreen, INe
     {
         super(parent);
         this.questLine = line;
-        this.lineID = QuestLineDatabase.INSTANCE.getID(line);
+        this.lineID = QuestLineDatabase.INSTANCE.lookupKey(line);
         this.tabList.addAll(ToolboxRegistry.INSTANCE.getAllTabs());
     }
     
     @Override
     public void refreshGui()
     {
-        this.questLine = QuestLineDatabase.INSTANCE.getValue(lineID);
+        this.questLine = QuestLineDatabase.INSTANCE.get(lineID);
         
         if(questLine == null)
         {

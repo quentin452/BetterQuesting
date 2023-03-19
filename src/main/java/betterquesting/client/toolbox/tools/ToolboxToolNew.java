@@ -3,6 +3,7 @@ package betterquesting.client.toolbox.tools;
 import betterquesting.api.client.toolbox.IToolboxTool;
 import betterquesting.api.questing.IQuestLine;
 import betterquesting.api.questing.IQuestLineEntry;
+import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.controls.PanelButtonQuest;
 import betterquesting.api2.client.gui.misc.GuiRectangle;
 import betterquesting.api2.client.gui.panels.lists.CanvasQuestLine;
@@ -17,6 +18,7 @@ import net.minecraft.nbt.NBTTagList;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 public class ToolboxToolNew implements IToolboxTool
 {
@@ -76,23 +78,24 @@ public class ToolboxToolNew implements IToolboxTool
 	@Override
 	public boolean onMouseClick(int mx, int my, int click)
 	{
-		if(click != 0 || !gui.getTransform().contains(mx, my))
+		if (click != 0 || !gui.getTransform().contains(mx, my))
 		{
 			return false;
 		}
 		
 		// Pre-sync
 		IQuestLine qLine = gui.getQuestLine();
-		int qID = QuestDatabase.INSTANCE.nextID();
-		int lID = QuestLineDatabase.INSTANCE.getID(qLine);
-		IQuestLineEntry qe = qLine.getValue(qID);//new QuestLineEntry(mx, my, 24);
+		UUID qID = QuestDatabase.INSTANCE.generateKey();
+		UUID lID = QuestLineDatabase.INSTANCE.lookupKey(qLine);
+		IQuestLineEntry qe = qLine.get(qID);//new QuestLineEntry(mx, my, 24);
 		
 		
-		if(qe == null)
+		if (qe == null)
 		{
 			qe = new QuestLineEntry(nQuest.rect.x, nQuest.rect.y, 24, 24);
-			qLine.add(qID, qe);
-		} else
+			qLine.put(qID, qe);
+		}
+        else
 		{
 			qe.setPosition(nQuest.rect.x, nQuest.rect.y);
 			qe.setSize(24, 24);
@@ -101,8 +104,7 @@ public class ToolboxToolNew implements IToolboxTool
 		// Sync Quest
 		NBTTagCompound quPayload = new NBTTagCompound();
         NBTTagList qdList = new NBTTagList();
-        NBTTagCompound qTag = new NBTTagCompound();
-        qTag.setInteger("questID", qID);
+        NBTTagCompound qTag = NBTConverter.UuidValueType.QUEST.writeId(qID);
         qdList.appendTag(qTag);
         quPayload.setTag("data", qdList);
         quPayload.setInteger("action", 3);
@@ -112,7 +114,7 @@ public class ToolboxToolNew implements IToolboxTool
 		NBTTagCompound chPayload = new NBTTagCompound();
         NBTTagList cdList = new NBTTagList();
         NBTTagCompound cTag = new NBTTagCompound();
-        cTag.setInteger("chapterID", lID);
+        NBTConverter.UuidValueType.QUEST_LINE.writeId(lID, cTag);
         cTag.setTag("config", qLine.writeToNBT(new NBTTagCompound(), null));
         cdList.appendTag(cTag);
         chPayload.setTag("data", cdList);

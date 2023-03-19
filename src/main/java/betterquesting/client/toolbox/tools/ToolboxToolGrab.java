@@ -3,6 +3,7 @@ package betterquesting.client.toolbox.tools;
 import betterquesting.api.client.toolbox.IToolboxTool;
 import betterquesting.api.questing.IQuestLine;
 import betterquesting.api.questing.IQuestLineEntry;
+import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.controls.PanelButtonQuest;
 import betterquesting.api2.client.gui.panels.lists.CanvasQuestLine;
 import betterquesting.client.gui2.editors.designer.PanelToolController;
@@ -15,6 +16,7 @@ import net.minecraft.nbt.NBTTagList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 public class ToolboxToolGrab implements IToolboxTool
 {
@@ -32,11 +34,11 @@ public class ToolboxToolGrab implements IToolboxTool
 	@Override
 	public void disableTool()
 	{
-	    for(GrabEntry grab : grabList)
+	    for (GrabEntry grab : grabList)
         {
-			IQuestLineEntry qle = gui.getQuestLine().getValue(grab.btn.getStoredValue().getID());
+			IQuestLineEntry qle = gui.getQuestLine().get(grab.btn.getStoredValue().getKey());
 			
-			if(qle != null)
+			if (qle != null)
             {
                 grab.btn.rect.x = qle.getPosX();
                 grab.btn.rect.y = qle.getPosY();
@@ -49,15 +51,18 @@ public class ToolboxToolGrab implements IToolboxTool
 	@Override
     public void refresh(CanvasQuestLine gui)
     {
-        if(grabList.size() <= 0) return;
+        if (grabList.isEmpty())
+        {
+            return;
+        }
         
         List<GrabEntry> tmp = new ArrayList<>();
         
-        for(GrabEntry grab : grabList)
+        for (GrabEntry grab : grabList)
         {
-            for(PanelButtonQuest btn : PanelToolController.selected)
+            for (PanelButtonQuest btn : PanelToolController.selected)
             {
-                if(btn.getStoredValue().getID() == grab.btn.getStoredValue().getID())
+                if (btn.getStoredValue().getKey().equals(grab.btn.getStoredValue().getKey()))
                 {
                     tmp.add(new GrabEntry(btn, grab.offX, grab.offY));
                     break;
@@ -122,13 +127,13 @@ public class ToolboxToolGrab implements IToolboxTool
 	@Override
 	public boolean onMouseClick(int mx, int my, int click)
 	{
-		if(click == 1 && grabList.size() > 0) // Reset tool
+		if (click == 1 && grabList.size() > 0) // Reset tool
 		{
-			for(GrabEntry grab : grabList)
+			for (GrabEntry grab : grabList)
             {
-                IQuestLineEntry qle = gui.getQuestLine().getValue(grab.btn.getStoredValue().getID());
+                IQuestLineEntry qle = gui.getQuestLine().get(grab.btn.getStoredValue().getKey());
                 
-                if(qle != null)
+                if (qle != null)
                 {
                     grab.btn.rect.x = qle.getPosX();
                     grab.btn.rect.y = qle.getPosY();
@@ -142,21 +147,24 @@ public class ToolboxToolGrab implements IToolboxTool
 			return false;
 		}
 		
-		if(grabList.size() > 0) // Apply positioning
+		if (grabList.size() > 0) // Apply positioning
         {
             IQuestLine qLine = gui.getQuestLine();
-			int lID = QuestLineDatabase.INSTANCE.getID(qLine);
-            for(GrabEntry grab : grabList)
+			UUID lID = QuestLineDatabase.INSTANCE.lookupKey(qLine);
+            for (GrabEntry grab : grabList)
             {
-			    IQuestLineEntry qle = gui.getQuestLine().getValue(grab.btn.getStoredValue().getID());
-			    if(qle != null) qle.setPosition(grab.btn.rect.x, grab.btn.rect.y);
+			    IQuestLineEntry qle = gui.getQuestLine().get(grab.btn.getStoredValue().getKey());
+			    if (qle != null)
+                {
+                    qle.setPosition(grab.btn.rect.x, grab.btn.rect.y);
+                }
             }
             
             // Send quest line edits
             NBTTagCompound chPayload = new NBTTagCompound();
             NBTTagList cdList = new NBTTagList();
             NBTTagCompound tagEntry = new NBTTagCompound();
-            tagEntry.setInteger("chapterID", lID);
+            NBTConverter.UuidValueType.QUEST_LINE.writeId(lID, tagEntry);
             tagEntry.setTag("config", qLine.writeToNBT(new NBTTagCompound(), null));
             cdList.appendTag(tagEntry);
             chPayload.setTag("data", cdList);

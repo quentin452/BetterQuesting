@@ -2,7 +2,6 @@ package betterquesting.commands.admin;
 
 import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.commands.QuestCommandBase;
 import betterquesting.network.handlers.NetQuestEdit;
 import betterquesting.questing.QuestDatabase;
@@ -14,6 +13,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentTranslation;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,13 +37,14 @@ public class QuestCommandComplete extends QuestCommandBase
 	{
 		ArrayList<String> list = new ArrayList<>();
 		
-		if(args.length == 2)
+		if (args.length == 2)
 		{
-			for(DBEntry<IQuest> i : QuestDatabase.INSTANCE.getEntries())
+			for (UUID id : QuestDatabase.INSTANCE.keySet())
 			{
-				list.add("" + i.getID());
+				list.add(id.toString());
 			}
-		} else if(args.length == 3)
+		}
+        else if (args.length == 3)
 		{
 			return CommandBase.getListOfStringsMatchingLastWord(args, NameCache.INSTANCE.getAllNames().toArray(new String[0]));
 		}
@@ -62,25 +63,29 @@ public class QuestCommandComplete extends QuestCommandBase
 	{
 		UUID uuid;
 		
-		if(args.length >= 3)
+		if (args.length >= 3)
 		{
 			uuid = this.findPlayerID(server, sender, args[2]);
 			
-			if(uuid == null)
+			if (uuid == null)
 			{
 				throw this.getException(command);
 			}
-		} else
+		}
+        else
 		{
 			uuid = this.findPlayerID(server, sender, sender.getCommandSenderName());
 		}
 		
 		String pName = uuid == null? "NULL" : NameCache.INSTANCE.getName(uuid);
 		
-        int id = Integer.parseInt(args[1].trim());
-        IQuest quest = QuestDatabase.INSTANCE.getValue(id);
-        if(quest == null) throw getException(command);
-        NetQuestEdit.setQuestStates(new int[]{id}, true, uuid);
+        UUID id = UUID.fromString(args[1].trim());
+        IQuest quest = QuestDatabase.INSTANCE.get(id);
+        if (quest == null)
+        {
+            throw getException(command);
+        }
+        NetQuestEdit.setQuestStates(Collections.singletonList(id), true, uuid);
         sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.complete", new ChatComponentTranslation(quest.getProperty(NativeProps.NAME)), pName));
 	}
 	

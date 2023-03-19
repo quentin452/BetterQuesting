@@ -4,7 +4,6 @@ import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.enums.EnumPartyStatus;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.party.IParty;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.storage.INBTPartial;
 import betterquesting.core.BetterQuesting;
 import betterquesting.network.handlers.NetInviteSync;
@@ -44,27 +43,36 @@ public class PartyInvitations implements INBTPartial<NBTTagList, UUID>
     
     public synchronized boolean acceptInvite(@Nonnull UUID uuid, int id)
     {
-	    HashMap<Integer,Long> userInvites = invites.get(uuid);
-	    if(userInvites == null || userInvites.size() <= 0) return false;
+	    HashMap<Integer, Long> userInvites = invites.get(uuid);
+	    if (userInvites == null || userInvites.isEmpty())
+        {
+            return false;
+        }
 	    
 	    long timestamp = userInvites.get(id);
 	    IParty party = PartyManager.INSTANCE.getValue(id);
 	    boolean valid = timestamp > System.currentTimeMillis();
 	    
-	    if(valid && party != null) {
+	    if (valid && party != null) {
 	        // Resetting user before joining party
-            for (DBEntry<IQuest> entry : QuestDatabase.INSTANCE.getEntries()) {
-                entry.getValue().resetUser(uuid, true);
+            for (IQuest quest : QuestDatabase.INSTANCE.values()) {
+                quest.resetUser(uuid, true);
             }
             EntityPlayerMP player = QuestingAPI.getPlayer(uuid);
-            if(player != null) NetQuestSync.sendSync(player, null, false, true, true);
+            if (player != null)
+            {
+                NetQuestSync.sendSync(player, null, false, true, true);
+            }
 
 	        party.setStatus(uuid, EnumPartyStatus.MEMBER);
             PartyManager.SyncPartyQuests(party, true);
 	    }
 	    
         userInvites.remove(id); // We still remove it regardless of validity
-        if(userInvites.size() <= 0) invites.remove(uuid);
+        if (userInvites.isEmpty())
+        {
+            invites.remove(uuid);
+        }
 	    
         return valid;
     }

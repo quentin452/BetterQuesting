@@ -54,18 +54,8 @@ bq_standard.gui.experience=Experience
 bq_standard.gui.tame=Tame %s
 bq_standard.gui.questcompletion=Quest Completed
 
-bq_standard.importer.hqm_bag.name=HQM Bag Importer
-bq_standard.importer.hqm_bag.desc=Imports HQM rewards bags exported in json format.
-bq_standard.importer.hqm_quest.name=HQM Quest Importer
-bq_standard.importer.hqm_quest.desc=Imports HQM quest lines exported in json format. Due to the strange nature in which HQM quests are indexed post export, errors may occur between quests with duplicate names or conditional unlocks.
-bq_standard.importer.nat_file.name=Native File Importer
-bq_standard.importer.nat_file.desc=Imports native quest database files and appends them onto the exisiting ones.
-bq_standard.importer.nat_url.name=Native Url Importer
-bq_standard.importer.nat_url.desc=Imports native quest databases from the internet and appends them onto the exisiting ones.
-bq_standard.importer.ftbq_quest.name=FTB Quest Importer
-bq_standard.importer.ftbq_quest.desc=Imports chapters and quests from the FTB Quests mod's native NBT files
-bq_standard.importer.adv_json.name=Advancement Importer (JSON)
-bq_standard.importer.adv_json.desc=Imports vanilla advancements written in JSON format.%n%nWARNING: Must be in original vanilla or triumph file locations to import correctly!
+bq_standard.importer.dummy.name=Dummy Importer
+bq_standard.importer.dummy.desc=Does nothing but throw UnsupportedOperationException.
 
 item.bq_standard.loot_chest.name=Loot Chest
 

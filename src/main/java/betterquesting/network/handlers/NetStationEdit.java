@@ -4,6 +4,7 @@ import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.network.QuestingPacket;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.tasks.ITask;
+import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.utils.Tuple2;
 import betterquesting.blocks.TileSubmitStation;
 import betterquesting.network.PacketSender;
@@ -28,11 +29,11 @@ public class NetStationEdit
     }
     
     @SideOnly(Side.CLIENT)
-    public static void setupStation(int posX, int posY, int posZ, int questID, int taskID)
+    public static void setupStation(int posX, int posY, int posZ, UUID questID, int taskID)
     {
         NBTTagCompound payload = new NBTTagCompound();
         payload.setInteger("action", 1);
-        payload.setInteger("questID", questID);
+        NBTConverter.UuidValueType.QUEST.writeId(questID, payload);
         payload.setInteger("taskID", taskID);
         payload.setInteger("tilePosX", posX);
         payload.setInteger("tilePosY", posY);
@@ -71,7 +72,7 @@ public class NetStationEdit
                 } else if(action == 1)
                 {
                     UUID QID = QuestingAPI.getQuestingUUID(message.getSecond());
-                    IQuest quest = QuestDatabase.INSTANCE.getValue(data.getInteger("questID"));
+                    IQuest quest = QuestDatabase.INSTANCE.get(NBTConverter.UuidValueType.QUEST.readId(data));
                     ITask task = quest == null ? null : quest.getTasks().getValue(data.getInteger("taskID"));
                     if(quest != null && task != null) oss.setupTask(QID, quest, task);
                 }

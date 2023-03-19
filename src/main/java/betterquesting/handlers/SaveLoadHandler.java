@@ -7,12 +7,10 @@ import betterquesting.api.questing.IQuest;
 import betterquesting.api.storage.BQ_Settings;
 import betterquesting.api.utils.JsonHelper;
 import betterquesting.api.utils.NBTConverter;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.client.QuestNotification;
 import betterquesting.client.gui2.GuiHome;
+import betterquesting.commands.admin.QuestCommandDefaults;
 import betterquesting.core.BetterQuesting;
-import betterquesting.legacy.ILegacyLoader;
-import betterquesting.legacy.LegacyLoaderRegistry;
 import betterquesting.questing.QuestDatabase;
 import betterquesting.questing.QuestInstance;
 import betterquesting.questing.QuestLineDatabase;
@@ -27,6 +25,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.Constants;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -55,8 +54,6 @@ public class SaveLoadHandler {
             fileParties = null,
             fileLives = null,
             fileNames = null;
-
-    private ILegacyLoader legacyLoader = null;
 
     private final Set<UUID> dirtyPlayers = new ConcurrentSet<>();
 
@@ -105,8 +102,6 @@ public class SaveLoadHandler {
         fileLives = new File(BQ_Settings.curWorldDir, "LifeDatabase.json");
         fileNames = new File(BQ_Settings.curWorldDir, "NameCache.json");
 
-        checkLegacyFiles(rootDir);
-
         loadConfig();
 
         loadProgress();
@@ -116,8 +111,6 @@ public class SaveLoadHandler {
         loadNames();
 
         loadLives();
-
-        legacyLoader = null;
 
         BetterQuesting.logger.info("Loaded " + QuestDatabase.INSTANCE.size() + " quests");
         BetterQuesting.logger.info("Loaded " + QuestLineDatabase.INSTANCE.size() + " quest lines");
@@ -163,8 +156,8 @@ public class SaveLoadHandler {
         isDirty = false;
 
         QuestSettings.INSTANCE.reset();
-        QuestDatabase.INSTANCE.reset();
-        QuestLineDatabase.INSTANCE.reset();
+        QuestDatabase.INSTANCE.clear();
+        QuestLineDatabase.INSTANCE.clear();
         LifeDatabase.INSTANCE.reset();
         NameCache.INSTANCE.reset();
 
@@ -178,61 +171,68 @@ public class SaveLoadHandler {
 
     private void loadConfig() {
         QuestSettings.INSTANCE.reset();
-        QuestDatabase.INSTANCE.reset();
-        QuestLineDatabase.INSTANCE.reset();
-
-        boolean useDef = !fileDatabase.exists();
+        QuestDatabase.INSTANCE.clear();
+        QuestLineDatabase.INSTANCE.clear();
 
         int packVer = 0;
         String packName = "";
+        final String currVer = Loader.instance().activeModContainer().getVersion();
 
-        File fileDefaultDatabase = new File(BQ_Settings.defaultDir, "DefaultQuests.json");
+        File defaultDatabaseFile = new File(BQ_Settings.defaultDir, QuestCommandDefaults.DEFAULT_FILE + ".json");
+        File defaultDatabaseDir = new File(BQ_Settings.defaultDir, QuestCommandDefaults.DEFAULT_FILE);
+        File defaultDatabaseSettingsFile = new File(defaultDatabaseDir, QuestCommandDefaults.SETTINGS_FILE);
 
-        if (useDef) // LOAD DEFAULTS
+        if (fileDatabase.exists())
         {
-            isDirty = true;
-        } else {
-            JsonObject defTmp = JsonHelper.ReadFromFile(fileDefaultDatabase);
+            boolean legacySettings = !defaultDatabaseSettingsFile.exists();
+            File settingsFile = legacySettings ? defaultDatabaseFile : defaultDatabaseSettingsFile;
+            JsonObject settingsJson = JsonHelper.ReadFromFile(settingsFile);
+            NBTTagCompound settingsTag = NBTConverter.JSONtoNBT_Object(settingsJson, new NBTTagCompound(), true);
+
             QuestSettings tmpSettings = new QuestSettings();
-            tmpSettings.readFromNBT(NBTConverter.JSONtoNBT_Object(defTmp, new NBTTagCompound(), true).getCompoundTag("questSettings"));
+            tmpSettings.readFromNBT(legacySettings ? settingsTag.getCompoundTag("questSettings") : settingsTag);
             packVer = tmpSettings.getProperty(NativeProps.PACK_VER);
             packName = tmpSettings.getProperty(NativeProps.PACK_NAME);
+
+            // Getting the build version like this is a bit wasteful, as we read the JSON twice.
+            // Perhaps we should improve this.
+            JsonObject databaseJson = JsonHelper.ReadFromFile(fileDatabase);
+            String buildVer =
+                    NBTConverter.JSONtoNBT_Object(settingsJson, new NBTTagCompound(), true)
+                            .getString("build");
+            if (!currVer.equalsIgnoreCase(buildVer)) // RUN BACKUPS
+            {
+                String fsVer = JsonHelper.makeFileNameSafe(buildVer);
+
+                if (fsVer.isEmpty())
+                {
+                    fsVer = "pre-251";
+                }
+
+                BetterQuesting.logger.warn("BetterQuesting has been updated to from \"" + fsVer + "\" to \"" + currVer + "\"! Creating backups...");
+
+                JsonHelper.CopyPaste(fileDatabase, new File(BQ_Settings.curWorldDir + "/backup/" + fsVer, "QuestDatabase_backup_" + fsVer + ".json"));
+                JsonHelper.CopyPaste(fileProgress, new File(BQ_Settings.curWorldDir + "/backup/" + fsVer, "QuestProgress_backup_" + fsVer + ".json"));
+                JsonHelper.CopyPaste(fileParties, new File(BQ_Settings.curWorldDir + "/backup/" + fsVer, "QuestingParties_backup_" + fsVer + ".json"));
+                JsonHelper.CopyPaste(fileNames, new File(BQ_Settings.curWorldDir + "/backup/" + fsVer, "NameCache_backup_" + fsVer + ".json"));
+                JsonHelper.CopyPaste(fileLives, new File(BQ_Settings.curWorldDir + "/backup/" + fsVer, "LifeDatabase_backup_" + fsVer + ".json"));
+            }
+
+            QuestCommandDefaults.loadLegacy(null, null, fileDatabase, true);
+        } else { // LOAD DEFAULTS
+            if (defaultDatabaseDir.exists())
+            {
+                QuestCommandDefaults.load(null, null, defaultDatabaseDir, true);
+            }
+            else
+            {
+                QuestCommandDefaults.loadLegacy(null, null, defaultDatabaseFile, true);
+            }
+
+            isDirty = true;
+            QuestSettings.INSTANCE.setProperty(NativeProps.EDIT_MODE, false); // Force edit off
         }
 
-        JsonObject json = JsonHelper.ReadFromFile(useDef ? fileDefaultDatabase : fileDatabase);
-
-        NBTTagCompound nbt = NBTConverter.JSONtoNBT_Object(json, new NBTTagCompound(), true);
-
-        String formatVer = nbt.hasKey("format", 8) ? nbt.getString("format") : "0.0.0";
-        String buildVer = nbt.getString("build");
-        String currVer = Loader.instance().activeModContainer().getVersion();
-
-        if (!currVer.equalsIgnoreCase(buildVer) && !useDef) // RUN BACKUPS
-        {
-            String fsVer = JsonHelper.makeFileNameSafe(buildVer);
-
-            if (fsVer.length() <= 0) fsVer = "pre-251";
-
-            BetterQuesting.logger.warn("BetterQuesting has been updated to from \"" + fsVer + "\" to \"" + currVer + "\"! Creating backups...");
-
-            JsonHelper.CopyPaste(fileDatabase, new File(BQ_Settings.curWorldDir + "/backup/" + fsVer, "QuestDatabase_backup_" + fsVer + ".json"));
-            JsonHelper.CopyPaste(fileProgress, new File(BQ_Settings.curWorldDir + "/backup/" + fsVer, "QuestProgress_backup_" + fsVer + ".json"));
-            JsonHelper.CopyPaste(fileParties, new File(BQ_Settings.curWorldDir + "/backup/" + fsVer, "QuestingParties_backup_" + fsVer + ".json"));
-            JsonHelper.CopyPaste(fileNames, new File(BQ_Settings.curWorldDir + "/backup/" + fsVer, "NameCache_backup_" + fsVer + ".json"));
-            JsonHelper.CopyPaste(fileLives, new File(BQ_Settings.curWorldDir + "/backup/" + fsVer, "LifeDatabase_backup_" + fsVer + ".json"));
-        }
-
-        legacyLoader = LegacyLoaderRegistry.getLoader(formatVer);
-
-        if (legacyLoader == null) {
-            QuestSettings.INSTANCE.readFromNBT(nbt.getCompoundTag("questSettings"));
-            QuestDatabase.INSTANCE.readFromNBT(nbt.getTagList("questDatabase", 10), false);
-            QuestLineDatabase.INSTANCE.readFromNBT(nbt.getTagList("questLines", 10), false);
-        } else {
-            legacyLoader.readFromJson(json);
-        }
-
-        if (useDef) QuestSettings.INSTANCE.setProperty(NativeProps.EDIT_MODE, false); // Force edit off
         hasUpdate = packName.equals(QuestSettings.INSTANCE.getProperty(NativeProps.PACK_NAME)) && packVer > QuestSettings.INSTANCE.getProperty(NativeProps.PACK_VER);
     }
 
@@ -240,19 +240,15 @@ public class SaveLoadHandler {
         if (fileProgress.exists()) {
             JsonObject json = JsonHelper.ReadFromFile(fileProgress);
 
-            if (legacyLoader == null) {
-                NBTTagCompound nbt = NBTConverter.JSONtoNBT_Object(json, new NBTTagCompound(), true);
-                QuestDatabase.INSTANCE.readProgressFromNBT(nbt.getTagList("questProgress", 10), false);
-            } else {
-                legacyLoader.readProgressFromJson(json);
-            }
+            NBTTagCompound nbt = NBTConverter.JSONtoNBT_Object(json, new NBTTagCompound(), true);
+            QuestDatabase.INSTANCE.readProgressFromNBT(nbt.getTagList("questProgress", 10), false);
 
             // Mark all data as dirty to migrate the file to the new format
             markDirty();
             HashSet<UUID> usersFound = new HashSet<>();
-            for (DBEntry<IQuest> quest : QuestDatabase.INSTANCE.getEntries()) {
-                if(quest.getValue() instanceof QuestInstance) {
-                    QuestInstance qi = (QuestInstance) quest.getValue();
+            for (IQuest quest : QuestDatabase.INSTANCE.values()) {
+                if (quest instanceof QuestInstance) {
+                    QuestInstance qi = (QuestInstance) quest;
                     qi.getUsersWithCompletionData(usersFound);
                 }
             }
@@ -287,29 +283,6 @@ public class SaveLoadHandler {
 
         NBTTagCompound nbt = NBTConverter.JSONtoNBT_Object(json, new NBTTagCompound(), true);
         LifeDatabase.INSTANCE.readFromNBT(nbt.getCompoundTag("lifeDatabase"), false);
-    }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    private void checkLegacyFiles(File rootDir) {
-        if (new File(rootDir, "QuestDatabase.json").exists() && !fileDatabase.exists()) {
-            File legFileDat = new File(rootDir, "QuestDatabase.json");
-            File legFilePro = new File(rootDir, "QuestProgress.json");
-            File legFilePar = new File(rootDir, "QuestingParties.json");
-            File legFileLiv = new File(rootDir, "LifeDatabase.json");
-            File legFileNam = new File(rootDir, "NameCache.json");
-
-            JsonHelper.CopyPaste(legFileDat, fileDatabase);
-            JsonHelper.CopyPaste(legFilePro, fileProgress);
-            JsonHelper.CopyPaste(legFilePar, fileParties);
-            JsonHelper.CopyPaste(legFileLiv, fileLives);
-            JsonHelper.CopyPaste(legFileNam, fileNames);
-
-            legFileDat.delete();
-            legFilePro.delete();
-            legFilePar.delete();
-            legFileLiv.delete();
-            legFileNam.delete();
-        }
     }
 
     private Future<Void> saveConfig() {

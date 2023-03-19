@@ -10,8 +10,9 @@ import betterquesting.api.questing.IQuestLine;
 import betterquesting.api.questing.IQuestLineDatabase;
 import betterquesting.api.questing.IQuestLineEntry;
 import betterquesting.api.utils.BigItemStack;
-import betterquesting.api2.storage.DBEntry;
-import betterquesting.api2.storage.SimpleDatabase;
+import betterquesting.api.utils.NBTConverter;
+import betterquesting.api2.storage.IUuidDatabase;
+import betterquesting.api2.storage.UuidDatabase;
 import betterquesting.storage.PropertyContainer;
 import net.minecraft.init.Items;
 import net.minecraft.nbt.NBTTagCompound;
@@ -19,8 +20,11 @@ import net.minecraft.nbt.NBTTagList;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
-public class QuestLine extends SimpleDatabase<IQuestLineEntry> implements IQuestLine
+public class QuestLine extends UuidDatabase<IQuestLineEntry> implements IQuestLine
 {
 	private IPropertyContainer info = new PropertyContainer();
 	
@@ -54,10 +58,10 @@ public class QuestLine extends SimpleDatabase<IQuestLineEntry> implements IQuest
 	}
 	
 	@Override
-    public IQuestLineEntry createNew(int id)
+    public IQuestLineEntry createNew(UUID uuid)
     {
         IQuestLineEntry qle = new QuestLineEntry(0, 0, 24, 24);
-        this.add(id, qle);
+        this.put(uuid, qle);
         return qle;
     }
 	
@@ -90,9 +94,9 @@ public class QuestLine extends SimpleDatabase<IQuestLineEntry> implements IQuest
 	}
 	
 	@Override
-	public DBEntry<IQuestLineEntry> getEntryAt(int x, int y)
+	public Map.Entry<UUID, IQuestLineEntry> getEntryAt(int x, int y)
 	{
-		for(DBEntry<IQuestLineEntry> entry : getEntries())
+		for (Map.Entry<UUID, IQuestLineEntry> entry : entrySet())
 		{
 			int i1 = entry.getValue().getPosX();
 			int j1 = entry.getValue().getPosY();
@@ -123,15 +127,19 @@ public class QuestLine extends SimpleDatabase<IQuestLineEntry> implements IQuest
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound json, @Nullable List<Integer> subset)
 	{
+        if (subset != null)
+        {
+            throw new UnsupportedOperationException("subset not supported");
+        }
+
 		json.setTag("properties", info.writeToNBT(new NBTTagCompound()));
 		
 		NBTTagList jArr = new NBTTagList();
 		
-		for(DBEntry<IQuestLineEntry> entry : getEntries())
+		for(Map.Entry<UUID, IQuestLineEntry> entry : entrySet())
 		{
-		    if(subset != null && !subset.contains(entry.getID())) continue;
 			NBTTagCompound qle = entry.getValue().writeToNBT(new NBTTagCompound());
-			qle.setInteger("id", entry.getID());
+            NBTConverter.UuidValueType.QUEST.writeId(entry.getKey(), qle);
 			jArr.appendTag(qle);
 		}
 		
@@ -144,17 +152,33 @@ public class QuestLine extends SimpleDatabase<IQuestLineEntry> implements IQuest
 	{
 		info.readFromNBT(json.getCompoundTag("properties"));
 		
-		if(!merge) reset();
+		if (!merge)
+        {
+            clear();
+        }
 		
 		NBTTagList qList = json.getTagList("quests", 10);
-		for(int i = 0; i < qList.tagCount(); i++)
+		for (int i = 0; i < qList.tagCount(); i++)
 		{
 			NBTTagCompound qTag = qList.getCompoundTagAt(i);
-			
-			int id = qTag.hasKey("id", 99) ? qTag.getInteger("id") : -1;
-			if(id< 0) continue;
-			
-			add(id, new QuestLineEntry(qTag));
+
+            Optional<UUID> questIDOptional = NBTConverter.UuidValueType.QUEST.tryReadId(qTag);
+            UUID questID;
+            if (questIDOptional.isPresent())
+            {
+                questID = questIDOptional.get();
+            }
+            else if (qTag.hasKey("id", 99))
+            {
+                // This block is needed for old questbook data.
+                questID = IUuidDatabase.convertLegacyId(qTag.getInteger("id"));
+            }
+            else
+            {
+                continue;
+            }
+
+			put(questID, new QuestLineEntry(qTag));
 		}
 		
 		this.setupProps();

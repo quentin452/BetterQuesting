@@ -5,7 +5,6 @@ import static codechicken.lib.gui.GuiDraw.drawTexturedModalRect;
 import static net.minecraft.util.EnumChatFormatting.*;
 
 import betterquesting.api.api.QuestingAPI;
-import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.rewards.IReward;
 import betterquesting.api.questing.tasks.ITask;
@@ -40,6 +39,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -68,12 +69,12 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
     public void loadCraftingRecipes(String outputId, Object... results) {
         if (outputId.equals(getOverlayIdentifier())) {
             Stopwatch stopwatch = Stopwatch.createStarted();
-            for (DBEntry<IQuest> quest : getVisibleQuests()) {
-                if (getTaskItemInputs(getTasks(quest.getValue())).isEmpty()
-                        && getRewardItemOutputs(getRewards(quest.getValue())).isEmpty()) {
+            for (Map.Entry<UUID, IQuest> entry : getVisibleQuests().entrySet()) {
+                if (getTaskItemInputs(getTasks(entry.getValue())).isEmpty()
+                        && getRewardItemOutputs(getRewards(entry.getValue())).isEmpty()) {
                     continue;
                 }
-                this.arecipes.add(new CachedQuestRecipe(quest.getValue(), quest.getID()));
+                this.arecipes.add(new CachedQuestRecipe(entry));
             }
             if (debug) {
                 BQ_Standard.logger.debug(
@@ -87,10 +88,10 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
     @Override
     public void loadCraftingRecipes(ItemStack result) {
         Stopwatch stopwatch = Stopwatch.createStarted();
-        for (DBEntry<IQuest> quest : getVisibleQuests()) {
-            for (BigItemStack compareTo : getRewardItemOutputs(getRewards(quest.getValue()))) {
+        for (Map.Entry<UUID, IQuest> entry : getVisibleQuests().entrySet()) {
+            for (BigItemStack compareTo : getRewardItemOutputs(getRewards(entry.getValue()))) {
                 if (matchStack(result, compareTo)) {
-                    this.arecipes.add(new CachedQuestRecipe(quest.getValue(), quest.getID()));
+                    this.arecipes.add(new CachedQuestRecipe(entry));
                     break;
                 }
             }
@@ -103,10 +104,10 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
     @Override
     public void loadUsageRecipes(ItemStack ingredient) {
         Stopwatch stopwatch = Stopwatch.createStarted();
-        for (DBEntry<IQuest> quest : getVisibleQuests()) {
-            for (BigItemStack compareTo : getTaskItemInputs(getTasks(quest.getValue()))) {
+        for (Map.Entry<UUID, IQuest> entry : getVisibleQuests().entrySet()) {
+            for (BigItemStack compareTo : getTaskItemInputs(getTasks(entry.getValue()))) {
                 if (matchStack(ingredient, compareTo)) {
-                    this.arecipes.add(new CachedQuestRecipe(quest.getValue(), quest.getID()));
+                    this.arecipes.add(new CachedQuestRecipe(entry));
                     break;
                 }
             }
@@ -129,7 +130,7 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
     @Override
     public void drawExtras(int recipeIndex) {
         CachedQuestRecipe recipe = (CachedQuestRecipe) this.arecipes.get(recipeIndex);
-        String questTitle = UNDERLINE + getTextWithoutFormattingCodes(QuestTranslation.translate(recipe.questName));
+        String questTitle = UNDERLINE + getTextWithoutFormattingCodes(recipe.questName);
 
         int color;
         if (isMouseOverTitle(recipeIndex)) {
@@ -204,15 +205,10 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
         return BetterQuesting.NAME;
     }
 
-    private static List<DBEntry<IQuest>> getVisibleQuests() {
-        List<DBEntry<IQuest>> ret = new ArrayList<>();
+    private static Map<UUID, IQuest> getVisibleQuests() {
         EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-        for (DBEntry<IQuest> quest : QuestDatabase.INSTANCE.getEntries()) {
-            if (QuestCache.isQuestShown(quest.getValue(), QuestingAPI.getQuestingUUID(player), player)) {
-                ret.add(quest);
-            }
-        }
-        return ret;
+        return QuestDatabase.INSTANCE.filterEntries(
+                (id, quest) -> QuestCache.isQuestShown(quest, QuestingAPI.getQuestingUUID(player), player));
     }
 
     private static List<ITask> getTasks(IQuest quest) {
@@ -305,14 +301,14 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
         private final List<PositionedStack> inputs = new ArrayList<>();
         private final List<PositionedStack> outputs = new ArrayList<>();
         private final String questName;
-        private final int questID;
+        private final UUID questID;
 
-        private CachedQuestRecipe(IQuest quest, int questID) {
-            this.questName = quest.getProperty(NativeProps.NAME);
-            this.questID = questID;
+        private CachedQuestRecipe(Map.Entry<UUID, IQuest> entry) {
+            this.questName = QuestTranslation.translateQuestName(entry);
+            this.questID = entry.getKey();
 
-            loadTasks(quest);
-            loadRewards(quest);
+            loadTasks(entry.getValue());
+            loadRewards(entry.getValue());
         }
 
         private void loadTasks(IQuest quest) {

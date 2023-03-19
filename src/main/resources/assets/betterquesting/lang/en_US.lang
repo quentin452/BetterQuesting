@@ -59,6 +59,7 @@ betterquesting.btn.prereq_visbility.normal=Normal Visibility
 betterquesting.btn.prereq_visbility.implicit=Hidden unless hovering over or holding shift
 betterquesting.btn.prereq_visbility.hidden=Hidden regardless of user input
 betterquesting.btn.share_quest=Share to Chat
+betterquesting.btn.copy_quest=Copy Quest ID
 
 betterquesting.home.exit=Exit
 betterquesting.home.quests=Quests
@@ -111,10 +112,13 @@ betterquesting.notice.update=Quest Updated
 betterquesting.notice.unlock=Quest Unlocked
 
 betterquesting.msg.heart_disabled=Hardcore lives are not enabled. Use "/bq_admin hardcore" to toggle it
-betterquesting.msg.share_quest=§b[Quest: #%d - %s§b]
+betterquesting.msg.share_quest=§b[Quest: #%s - %s§b]
 betterquesting.msg.share_quest_invalid=§cCannot view Quest %s
 betterquesting.msg.share_quest_hover_text_success=§aClick to View Quest
 betterquesting.msg.share_quest_hover_text_failure=§cQuest is Currently Inaccessible
+
+betterquesting.msg.copy_quest_copied=§eCopied to clipboard:
+betterquesting.msg.copy_quest_failed=§cCould not copy to clipboard!
 
 key.betterquesting.quests=Open Quests
 key.betterquesting.party=Party Manager
@@ -185,7 +189,7 @@ betterquesting.toolbox.tool.frame.name=Edit Icon Frame
 betterquesting.toolbox.tool.frame.desc=Changes the quest icons frame style
 
 betterquesting.cmd.check_all=All quests completed by %s:
-betterquesting.cmd.check_all.line=%d %s
+betterquesting.cmd.check_all.line=%s %s
 betterquesting.cmd.check.true=%s has completed %s
 betterquesting.cmd.check.false=%s has not completed %s
 betterquesting.cmd.complete=Completed quest %s for %s
@@ -201,6 +205,7 @@ betterquesting.cmd.edit=Edit mode %s
 betterquesting.cmd.view=View mode button %s
 betterquesting.cmd.hardcore=Hardcore mode %s
 betterquesting.cmd.purge_hidden=Deleted %s hidden quest(s)
+betterquesting.cmd.error=§cSomething went wrong! Please check your logs.
 
 betterquesting.cmd.lives.add_player=Added %s lives to %s (Total: %s)
 betterquesting.cmd.lives.add_all=Added %s lives to all players

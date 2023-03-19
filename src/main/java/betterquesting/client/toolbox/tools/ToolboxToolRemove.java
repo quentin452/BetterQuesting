@@ -2,6 +2,7 @@ package betterquesting.client.toolbox.tools;
 
 import betterquesting.api.client.toolbox.IToolboxTool;
 import betterquesting.api.questing.IQuestLine;
+import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.controls.PanelButtonQuest;
 import betterquesting.api2.client.gui.panels.lists.CanvasQuestLine;
 import betterquesting.client.gui2.editors.designer.PanelToolController;
@@ -12,6 +13,7 @@ import net.minecraft.nbt.NBTTagList;
 import org.lwjgl.input.Keyboard;
 
 import java.util.List;
+import java.util.UUID;
 
 public class ToolboxToolRemove implements IToolboxTool
 {
@@ -49,18 +51,19 @@ public class ToolboxToolRemove implements IToolboxTool
 		    if(PanelToolController.selected.size() > 0)
             {
                 if(!PanelToolController.selected.contains(btn)) return false;
-                for(PanelButtonQuest b : PanelToolController.selected) line.removeID(b.getStoredValue().getID());
+                for(PanelButtonQuest b : PanelToolController.selected) line.remove(b.getStoredValue().getKey());
             } else
             {
-                int qID = btn.getStoredValue().getID();
-                line.removeID(qID);
+                UUID qID = btn.getStoredValue().getKey();
+                line.remove(qID);
             }
 		    
             // Sync Line
             NBTTagCompound chPayload = new NBTTagCompound();
             NBTTagList cdList = new NBTTagList();
             NBTTagCompound cTag = new NBTTagCompound();
-            cTag.setInteger("chapterID", QuestLineDatabase.INSTANCE.getID(line));
+            NBTConverter.UuidValueType.QUEST_LINE.writeId(
+                    QuestLineDatabase.INSTANCE.lookupKey(line), cTag);
             cTag.setTag("config", line.writeToNBT(new NBTTagCompound(), null));
             cdList.appendTag(cTag);
             chPayload.setTag("data", cdList);
@@ -106,13 +109,14 @@ public class ToolboxToolRemove implements IToolboxTool
 	    if(PanelToolController.selected.size() > 0 && key == Keyboard.KEY_RETURN)
         {
             IQuestLine line = gui.getQuestLine();
-            for(PanelButtonQuest b : PanelToolController.selected) line.removeID(b.getStoredValue().getID());
+            for(PanelButtonQuest b : PanelToolController.selected) line.remove(b.getStoredValue().getKey());
 		    
             // Sync Line
             NBTTagCompound chPayload = new NBTTagCompound();
             NBTTagList cdList = new NBTTagList();
             NBTTagCompound cTag = new NBTTagCompound();
-            cTag.setInteger("chapterID", QuestLineDatabase.INSTANCE.getID(line));
+            NBTConverter.UuidValueType.QUEST_LINE.writeId(
+                    QuestLineDatabase.INSTANCE.lookupKey(line), cTag);
             cTag.setTag("config", line.writeToNBT(new NBTTagCompound(), null));
             cdList.appendTag(cTag);
             chPayload.setTag("data", cdList);

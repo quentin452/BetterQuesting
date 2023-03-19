@@ -1,6 +1,7 @@
 package betterquesting.client.toolbox;
 
 import betterquesting.api.client.toolbox.IToolboxTool;
+import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.controls.PanelButton;
 import betterquesting.api2.client.gui.controls.PanelButtonStorage;
 import betterquesting.api2.client.gui.misc.GuiRectangle;
@@ -67,7 +68,8 @@ public class PanelTabMain extends CanvasEmpty
                     NBTTagCompound payload = new NBTTagCompound();
                     NBTTagList dataList = new NBTTagList();
                     NBTTagCompound entry = new NBTTagCompound();
-                    entry.setInteger("chapterID", QuestLineDatabase.INSTANCE.getID(cvQuestLine.getQuestLine()));
+                    NBTConverter.UuidValueType.QUEST_LINE.writeId(
+                            QuestLineDatabase.INSTANCE.lookupKey(cvQuestLine.getQuestLine()), entry);
                     entry.setTag("config", value);
                     dataList.appendTag(entry);
                     payload.setTag("data", dataList);

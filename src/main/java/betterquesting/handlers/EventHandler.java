@@ -72,6 +72,7 @@ import org.apache.commons.lang3.Validate;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -119,39 +120,51 @@ public class EventHandler
         {
             String text = event.message.getFormattedText();
             int index = text.indexOf("betterquesting.msg.sharequest:");
-            if(index != -1)
+            if (index != -1)
             {
                 int lastIndex = index + "betterquesting.msg.sharequest:".length();
-                int endIndex = lastIndex;
-                int questId = 0;
-                for(int i = lastIndex; i < text.length(); i++)
-                {
-                    int digit = Character.getNumericValue(text.charAt(i));
-                    if (digit < 0)
-                    {
-                        break;
-                    }
-                    endIndex++;
-                    questId = (questId * 10) + digit;
-                }
-                IQuest quest = QuestDatabase.INSTANCE.getValue(questId);
-                if(quest == null)
-                {
-                    event.message = new ChatComponentTranslation("betterquesting.msg.share_quest_invalid", String.valueOf(questId));
+                String restOfText = text.substring(lastIndex);
+
+                // UUIDs in string form have the format dddddddd-dddd-dddd-dddd-dddddddddddd
+                // This has a length of 8 + 4 + 4 + 4 + 12 + 4 (for the dashes) = 36
+                if (restOfText.length() < 36) {
+                    event.message = new ChatComponentTranslation("betterquesting.msg.share_quest_invalid", restOfText);
                     return;
                 }
+                String uuidString = restOfText.substring(0, 36);
+                UUID questId;
+                try
+                {
+                    questId = UUID.fromString(uuidString);
+                }
+                catch (IllegalArgumentException e)
+                {
+                    event.message = new ChatComponentTranslation("betterquesting.msg.share_quest_invalid", uuidString);
+                    return;
+                }
+
+                IQuest quest = QuestDatabase.INSTANCE.get(questId);
+                if (quest == null)
+                {
+                    event.message = new ChatComponentTranslation("betterquesting.msg.share_quest_invalid", questId.toString());
+                    return;
+                }
+
                 String questName = quest.getProperty(NativeProps.NAME);
                 IChatComponent translated = new ChatComponentTranslation("betterquesting.msg.share_quest", questId, questName);
-                IChatComponent newMessage = new ChatComponentText(text.substring(0, index) + translated.getFormattedText() + text.substring(endIndex));
+
+                String textAfter = restOfText.length() > 36 ? restOfText.substring(36) : "";
+                IChatComponent newMessage = new ChatComponentText(text.substring(0, index) + translated.getFormattedText() + textAfter);
                 ChatStyle newMessageStyle;
                 EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-                if(QuestCache.isQuestShown(quest, QuestingAPI.getQuestingUUID(player), player))
+                if (QuestCache.isQuestShown(quest, QuestingAPI.getQuestingUUID(player), player))
                 {
                     QuestCommandShow.sentViaClick = true;
                     newMessageStyle = newMessage.getChatStyle()
                             .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/bq_client show " + questId))
                             .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentTranslation("betterquesting.msg.share_quest_hover_text_success")));
-                } else
+                }
+                else
                 {
                     newMessageStyle = newMessage.getChatStyle()
                             .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentTranslation("betterquesting.msg.share_quest_hover_text_failure")));
@@ -187,61 +200,83 @@ public class EventHandler
 	@SubscribeEvent
 	public void onLivingUpdate(BQLivingUpdateEvent event)
 	{
-		if(event.entityLiving.worldObj.isRemote) return;
-		if(!(event.entityLiving instanceof EntityPlayerMP)) return;
-        if(event.entityLiving.ticksExisted%20 != 0) return; // Only triggers once per second
+		if (event.entityLiving.worldObj.isRemote)
+        {
+            return;
+        }
+		if (!(event.entityLiving instanceof EntityPlayerMP))
+        {
+            return;
+        }
+        if (event.entityLiving.ticksExisted % 20 != 0)
+        {
+            return; // Only triggers once per second
+        }
 
         EntityPlayerMP player = (EntityPlayerMP)event.entityLiving;
         QuestCache qc = (QuestCache)player.getExtendedProperties(QuestCache.LOC_QUEST_CACHE.toString());
         boolean editMode = QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE);
 
-        if(qc == null) return;
+        if (qc == null)
+        {
+            return;
+        }
 
-        List<DBEntry<IQuest>> activeQuests = QuestDatabase.INSTANCE.bulkLookup(qc.getActiveQuests());
-        List<DBEntry<IQuest>> pendingAutoClaims = QuestDatabase.INSTANCE.bulkLookup(qc.getPendingAutoClaims());
+        Map<UUID, IQuest> activeQuests = QuestDatabase.INSTANCE.filterKeys(qc.getActiveQuests());
+        Map<UUID, IQuest> pendingAutoClaims = QuestDatabase.INSTANCE.filterKeys(qc.getPendingAutoClaims());
         QResetTime[] pendingResets = qc.getScheduledResets();
 
         UUID uuid = QuestingAPI.getQuestingUUID(player);
         boolean refreshCache = false;
 
-        if(!editMode && player.ticksExisted%60 == 0) // Passive quest state check every 3 seconds
+        if (!editMode && player.ticksExisted % 60 == 0) // Passive quest state check every 3 seconds
         {
-            List<Integer> com = new ArrayList<>();
+            List<UUID> com = new ArrayList<>();
 
-            for(DBEntry<IQuest> quest : activeQuests)
+            for (Map.Entry<UUID, IQuest> entry : activeQuests.entrySet())
             {
-                if(!quest.getValue().isUnlocked(uuid)) continue; // Although it IS active, it cannot be completed yet
+                if (!entry.getValue().isUnlocked(uuid))
+                {
+                    continue; // Although it IS active, it cannot be completed yet
+                }
 
-                if(quest.getValue().canSubmit(player)) quest.getValue().update(player);
+                if (entry.getValue().canSubmit(player))
+                {
+                    entry.getValue().update(player);
+                }
 
-                if(quest.getValue().isComplete(uuid) && !quest.getValue().canSubmit(player))
+                if (entry.getValue().isComplete(uuid) && !entry.getValue().canSubmit(player))
                 {
                     refreshCache = true;
-                    qc.markQuestDirty(quest.getID());
+                    qc.markQuestDirty(entry.getKey());
 
-                    com.add(quest.getID());
-                    if(!quest.getValue().getProperty(NativeProps.SILENT)) postPresetNotice(quest.getValue(), player, 2);
+                    com.add(entry.getKey());
+                    if (!entry.getValue().getProperty(NativeProps.SILENT))
+                    {
+                        postPresetNotice(entry.getValue(), player, 2);
+                    }
                 }
             }
 
             MinecraftForge.EVENT_BUS.post(new QuestEvent(Type.COMPLETED, uuid, com));
         }
 
-        if(!editMode && MinecraftServer.getServer() != null) // Repeatable quest resets
+        if (!editMode && MinecraftServer.getServer() != null) // Repeatable quest resets
         {
-            List<Integer> res = new ArrayList<>();
+            List<UUID> res = new ArrayList<>();
             long totalTime = System.currentTimeMillis();
             
-            for(QResetTime rTime : pendingResets)
+            for (QResetTime rTime : pendingResets)
             {
-                IQuest entry = QuestDatabase.INSTANCE.getValue(rTime.questID);
+                IQuest entry = QuestDatabase.INSTANCE.get(rTime.questID);
 
-                if(totalTime >= rTime.time && !entry.canSubmit(player)) // REEEEEEEEEset
+                if (totalTime >= rTime.time && !entry.canSubmit(player)) // REEEEEEEEEset
                 {
-                    if(entry.getProperty(NativeProps.GLOBAL))
+                    if (entry.getProperty(NativeProps.GLOBAL))
                     {
                         entry.resetUser(null, false);
-                    } else
+                    }
+                    else
                     {
                         entry.resetUser(uuid, false);
                     }
@@ -249,33 +284,43 @@ public class EventHandler
                     refreshCache = true;
                     qc.markQuestDirty(rTime.questID);
                     res.add(rTime.questID);
-                    if(!entry.getProperty(NativeProps.SILENT)) postPresetNotice(entry, player, 1);
-                } else break; // Entries are sorted by time so we fail fast and skip checking the others
+                    if (!entry.getProperty(NativeProps.SILENT))
+                    {
+                        postPresetNotice(entry, player, 1);
+                    }
+                }
+                else
+                {
+                    break; // Entries are sorted by time so we fail fast and skip checking the others
+                }
             }
 
             MinecraftForge.EVENT_BUS.post(new QuestEvent(Type.RESET, uuid, res));
         }
 
-        if(!editMode)
+        if (!editMode)
         {
-            for(DBEntry<IQuest> entry : pendingAutoClaims) // Auto claims
+            for (Map.Entry<UUID, IQuest> entry : pendingAutoClaims.entrySet()) // Auto claims
             {
-                if(entry.getValue().canClaim(player))
+                if (entry.getValue().canClaim(player))
                 {
                     entry.getValue().claimReward(player);
                     refreshCache = true;
-                    qc.markQuestDirty(entry.getID());
+                    qc.markQuestDirty(entry.getKey());
                     // Not going to notify of auto-claims anymore. Kinda pointless if they're already being pinged for completion
                 }
             }
         }
 
-        if(refreshCache || player.ticksExisted % 200 == 0) // Refresh the cache if something changed or every 10 seconds
+        if (refreshCache || player.ticksExisted % 200 == 0) // Refresh the cache if something changed or every 10 seconds
         {
             qc.updateCache(player);
         }
 
-        if(qc.getDirtyQuests().length > 0) NetQuestSync.sendSync(player, qc.getDirtyQuests(), false, true, true);
+        if (!qc.getDirtyQuests().isEmpty())
+        {
+            NetQuestSync.sendSync(player, qc.getDirtyQuests(), false, true, true);
+        }
         qc.cleanAllQuests();
 	}
 	

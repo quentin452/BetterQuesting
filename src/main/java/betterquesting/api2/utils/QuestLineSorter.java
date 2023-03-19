@@ -2,10 +2,11 @@ package betterquesting.api2.utils;
 
 import betterquesting.api.questing.IQuestLine;
 import betterquesting.api.questing.IQuestLineDatabase;
-import betterquesting.api2.storage.DBEntry;
+import java.util.Map;
 import java.util.Comparator;
+import java.util.UUID;
 
-public class QuestLineSorter implements Comparator<DBEntry<IQuestLine>>
+public class QuestLineSorter implements Comparator<Map.Entry<UUID, IQuestLine>>
 {
     private final IQuestLineDatabase QL_DB;
     
@@ -15,8 +16,8 @@ public class QuestLineSorter implements Comparator<DBEntry<IQuestLine>>
     }
     
     @Override
-    public int compare(DBEntry<IQuestLine> objA, DBEntry<IQuestLine> objB)
+    public int compare(Map.Entry<UUID, IQuestLine> objA, Map.Entry<UUID, IQuestLine> objB)
     {
-        return Integer.compare(QL_DB.getOrderIndex(objA.getID()), QL_DB.getOrderIndex(objB.getID()));
+        return Integer.compare(QL_DB.getOrderIndex(objA.getKey()), QL_DB.getOrderIndex(objB.getKey()));
     }
 }

@@ -7,6 +7,7 @@ import betterquesting.api.network.QuestingPacket;
 import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.tasks.ITask;
+import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.Tuple2;
 import betterquesting.core.BetterQuesting;
@@ -26,9 +27,13 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.Constants;
 import org.apache.logging.log4j.Level;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class NetQuestEdit
@@ -79,13 +84,13 @@ public class NetQuestEdit
             }
             case 1:
             {
-                deleteQuests(tag.getIntArray("questIDs"));
+                deleteQuests(NBTConverter.UuidValueType.QUEST.readIds(tag, "questIDs"));
                 break;
             }
             case 2:
             {
                 // TODO: Allow the editor to send a target player name/UUID
-                setQuestStates(tag.getIntArray("questIDs"), tag.getBoolean("state"), senderID);
+                setQuestStates(NBTConverter.UuidValueType.QUEST.readIds(tag, "questIDs"), tag.getBoolean("state"), senderID);
                 break;
             }
             case 3:
@@ -103,80 +108,87 @@ public class NetQuestEdit
     // Serverside only
     public static void editQuests(NBTTagList data)
     {
-        int[] ids = new int[data.tagCount()];
+        List<UUID> questIDs = new ArrayList<>();
         for(int i = 0; i < data.tagCount(); i++)
         {
             NBTTagCompound entry = data.getCompoundTagAt(i);
-            int questID = entry.getInteger("questID");
-            ids[i] = questID;
-            
-            IQuest quest = QuestDatabase.INSTANCE.getValue(questID);
-            if(quest != null) quest.readFromNBT(entry.getCompoundTag("config"));
+            UUID questID = NBTConverter.UuidValueType.QUEST.readId(entry);
+            questIDs.add(questID);
+
+            IQuest quest = QuestDatabase.INSTANCE.get(questID);
+            if (quest != null)
+            {
+                quest.readFromNBT(entry.getCompoundTag("config"));
+            }
         }
     
         SaveLoadHandler.INSTANCE.markDirty();
-        NetQuestSync.sendSync(null, ids, true, false);
+        NetQuestSync.sendSync(null, questIDs, true, false);
     }
     
     // Serverside only
-    public static void deleteQuests(int[] questIDs)
+    public static void deleteQuests(Collection<UUID> questIDs)
     {
-        for(int id : questIDs)
+        for (UUID uuid : questIDs)
         {
-            QuestDatabase.INSTANCE.removeID(id);
-            QuestLineDatabase.INSTANCE.removeQuest(id);
+            QuestDatabase.INSTANCE.remove(uuid);
+            QuestLineDatabase.INSTANCE.removeQuest(uuid);
         }
         
         SaveLoadHandler.INSTANCE.markDirty();
         
         NBTTagCompound payload = new NBTTagCompound();
-        payload.setIntArray("questIDs", questIDs);
+        payload.setTag("questIDs", NBTConverter.UuidValueType.QUEST.writeIds(questIDs));
         payload.setInteger("action", 1);
         PacketSender.INSTANCE.sendToAll(new QuestingPacket(ID_NAME, payload));
     }
     
     // Serverside only
-    public static void setQuestStates(int[] questIDs, boolean state, UUID targetID)
+    public static void setQuestStates(Collection<UUID> questIDs, boolean state, UUID targetID)
     {
-        List<DBEntry<IQuest>> questList = QuestDatabase.INSTANCE.bulkLookup(questIDs);
+        Map<UUID, IQuest> questMap = QuestDatabase.INSTANCE.filterKeys(questIDs);
 
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-
-        if(server == null) return;
-        EntityPlayerMP player = null;
-        for(Object o : server.getConfigurationManager().playerEntityList)
+        if (server == null)
         {
-            if(((EntityPlayerMP)o).getGameProfile().getId().equals(targetID))
+            return;
+        }
+
+        EntityPlayerMP player = null;
+        for (Object o : server.getConfigurationManager().playerEntityList)
+        {
+            if (((EntityPlayerMP) o).getGameProfile().getId().equals(targetID))
             {
-                player = (EntityPlayerMP)o;
+                player = (EntityPlayerMP) o;
             }
         }
 
-        for(DBEntry<IQuest> entry : questList)
+        for (Map.Entry<UUID, IQuest> entry : questMap.entrySet())
         {
-            if(!state)
+            if (!state)
             {
                 entry.getValue().resetUser(targetID, true);
                 continue;
             }
             
-            if(entry.getValue().isComplete(targetID))
+            if (entry.getValue().isComplete(targetID))
             {
                 entry.getValue().setClaimed(targetID, 0);
-            } else
+            }
+            else
             {
                 entry.getValue().setComplete(targetID, 0);
                 
                 int done = 0;
                 
-                if(!entry.getValue().getProperty(NativeProps.LOGIC_TASK).getResult(done, entry.getValue().getTasks().size())) // Preliminary check
+                if (!entry.getValue().getProperty(NativeProps.LOGIC_TASK).getResult(done, entry.getValue().getTasks().size())) // Preliminary check
                 {
-                    for(DBEntry<ITask> task : entry.getValue().getTasks().getEntries())
+                    for (DBEntry<ITask> task : entry.getValue().getTasks().getEntries())
                     {
                         task.getValue().setComplete(targetID);
                         done++;
                         
-                        if(entry.getValue().getProperty(NativeProps.LOGIC_TASK).getResult(done, entry.getValue().getTasks().size()))
+                        if (entry.getValue().getProperty(NativeProps.LOGIC_TASK).getResult(done, entry.getValue().getTasks().size()))
                         {
                             break; // Only complete enough quests to claim the reward
                         }
@@ -184,7 +196,9 @@ public class NetQuestEdit
                 }
             }
             if (player != null)
-                BetterQuesting.logger.info("{} ({}) completed quest {}", player.getDisplayName(), targetID, entry.getID());
+            {
+                BetterQuesting.logger.info("{} ({}) completed quest {}", player.getDisplayName(), targetID, entry.getKey());
+            }
         }
         
         SaveLoadHandler.INSTANCE.markDirty();
@@ -196,21 +210,30 @@ public class NetQuestEdit
     // Serverside only
     public static void createQuests(NBTTagList data)
     {
-        int[] ids = new int[data.tagCount()];
-        for(int i = 0; i < data.tagCount(); i++)
+        List<UUID> questIDs = new ArrayList<>();
+        for (int i = 0; i < data.tagCount(); i++)
         {
             NBTTagCompound entry = data.getCompoundTagAt(i);
-            int questID = entry.hasKey("questID", 99) ? entry.getInteger("questID") : -1;
-            if(questID < 0) questID = QuestDatabase.INSTANCE.nextID();
-            ids[i] = questID;
+
+            UUID questID =
+                    NBTConverter.UuidValueType.QUEST.tryReadId(entry)
+                            .orElseGet(QuestDatabase.INSTANCE::generateKey);
+            questIDs.add(questID);
             
-            IQuest quest = QuestDatabase.INSTANCE.getValue(questID);
-            if(quest == null) quest = QuestDatabase.INSTANCE.createNew(questID);
-            if(entry.hasKey("config", 10)) quest.readFromNBT(entry.getCompoundTag("config"));
+            IQuest quest = QuestDatabase.INSTANCE.get(questID);
+            if (quest == null)
+            {
+                quest = QuestDatabase.INSTANCE.createNew(questID);
+            }
+
+            if (entry.hasKey("config", Constants.NBT.TAG_COMPOUND))
+            {
+                quest.readFromNBT(entry.getCompoundTag("config"));
+            }
         }
         
         SaveLoadHandler.INSTANCE.markDirty();
-        NetQuestSync.sendSync(null, ids, true, false);
+        NetQuestSync.sendSync(null, questIDs, true, false);
     }
     
     @SideOnly(Side.CLIENT)
@@ -218,12 +241,12 @@ public class NetQuestEdit
     {
 		int action = !message.hasKey("action", 99) ? -1 : message.getInteger("action");
 		
-		if(action == 1) // Change to a switch statement when more actions are required
+		if (action == 1) // Change to a switch statement when more actions are required
         {
-            for(int id : message.getIntArray("questIDs"))
+            for (UUID uuid : NBTConverter.UuidValueType.QUEST.readIds(message, "questIDs"))
             {
-                QuestDatabase.INSTANCE.removeID(id);
-                QuestLineDatabase.INSTANCE.removeQuest(id);
+                QuestDatabase.INSTANCE.remove(uuid);
+                QuestLineDatabase.INSTANCE.removeQuest(uuid);
             }
         
 		    MinecraftForge.EVENT_BUS.post(new DatabaseEvent.Update(DBType.CHAPTER));

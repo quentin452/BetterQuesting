@@ -8,7 +8,6 @@ import betterquesting.api.utils.JsonHelper;
 import betterquesting.api.utils.NBTConverter;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
-import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import betterquesting.api2.utils.Tuple2;
 import bq_standard.client.gui.tasks.PanelTaskRetrieval;
@@ -21,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.IntFunction;
 import java.util.stream.IntStream;
@@ -90,13 +90,13 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
 
     @Override
     @SideOnly(Side.CLIENT)
-    public IGuiPanel getTaskGui(IGuiRect rect, DBEntry<IQuest> quest) {
+    public IGuiPanel getTaskGui(IGuiRect rect, Map.Entry<UUID, IQuest> quest) {
         return new PanelTaskRetrieval(rect, this);
     }
 
     @Override
     @SideOnly(Side.CLIENT)
-    public GuiScreen getTaskEditor(GuiScreen parent, DBEntry<IQuest> quest) {
+    public GuiScreen getTaskEditor(GuiScreen parent, Map.Entry<UUID, IQuest> quest) {
         return null;
     }
     // endregion Basic
@@ -134,7 +134,7 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
     // endregion Progress
 
     @Override
-    public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest) {
+    public void detect(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest) {
         if (isComplete(pInfo.UUID)) return;
 
         Detector detector = new Detector(this, consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
@@ -159,7 +159,7 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
     }
 
     private void checkAndComplete(
-            ParticipantInfo pInfo, DBEntry<IQuest> quest, boolean resync, List<Tuple2<UUID, int[]>> progress) {
+            ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, boolean resync, List<Tuple2<UUID, int[]>> progress) {
         boolean updated = resync;
 
         topLoop:
@@ -181,16 +181,16 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
 
         if (updated) {
             if (consume) {
-                pInfo.markDirty(Collections.singletonList(quest.getID()));
+                pInfo.markDirty(quest.getKey());
             } else {
-                pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
+                pInfo.markDirtyParty(quest.getKey());
             }
         }
     }
 
     // region IItemTask
     @Override
-    public boolean canAcceptItem(UUID owner, DBEntry<IQuest> quest, ItemStack stack) {
+    public boolean canAcceptItem(UUID owner, Map.Entry<UUID, IQuest> quest, ItemStack stack) {
         if (owner == null
                 || stack == null
                 || stack.stackSize <= 0
@@ -218,7 +218,7 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
     }
 
     @Override
-    public ItemStack submitItem(UUID owner, DBEntry<IQuest> quest, ItemStack input) {
+    public ItemStack submitItem(UUID owner, Map.Entry<UUID, IQuest> quest, ItemStack input) {
         if (owner == null || input == null || !consume || isComplete(owner)) return input;
 
         Detector detector = new Detector(this, Collections.singletonList(owner));
@@ -238,7 +238,7 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
     }
 
     @Override
-    public void retrieveItems(ParticipantInfo pInfo, DBEntry<IQuest> quest, ItemStack[] stacks) {
+    public void retrieveItems(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, ItemStack[] stacks) {
         if (consume || isComplete(pInfo.UUID)) return;
 
         Detector detector = new Detector(this, consume ? Collections.singletonList(pInfo.UUID) : pInfo.ALL_UUIDS);
@@ -253,7 +253,7 @@ public class TaskRetrieval extends TaskProgressableBase<int[]> implements ITaskI
     // endregion IItemTask
 
     @Override
-    public void onInventoryChange(@Nonnull DBEntry<IQuest> quest, @Nonnull ParticipantInfo pInfo) {
+    public void onInventoryChange(@Nonnull Map.Entry<UUID, IQuest> quest, @Nonnull ParticipantInfo pInfo) {
         if (!consume || autoConsume) {
             detect(pInfo, quest);
         }

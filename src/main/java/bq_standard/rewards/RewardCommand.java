@@ -5,7 +5,6 @@ import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.rewards.IReward;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
-import betterquesting.api2.storage.DBEntry;
 import bq_standard.AdminExecute;
 import bq_standard.client.gui.rewards.PanelRewardCommand;
 import bq_standard.handlers.EventHandler;
@@ -19,6 +18,9 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+
+import java.util.Map;
+import java.util.UUID;
 
 public class RewardCommand implements IReward {
     public String command = "/say VAR_NAME Claimed a reward";
@@ -36,12 +38,12 @@ public class RewardCommand implements IReward {
     }
 
     @Override
-    public boolean canClaim(EntityPlayer player, DBEntry<IQuest> quest) {
+    public boolean canClaim(EntityPlayer player, Map.Entry<UUID, IQuest> quest) {
         return true;
     }
 
     @Override
-    public void claimReward(final EntityPlayer player, DBEntry<IQuest> quest) {
+    public void claimReward(final EntityPlayer player, Map.Entry<UUID, IQuest> quest) {
         if (player.worldObj.isRemote) return;
 
         String tmp = command.replaceAll("VAR_NAME", player.getCommandSenderName());
@@ -76,12 +78,12 @@ public class RewardCommand implements IReward {
     }
 
     @Override
-    public IGuiPanel getRewardGui(IGuiRect rect, DBEntry<IQuest> quest) {
+    public IGuiPanel getRewardGui(IGuiRect rect, Map.Entry<UUID, IQuest> quest) {
         return new PanelRewardCommand(rect, this);
     }
 
     @Override
-    public GuiScreen getRewardEditor(GuiScreen screen, DBEntry<IQuest> quest) {
+    public GuiScreen getRewardEditor(GuiScreen screen, Map.Entry<UUID, IQuest> quest) {
         return null;
     }
 
