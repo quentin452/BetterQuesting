@@ -7,7 +7,7 @@ import net.minecraft.nbt.NBTTagList;
 
 import java.util.UUID;
 
-public interface IQuestDatabase extends IUuidDatabase<IQuest>, INBTPartial<NBTTagList, Integer>, INBTProgress<NBTTagList>
+public interface IQuestDatabase extends IUuidDatabase<IQuest>, INBTPartial<NBTTagList, UUID>, INBTProgress<NBTTagList>
 {
 	IQuest createNew(UUID uuid);
 }

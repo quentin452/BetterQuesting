@@ -163,15 +163,15 @@ public class QuestCache implements IExtendedEntityProperties
     public synchronized void saveNBTData(NBTTagCompound tags)
     {
 
-        tags.setTag("visibleQuests", NBTConverter.writeQuestIds(getVisibleQuests()));
-        tags.setTag("activeQuests", NBTConverter.writeQuestIds(getActiveQuests()));
-        tags.setTag("autoClaims", NBTConverter.writeQuestIds(getPendingAutoClaims()));
-        tags.setTag("markedDirty", NBTConverter.writeQuestIds(getDirtyQuests()));
+        tags.setTag("visibleQuests", NBTConverter.UuidValueType.QUEST.writeIds(getVisibleQuests()));
+        tags.setTag("activeQuests", NBTConverter.UuidValueType.QUEST.writeIds(getActiveQuests()));
+        tags.setTag("autoClaims", NBTConverter.UuidValueType.QUEST.writeIds(getPendingAutoClaims()));
+        tags.setTag("markedDirty", NBTConverter.UuidValueType.QUEST.writeIds(getDirtyQuests()));
         
         NBTTagList tagSchedule = new NBTTagList();
         for (QResetTime entry : getScheduledResets())
         {
-            NBTTagCompound tagEntry = NBTConverter.writeQuestId(entry.questID);
+            NBTTagCompound tagEntry = NBTConverter.UuidValueType.QUEST.writeId(entry.questID);
             tagEntry.setLong("time", entry.time);
             tagSchedule.appendTag(tagEntry);
         }
@@ -191,7 +191,7 @@ public class QuestCache implements IExtendedEntityProperties
                 (tagName, map) -> {
                     if (nbt.func_150299_b(tagName) == Constants.NBT.TAG_LIST)
                     {
-                        map.addAll(NBTConverter.readQuestIds(nbt, tagName));
+                        map.addAll(NBTConverter.UuidValueType.QUEST.readIds(nbt, tagName));
                     }
                     else
                     {
@@ -211,7 +211,7 @@ public class QuestCache implements IExtendedEntityProperties
         for (int i = 0; i < tagList.tagCount(); i++)
         {
             NBTTagCompound tagEntry = tagList.getCompoundTagAt(i);
-            NBTConverter.tryReadQuestId(tagEntry).ifPresent(
+            NBTConverter.UuidValueType.QUEST.tryReadId(tagEntry).ifPresent(
                     uuid -> resetSchedule.add(new QResetTime(uuid, tagEntry.getLong("time"))));
         }
     }

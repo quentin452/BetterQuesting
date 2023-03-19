@@ -517,7 +517,7 @@ public class QuestInstance implements IQuest
         NBTTagList tagList = new NBTTagList();
         for (UUID questID : preRequisites)
         {
-            NBTTagCompound tag = NBTConverter.writeQuestId(questID);
+            NBTTagCompound tag = NBTConverter.UuidValueType.QUEST.writeId(questID);
 
             if (prereqTypes.containsKey(questID))
             {
@@ -556,7 +556,7 @@ public class QuestInstance implements IQuest
                 }
 
                 NBTTagCompound tagCompound = (NBTTagCompound) tag;
-                Optional<UUID> questIDOptional = NBTConverter.tryReadQuestId(tagCompound);
+                Optional<UUID> questIDOptional = NBTConverter.UuidValueType.QUEST.tryReadId(tagCompound);
                 if (!questIDOptional.isPresent())
                 {
                     continue;

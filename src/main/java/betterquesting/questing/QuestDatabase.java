@@ -67,18 +67,17 @@ public class QuestDatabase extends UuidDatabase<IQuest> implements IQuestDatabas
     }
 	
 	@Override
-	public synchronized NBTTagList writeToNBT(NBTTagList nbt, @Nullable List<Integer> subset)
+	public synchronized NBTTagList writeToNBT(NBTTagList nbt, @Nullable List<UUID> subset)
 	{
-        if (subset != null)
-        {
-            throw new UnsupportedOperationException("subset not supported");
-        }
-
-		for(Map.Entry<UUID, IQuest> entry : entrySet())
+		for (Map.Entry<UUID, IQuest> entry : entrySet())
 		{
+            if (subset != null && !subset.contains(entry.getKey()))
+            {
+                continue;
+            }
 			NBTTagCompound jq = new NBTTagCompound();
 			entry.getValue().writeToNBT(jq);
-            NBTConverter.writeQuestId(entry.getKey(), jq);
+            NBTConverter.UuidValueType.QUEST.writeId(entry.getKey(), jq);
 			nbt.appendTag(jq);
 		}
 		
@@ -97,7 +96,7 @@ public class QuestDatabase extends UuidDatabase<IQuest> implements IQuestDatabas
 		{
 			NBTTagCompound qTag = nbt.getCompoundTagAt(i);
 
-            Optional<UUID> questIDOptional = NBTConverter.tryReadQuestId(qTag);
+            Optional<UUID> questIDOptional = NBTConverter.UuidValueType.QUEST.tryReadId(qTag);
             UUID questID;
             if (questIDOptional.isPresent())
             {
@@ -125,7 +124,7 @@ public class QuestDatabase extends UuidDatabase<IQuest> implements IQuestDatabas
 		for (Map.Entry<UUID, IQuest> entry : entrySet())
 		{
 			NBTTagCompound jq = entry.getValue().writeProgressToNBT(new NBTTagCompound(), users);
-            NBTConverter.writeQuestId(entry.getKey(), jq);
+            NBTConverter.UuidValueType.QUEST.writeId(entry.getKey(), jq);
 			json.appendTag(jq);
 		}
 		
@@ -139,7 +138,7 @@ public class QuestDatabase extends UuidDatabase<IQuest> implements IQuestDatabas
 		{
 			NBTTagCompound qTag = json.getCompoundTagAt(i);
 
-            Optional<UUID> questIDOptional = NBTConverter.tryReadQuestId(qTag);
+            Optional<UUID> questIDOptional = NBTConverter.UuidValueType.QUEST.tryReadId(qTag);
             UUID questID = null;
             if (questIDOptional.isPresent())
             {
