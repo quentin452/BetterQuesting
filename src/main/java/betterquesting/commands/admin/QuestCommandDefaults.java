@@ -29,6 +29,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.util.Constants;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Level;
@@ -143,7 +144,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
 
     public static void save(@Nullable ICommandSender sender, @Nullable String databaseName, File dataDir) {
         BiFunction<String, String, String> buildFileName =
-                (name, id) -> name.replaceAll("[^a-zA-Z0-9]", "") + "-" + id;
+                (name, id) -> EnumChatFormatting.getTextWithoutFormattingCodes(name).replaceAll("[^a-zA-Z0-9]", "") + "-" + id;
 
         File settingsFile = new File(dataDir, SETTINGS_FILE);
         if (dataDir.exists()) {
