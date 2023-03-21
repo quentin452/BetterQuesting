@@ -143,16 +143,13 @@ public class QuestCommandDefaults extends QuestCommandBase {
     }
 
     public static void save(@Nullable ICommandSender sender, @Nullable String databaseName, File dataDir) {
+        // Remove chat formatting, as well as simplifying names for use in file paths.
         BiFunction<String, UUID, String> buildFileName =
-                // Remove chat formatting, as well as simplifying names for use in file paths.
                 (name, id) ->
                         String.format(
                                 "%s-%s",
                                 name
-                                        // As of the time of this writing, we MUST NOT include "§"
-                                        // in our string literals, because it is somehow getting
-                                        // turned into Japanese at runtime. "\u00a7" is "§".
-                                        .replaceAll("\u00a7[0-9a-fk-or]", "")
+                                        .replaceAll("§[0-9a-fk-or]", "")
                                         .replaceAll("[^a-zA-Z0-9]", ""),
                                 UuidConverter.encodeUuid(id));
 
