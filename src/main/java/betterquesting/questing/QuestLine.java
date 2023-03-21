@@ -11,7 +11,7 @@ import betterquesting.api.questing.IQuestLineDatabase;
 import betterquesting.api.questing.IQuestLineEntry;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api.utils.NBTConverter;
-import betterquesting.api2.storage.IUuidDatabase;
+import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.storage.UuidDatabase;
 import betterquesting.storage.PropertyContainer;
 import net.minecraft.init.Items;
@@ -171,7 +171,7 @@ public class QuestLine extends UuidDatabase<IQuestLineEntry> implements IQuestLi
             else if (qTag.hasKey("id", 99))
             {
                 // This block is needed for old questbook data.
-                questID = IUuidDatabase.convertLegacyId(qTag.getInteger("id"));
+                questID = UuidConverter.convertLegacyId(qTag.getInteger("id"));
             }
             else
             {

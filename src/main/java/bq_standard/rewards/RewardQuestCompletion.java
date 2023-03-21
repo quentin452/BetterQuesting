@@ -5,9 +5,9 @@ import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.rewards.IReward;
 import betterquesting.api.utils.NBTConverter;
+import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
-import betterquesting.api2.storage.IUuidDatabase;
 import bq_standard.client.gui.rewards.PanelRewardQuestCompletion;
 import bq_standard.rewards.factory.FactoryRewardQuestCompletion;
 
@@ -61,7 +61,7 @@ public class RewardQuestCompletion implements IReward {
             questNum = uuid.get();
         } else if (nbt.hasKey("quest", 99)) {
             // This block is needed for old questbook data.
-            questNum = IUuidDatabase.convertLegacyId(nbt.getInteger("quest"));
+            questNum = UuidConverter.convertLegacyId(nbt.getInteger("quest"));
         } else {
             questNum = null;
         }

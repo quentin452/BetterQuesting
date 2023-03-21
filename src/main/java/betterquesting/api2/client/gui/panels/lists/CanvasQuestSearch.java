@@ -6,6 +6,7 @@ import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.IQuestLine;
 import betterquesting.api.questing.IQuestLineEntry;
 import betterquesting.api.questing.tasks.ITask;
+import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.cache.QuestCache;
 import betterquesting.api2.client.gui.controls.PanelButtonCustom;
 import betterquesting.api2.client.gui.controls.PanelButtonQuest;
@@ -70,7 +71,7 @@ public class CanvasQuestSearch extends CanvasSearch<QuestSearchEntry, QuestSearc
             }
         } else if (
             // quest id
-            String.valueOf(entry.getQuest().getKey()).contains(query)
+            UuidConverter.encodeUuid(entry.getQuest().getKey()).toLowerCase().contains(query)
             // quest title
             || entry.getQuest().getValue().getProperty(NativeProps.NAME).toLowerCase().contains(query)
             || QuestTranslation.translateQuestName(entry.getQuest()).toLowerCase().contains(query)

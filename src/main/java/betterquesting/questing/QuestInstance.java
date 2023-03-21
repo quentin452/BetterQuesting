@@ -11,10 +11,10 @@ import betterquesting.api.questing.rewards.IReward;
 import betterquesting.api.questing.tasks.ITask;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api.utils.NBTConverter;
+import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.cache.QuestCache;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.storage.IDatabaseNBT;
-import betterquesting.api2.storage.IUuidDatabase;
 import betterquesting.api2.utils.DirtyPlayerMarker;
 import betterquesting.api2.utils.ParticipantInfo;
 import betterquesting.core.BetterQuesting;
@@ -577,7 +577,7 @@ public class QuestInstance implements IQuest
             preRequisites = new HashSet<>();
             int[] intArray = jObj.getIntArray("preRequisites");
             for (int i = 0; i < intArray.length; i++) {
-                UUID questID = IUuidDatabase.convertLegacyId(intArray[i]);
+                UUID questID = UuidConverter.convertLegacyId(intArray[i]);
                 preRequisites.add(questID);
                 legacyPrerequisiteIndex.put(i, questID);
             }

@@ -11,6 +11,7 @@ import betterquesting.api.questing.IQuestLine;
 import betterquesting.api.questing.IQuestLineEntry;
 import betterquesting.api.storage.BQ_Settings;
 import betterquesting.api.utils.RenderUtils;
+import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.cache.QuestCache;
 import betterquesting.api2.client.gui.GuiScreenCanvas;
 import betterquesting.api2.client.gui.controls.IPanelButton;
@@ -388,13 +389,13 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
 
                         PopContextMenu popup = new PopContextMenu(new GuiRectangle(mx, my, maxWidth + 12, questExistsUnderMouse ? 48 : 16), true);
                         Runnable questSharer = () -> {
-                            mc.thePlayer.sendChatMessage("betterquesting.msg.sharequest:" + questId);
+                            mc.thePlayer.sendChatMessage("betterquesting.msg.sharequest:" + UuidConverter.encodeUuid(questId));
                             mc.displayGuiScreen(null);
                         };
                         popup.addButton(QuestTranslation.translate("betterquesting.btn.share_quest"), null, questSharer);
 
                         Runnable copyQuestId = () -> {
-                            StringSelection stringToCopy = new StringSelection(questId.toString());
+                            StringSelection stringToCopy = new StringSelection(UuidConverter.encodeUuid(questId));
                             try {
                                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringToCopy, null);
                                 mc.thePlayer.addChatMessage(
@@ -402,7 +403,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
                                                 QuestTranslation.translate("betterquesting.msg.copy_quest_copied")));
                                 mc.thePlayer.addChatMessage(
                                         new ChatComponentText(
-                                                "  " + EnumChatFormatting.AQUA + questId));
+                                                "  " + EnumChatFormatting.AQUA + UuidConverter.encodeUuid(questId)));
                             } catch (IllegalStateException e) {
                                 mc.thePlayer.addChatMessage(
                                         new ChatComponentText(

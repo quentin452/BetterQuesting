@@ -2,6 +2,7 @@ package betterquesting.commands.admin;
 
 import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
+import betterquesting.api.utils.UuidConverter;
 import betterquesting.commands.QuestCommandBase;
 import betterquesting.network.handlers.NetQuestEdit;
 import betterquesting.questing.QuestDatabase;
@@ -41,7 +42,7 @@ public class QuestCommandComplete extends QuestCommandBase
 		{
 			for (UUID id : QuestDatabase.INSTANCE.keySet())
 			{
-				list.add(id.toString());
+                list.add(UuidConverter.encodeUuid(id));
 			}
 		}
         else if (args.length == 3)
@@ -79,7 +80,7 @@ public class QuestCommandComplete extends QuestCommandBase
 		
 		String pName = uuid == null? "NULL" : NameCache.INSTANCE.getName(uuid);
 		
-        UUID id = UUID.fromString(args[1].trim());
+        UUID id = UuidConverter.decodeUuid(args[1].trim());
         IQuest quest = QuestDatabase.INSTANCE.get(id);
         if (quest == null)
         {

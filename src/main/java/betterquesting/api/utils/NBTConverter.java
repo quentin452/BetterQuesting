@@ -60,7 +60,7 @@ public class NBTConverter
         /** Use this method in cases where the player needs to edit the NBT manually. */
         public void writeIdString(@Nullable UUID uuid, NBTTagCompound tag)
         {
-            tag.setString(idFieldName, uuid == null ? "" : uuid.toString());
+            tag.setString(idFieldName, uuid == null ? "" : UuidConverter.encodeUuid(uuid));
         }
 
         public NBTTagList writeIds(Collection<UUID> uuids)
@@ -99,7 +99,12 @@ public class NBTConverter
                 return Optional.empty();
             }
 
-            return Optional.of(UUID.fromString(questId));
+            if (questId.length() > 24) {
+                // Handle old data, from before we started encoding UUIDs.
+                return Optional.of(UUID.fromString(questId));
+            }
+
+            return Optional.of(UuidConverter.decodeUuid(questId));
         }
 
         public List<UUID> readIds(NBTTagCompound tag, String key)

@@ -3,6 +3,7 @@ package betterquesting.network.handlers;
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.network.QuestingPacket;
 import betterquesting.api.questing.*;
+import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.utils.Tuple2;
 import betterquesting.client.importers.ImportedQuestLines;
 import betterquesting.client.importers.ImportedQuests;
@@ -93,7 +94,7 @@ public class NetImport
             {
                 if (!remapped.containsKey(qle.getKey()))
                 {
-                    BetterQuesting.logger.error("Failed to import quest into quest line. Unable to remap ID " + qle.getKey());
+                    BetterQuesting.logger.error("Failed to import quest into quest line. Unable to remap ID " + UuidConverter.encodeUuid(qle.getKey()));
                     continue;
                 }
                 

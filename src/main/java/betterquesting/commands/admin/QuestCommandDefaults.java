@@ -7,6 +7,7 @@ import betterquesting.api.questing.IQuestLine;
 import betterquesting.api.storage.BQ_Settings;
 import betterquesting.api.utils.JsonHelper;
 import betterquesting.api.utils.NBTConverter;
+import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.utils.QuestTranslation;
 import betterquesting.commands.QuestCommandBase;
 import betterquesting.core.BetterQuesting;
@@ -143,11 +144,17 @@ public class QuestCommandDefaults extends QuestCommandBase {
 
     public static void save(@Nullable ICommandSender sender, @Nullable String databaseName, File dataDir) {
         BiFunction<String, UUID, String> buildFileName =
-                // "\u00a7" is "§". As of the time of this writing, we MUST NOT include "§" in our
-                // string literals, because it is somehow getting turned into Japanese at runtime.
-                //
                 // Remove chat formatting, as well as simplifying names for use in file paths.
-                (name, id) -> name.replaceAll("\u00a7[0-9a-fk-or]", "").replaceAll("[^a-zA-Z0-9]", "") + "-" + id;
+                (name, id) ->
+                        String.format(
+                                "%s-%s",
+                                name
+                                        // As of the time of this writing, we MUST NOT include "§"
+                                        // in our string literals, because it is somehow getting
+                                        // turned into Japanese at runtime. "\u00a7" is "§".
+                                        .replaceAll("\u00a7[0-9a-fk-or]", "")
+                                        .replaceAll("[^a-zA-Z0-9]", ""),
+                                UuidConverter.encodeUuid(id));
 
         File settingsFile = new File(dataDir, SETTINGS_FILE);
         if (dataDir.exists()) {

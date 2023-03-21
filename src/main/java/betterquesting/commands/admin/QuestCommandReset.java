@@ -2,6 +2,7 @@ package betterquesting.commands.admin;
 
 import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
+import betterquesting.api.utils.UuidConverter;
 import betterquesting.commands.QuestCommandBase;
 import betterquesting.handlers.SaveLoadHandler;
 import betterquesting.network.handlers.NetQuestSync;
@@ -44,7 +45,7 @@ public class QuestCommandReset extends QuestCommandBase
 			
 			for (UUID id : QuestDatabase.INSTANCE.keySet())
 			{
-				list.add(id.toString());
+                list.add(UuidConverter.encodeUuid(id));
 			}
 		}
         else if (args.length == 3)
@@ -126,7 +127,7 @@ public class QuestCommandReset extends QuestCommandBase
 		{
 			try
 			{
-				UUID id = UUID.fromString(action.trim());
+				UUID id = UuidConverter.decodeUuid(action.trim());
 				IQuest quest = QuestDatabase.INSTANCE.get(id);
 				
 				if (uuid != null)

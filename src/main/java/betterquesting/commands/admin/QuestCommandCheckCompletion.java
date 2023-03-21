@@ -2,6 +2,7 @@ package betterquesting.commands.admin;
 
 import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
+import betterquesting.api.utils.UuidConverter;
 import betterquesting.commands.QuestCommandBase;
 import betterquesting.questing.QuestDatabase;
 import betterquesting.storage.NameCache;
@@ -35,7 +36,7 @@ public class QuestCommandCheckCompletion extends QuestCommandBase {
 			return CommandBase.getListOfStringsMatchingLastWord(args, NameCache.INSTANCE.getAllNames().toArray(new String[0]));
 		} else if (args.length == 3) {
 			for (UUID id : QuestDatabase.INSTANCE.keySet()) {
-				list.add(id.toString());
+				list.add(UuidConverter.encodeUuid(id));
 			}
 		}
 
@@ -59,7 +60,7 @@ public class QuestCommandCheckCompletion extends QuestCommandBase {
 
 		String pName = NameCache.INSTANCE.getName(uuid);
 
-		UUID id = UUID.fromString(args[2].trim());
+		UUID id = UuidConverter.decodeUuid(args[2].trim());
 		IQuest quest = QuestDatabase.INSTANCE.get(id);
 		if (quest == null) throw getException(command);
 		sender.addChatMessage(new ChatComponentTranslation("betterquesting.cmd.check." + quest.isComplete(uuid), pName, new ChatComponentTranslation(quest.getProperty(NativeProps.NAME))));
