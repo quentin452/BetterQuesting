@@ -29,7 +29,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentTranslation;
-import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.util.Constants;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Level;
@@ -143,8 +142,12 @@ public class QuestCommandDefaults extends QuestCommandBase {
     }
 
     public static void save(@Nullable ICommandSender sender, @Nullable String databaseName, File dataDir) {
-        BiFunction<String, String, String> buildFileName =
-                (name, id) -> EnumChatFormatting.getTextWithoutFormattingCodes(name).replaceAll("[^a-zA-Z0-9]", "") + "-" + id;
+        BiFunction<String, UUID, String> buildFileName =
+                // "\u00a7" is "§". As of the time of this writing, we MUST NOT include "§" in our
+                // string literals, because it is somehow getting turned into Japanese at runtime.
+                //
+                // Remove chat formatting, as well as simplifying names for use in file paths.
+                (name, id) -> name.replaceAll("\u00a7[0-9a-fk-or]", "").replaceAll("[^a-zA-Z0-9]", "") + "-" + id;
 
         File settingsFile = new File(dataDir, SETTINGS_FILE);
         if (dataDir.exists()) {
@@ -208,7 +211,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
                     IQuestLine questLine = questLines.get(0);
                     UUID questLineId = QuestLineDatabase.INSTANCE.lookupKey(questLine);
                     String questLineName = questLine.getProperty(NativeProps.NAME);
-                    questDir = new File(questDir, buildFileName.apply(questLineName, questLineId.toString()));
+                    questDir = new File(questDir, buildFileName.apply(questLineName, questLineId));
                     break;
 
                 default:
@@ -218,7 +221,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
             }
 
             String questName = quest.getProperty(NativeProps.NAME);
-            File questFile = new File(questDir, buildFileName.apply(questName, questId.toString()) + ".json");
+            File questFile = new File(questDir, buildFileName.apply(questName, questId) + ".json");
             if (!questFile.exists() && !questFile.mkdirs()) {
                 QuestingAPI.getLogger().log(Level.ERROR, "Failed to create directories\n{}", questFile);
                 sendChatMessage(sender, "betterquesting.cmd.error");
