@@ -135,13 +135,13 @@ public class QuestLine extends UuidDatabase<IQuestLineEntry> implements IQuestLi
 		json.setTag("properties", info.writeToNBT(new NBTTagCompound()));
 		
 		NBTTagList jArr = new NBTTagList();
-		
-		for(Map.Entry<UUID, IQuestLineEntry> entry : entrySet())
+
+        orderedEntries().forEach(entry ->
 		{
 			NBTTagCompound qle = entry.getValue().writeToNBT(new NBTTagCompound());
             NBTConverter.UuidValueType.QUEST.writeId(entry.getKey(), qle);
 			jArr.appendTag(qle);
-		}
+		});
 		
 		json.setTag("quests", jArr);
 		return json;

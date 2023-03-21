@@ -87,17 +87,17 @@ public class QuestLineDatabase extends UuidDatabase<IQuestLine> implements IQues
 	@Override
 	public NBTTagList writeToNBT(NBTTagList json, @Nullable List<UUID> subset)
 	{
-		for (Map.Entry<UUID, IQuestLine> entry : entrySet())
-		{
+		orderedEntries().forEach(entry ->
+        {
             if (subset != null && !subset.contains(entry.getKey()))
             {
-                continue;
+                return;
             }
-			NBTTagCompound jObj = entry.getValue().writeToNBT(new NBTTagCompound(), null);
+            NBTTagCompound jObj = entry.getValue().writeToNBT(new NBTTagCompound(), null);
             NBTConverter.UuidValueType.QUEST_LINE.writeId(entry.getKey(), jObj);
-			jObj.setInteger("order", getOrderIndex(entry.getKey()));
-			json.appendTag(jObj);
-		}
+            jObj.setInteger("order", getOrderIndex(entry.getKey()));
+            json.appendTag(jObj);
+        });
 		
 		return json;
 	}

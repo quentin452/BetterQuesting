@@ -34,6 +34,11 @@ public class UuidDatabase<T> implements IUuidDatabase<T> {
     }
 
     @Override
+    public Stream<Map.Entry<UUID, T>> orderedEntries() {
+        return entrySet().stream().sorted(Map.Entry.comparingByKey());
+    }
+
+    @Override
     public Stream<T> getAll(Collection<UUID> keys) {
         return keys.stream().distinct().filter(database::containsKey).map(database::get);
     }

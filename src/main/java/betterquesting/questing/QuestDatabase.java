@@ -69,17 +69,17 @@ public class QuestDatabase extends UuidDatabase<IQuest> implements IQuestDatabas
 	@Override
 	public synchronized NBTTagList writeToNBT(NBTTagList nbt, @Nullable List<UUID> subset)
 	{
-		for (Map.Entry<UUID, IQuest> entry : entrySet())
+		orderedEntries().forEach(entry ->
 		{
             if (subset != null && !subset.contains(entry.getKey()))
             {
-                continue;
+                return;
             }
 			NBTTagCompound jq = new NBTTagCompound();
 			entry.getValue().writeToNBT(jq);
             NBTConverter.UuidValueType.QUEST.writeId(entry.getKey(), jq);
 			nbt.appendTag(jq);
-		}
+		});
 		
 		return nbt;
 	}

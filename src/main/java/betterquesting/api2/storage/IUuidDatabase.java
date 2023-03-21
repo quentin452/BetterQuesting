@@ -17,6 +17,12 @@ public interface IUuidDatabase<T> extends BiMap<UUID, T> {
     @Nullable
     UUID lookupKey(T value);
 
+    /**
+     * Returns this database's entries in a stable order.
+     * Useful for ensuring that exported files change as little as possible.
+     */
+    Stream<Map.Entry<UUID, T>> orderedEntries();
+
     Stream<T> getAll(Collection<UUID> keys);
 
     Map<UUID, T> filterKeys(Collection<UUID> keys);
