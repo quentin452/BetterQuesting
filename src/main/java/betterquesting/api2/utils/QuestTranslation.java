@@ -5,12 +5,9 @@ import betterquesting.api.properties.IPropertyType;
 import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.IQuestLine;
-import betterquesting.api2.storage.DBEntry;
-import cpw.mods.fml.relauncher.ReflectionHelper;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.client.resources.Locale;
+import net.minecraft.util.StatCollector;
 
-import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.UUID;
 
@@ -19,21 +16,6 @@ public class QuestTranslation {
     private static final String QUEST_DESCRIPTION_KEY = "betterquesting.quest.%s.desc";
     private static final String QUEST_LINE_NAME_KEY = "betterquesting.questline.%s.name";
     private static final String QUEST_LINE_DESCRIPTION_KEY = "betterquesting.questline.%s.desc";
-
-    /**
-     * We'll look up translation keys directly from the map, to avoid needing to perform string
-     * comparison to check if a key is missing.
-     */
-    private static final Map<String, String> translations;
-    static {
-        try {
-            Field localeField = ReflectionHelper.findField(I18n.class, "i18nLocale", "field_135054_a");
-            Field translationsField = ReflectionHelper.findField(Locale.class, "field_135032_a");
-            translations = (Map<String, String>) translationsField.get(localeField.get(null));
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     public static String translate(String text, Object... args) {
         String out = I18n.format(text, args);
@@ -102,9 +84,8 @@ public class QuestTranslation {
      */
     private static String translateProperty(
             String key, IPropertyContainer container, IPropertyType<String> property) {
-        String translation = translations.get(key);
-        if (translation != null) {
-            return String.format(translation);
+        if (StatCollector.canTranslate(key)) {
+            return StatCollector.translateToLocal(key);
         }
 
         return container.getProperty(property);

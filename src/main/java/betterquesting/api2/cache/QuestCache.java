@@ -7,9 +7,9 @@ import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.storage.BQ_Settings;
 import betterquesting.api.utils.NBTConverter;
-import betterquesting.api2.storage.IUuidDatabase;
 import betterquesting.network.handlers.NetCacheSync;
 import betterquesting.questing.QuestDatabase;
+import com.google.common.collect.ImmutableSet;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -22,14 +22,12 @@ import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 
 public class QuestCache implements IExtendedEntityProperties
 {
@@ -54,20 +52,32 @@ public class QuestCache implements IExtendedEntityProperties
     public void init(Entity entity, World world)
     {
     }
-    
-    public synchronized Set<UUID> getActiveQuests()
+
+    /**
+     * I don't think that it's currently necessary for this method to return a copy, but let's do so
+     * anyway in case of future concurrency changes.
+     */
+    public synchronized ImmutableSet<UUID> getActiveQuests()
     {
-        return activeQuests;
+        return ImmutableSet.copyOf(activeQuests);
     }
-    
-    public synchronized Set<UUID> getVisibleQuests()
+
+    /**
+     * I don't think that it's currently necessary for this method to return a copy, but let's do so
+     * anyway in case of future concurrency changes.
+     */
+    public synchronized ImmutableSet<UUID> getVisibleQuests()
     {
-        return visibleQuests;
+        return ImmutableSet.copyOf(visibleQuests);
     }
-    
-    public synchronized Set<UUID> getPendingAutoClaims()
+
+    /**
+     * I don't think that it's currently necessary for this method to return a copy, but let's do so
+     * anyway in case of future concurrency changes.
+     */
+    public synchronized ImmutableSet<UUID> getPendingAutoClaims()
     {
-        return autoClaims;
+        return ImmutableSet.copyOf(autoClaims);
     }
     
     public synchronized QResetTime[] getScheduledResets() // Already sorted by time
@@ -89,10 +99,15 @@ public class QuestCache implements IExtendedEntityProperties
     {
         markedDirty.clear();
     }
-    
-    public synchronized Set<UUID> getDirtyQuests()
+
+    /**
+     * This method must return a copy of {@code markedDirty}, because {@code markedDirty} gets
+     * cleared every tick. Returning it directly means introducing a potential race condition where
+     * any callers that run code on separate threads may run after {@code markedDirty} gets cleared.
+     */
+    public synchronized ImmutableSet<UUID> getDirtyQuests()
     {
-        return markedDirty;
+        return ImmutableSet.copyOf(markedDirty);
     }
     
     // TODO: Ensure this is thread safe because we're likely going to run this in the background
@@ -187,25 +202,10 @@ public class QuestCache implements IExtendedEntityProperties
         autoClaims.clear();
         markedDirty.clear();
 
-        BiConsumer<String, Set<UUID>> handleTag =
-                (tagName, map) -> {
-                    if (nbt.func_150299_b(tagName) == Constants.NBT.TAG_LIST)
-                    {
-                        map.addAll(NBTConverter.UuidValueType.QUEST.readIds(nbt, tagName));
-                    }
-                    else
-                    {
-                        // TODO is this NBT ever persisted? We only need this block if it is.
-                        Arrays.stream(nbt.getIntArray(tagName))
-                                .mapToObj(IUuidDatabase::convertLegacyId)
-                                .forEach(map::add);
-                    }
-                };
-
-        handleTag.accept("visibleQuests", visibleQuests);
-        handleTag.accept("activeQuests", activeQuests);
-        handleTag.accept("autoClaims", autoClaims);
-        handleTag.accept("markedDirty", markedDirty);
+        visibleQuests.addAll(NBTConverter.UuidValueType.QUEST.readIds(nbt, "visibleQuests"));
+        activeQuests.addAll(NBTConverter.UuidValueType.QUEST.readIds(nbt, "activeQuests"));
+        autoClaims.addAll(NBTConverter.UuidValueType.QUEST.readIds(nbt, "autoClaims"));
+        markedDirty.addAll(NBTConverter.UuidValueType.QUEST.readIds(nbt, "markedDirty"));
 
         NBTTagList tagList = nbt.getTagList("resetSchedule", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < tagList.tagCount(); i++)
