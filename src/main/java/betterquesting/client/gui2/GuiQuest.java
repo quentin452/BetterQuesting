@@ -405,7 +405,7 @@ public class GuiQuest extends GuiScreenCanvas implements IPEventListener, INeeds
             csDesc = new CanvasScrolling(new GuiTransform(GuiAlign.HALF_LEFT, new GuiPadding(0, 0, 16, 0), 0));
         }
         cvInner.addPanel(csDesc);
-        PanelTextBox paDesc = new PanelTextBox(new GuiRectangle(0, 0, csDesc.getTransform().getWidth(), 0), QuestTranslation.translateQuestDescription(questID, quest), true);
+        PanelTextBox paDesc = new PanelTextBox(new GuiRectangle(0, 0, csDesc.getTransform().getWidth(), 0), QuestTranslation.translateQuestDescription(questID, quest), true, true);
         paDesc.setColor(PresetColor.TEXT_MAIN.getColor());//.setFontSize(10);
         csDesc.addCulledPanel(paDesc, false);
 
