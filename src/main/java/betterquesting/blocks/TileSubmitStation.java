@@ -441,7 +441,7 @@ public class TileSubmitStation extends TileEntity implements IFluidHandler, ISid
 	{
 		super.writeToNBT(tags);
 		tags.setString("owner", owner != null ? owner.toString() : "");
-        NBTConverter.UuidValueType.QUEST.writeId(questID, tags);
+        NBTConverter.UuidValueType.QUEST.tryWriteId(questID, tags);
 		tags.setInteger("task", taskID);
 		tags.setTag("input", itemStack[SLOT_INPUT] != null? itemStack[SLOT_INPUT].writeToNBT(new NBTTagCompound()) : new NBTTagCompound());
 		tags.setTag("output", itemStack[SLOT_OUTPUT] != null? itemStack[SLOT_OUTPUT].writeToNBT(new NBTTagCompound()) : new NBTTagCompound());

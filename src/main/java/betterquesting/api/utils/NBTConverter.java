@@ -57,6 +57,13 @@ public class NBTConverter
             tag.setLong(lowIdFieldName, uuid.getLeastSignificantBits());
         }
 
+        public void tryWriteId(@Nullable UUID uuid, NBTTagCompound tag)
+        {
+            if (uuid != null) {
+                writeId(uuid, tag);
+            }
+        }
+
         /** Use this method in cases where the player needs to edit the NBT manually. */
         public void writeIdString(@Nullable UUID uuid, NBTTagCompound tag)
         {
