@@ -12,6 +12,7 @@ import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.party.IParty;
 import betterquesting.api.storage.BQ_Settings;
+import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.cache.QuestCache;
 import betterquesting.api2.cache.QuestCache.QResetTime;
 import betterquesting.api2.client.gui.GuiScreenTest;
@@ -125,19 +126,18 @@ public class EventHandler
                 int lastIndex = index + "betterquesting.msg.sharequest:".length();
                 String restOfText = text.substring(lastIndex);
 
-                // UUIDs in string form have the format dddddddd-dddd-dddd-dddd-dddddddddddd
-                // This has a length of 8 + 4 + 4 + 4 + 12 + 4 (for the dashes) = 36
-                if (restOfText.length() < 36) {
+                // UUIDs in base64-encoded string form are 24 characters in length.
+                if (restOfText.length() < 24) {
                     event.message = new ChatComponentTranslation("betterquesting.msg.share_quest_invalid", restOfText);
                     return;
                 }
-                String uuidString = restOfText.substring(0, 36);
+                String uuidString = restOfText.substring(0, 24);
                 UUID questId;
                 try
                 {
-                    questId = UUID.fromString(uuidString);
+                    questId = UuidConverter.decodeUuid(uuidString);
                 }
-                catch (IllegalArgumentException e)
+                catch (ArrayIndexOutOfBoundsException | IllegalArgumentException e)
                 {
                     event.message = new ChatComponentTranslation("betterquesting.msg.share_quest_invalid", uuidString);
                     return;
@@ -146,12 +146,12 @@ public class EventHandler
                 IQuest quest = QuestDatabase.INSTANCE.get(questId);
                 if (quest == null)
                 {
-                    event.message = new ChatComponentTranslation("betterquesting.msg.share_quest_invalid", questId.toString());
+                    event.message = new ChatComponentTranslation("betterquesting.msg.share_quest_invalid", UuidConverter.encodeUuid(questId));
                     return;
                 }
 
                 String questName = quest.getProperty(NativeProps.NAME);
-                IChatComponent translated = new ChatComponentTranslation("betterquesting.msg.share_quest", questId, questName);
+                IChatComponent translated = new ChatComponentTranslation("betterquesting.msg.share_quest", UuidConverter.encodeUuid(questId), questName);
 
                 String textAfter = restOfText.length() > 36 ? restOfText.substring(36) : "";
                 IChatComponent newMessage = new ChatComponentText(text.substring(0, index) + translated.getFormattedText() + textAfter);
@@ -161,7 +161,7 @@ public class EventHandler
                 {
                     QuestCommandShow.sentViaClick = true;
                     newMessageStyle = newMessage.getChatStyle()
-                            .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/bq_client show " + questId))
+                            .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/bq_client show " + UuidConverter.encodeUuid(questId)))
                             .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentTranslation("betterquesting.msg.share_quest_hover_text_success")));
                 }
                 else

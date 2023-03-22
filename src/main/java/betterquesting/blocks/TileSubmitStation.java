@@ -6,8 +6,8 @@ import betterquesting.api.questing.tasks.IFluidTask;
 import betterquesting.api.questing.tasks.IItemTask;
 import betterquesting.api.questing.tasks.ITask;
 import betterquesting.api.utils.NBTConverter;
+import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.cache.QuestCache;
-import betterquesting.api2.storage.IUuidDatabase;
 import betterquesting.core.BetterQuesting;
 import betterquesting.questing.QuestDatabase;
 import betterquesting.storage.QuestSettings;
@@ -424,7 +424,7 @@ public class TileSubmitStation extends TileEntity implements IFluidHandler, ISid
         else if (tags.hasKey("questID"))
         {
             // Needed for compatibility with old worlds.
-            questID = IUuidDatabase.convertLegacyId(tags.getInteger("questID"));
+            questID = UuidConverter.convertLegacyId(tags.getInteger("questID"));
         }
 
 		taskID = tags.hasKey("task") ? tags.getInteger("task") : -1;
@@ -441,7 +441,7 @@ public class TileSubmitStation extends TileEntity implements IFluidHandler, ISid
 	{
 		super.writeToNBT(tags);
 		tags.setString("owner", owner != null ? owner.toString() : "");
-        NBTConverter.UuidValueType.QUEST.writeId(questID, tags);
+        NBTConverter.UuidValueType.QUEST.tryWriteId(questID, tags);
 		tags.setInteger("task", taskID);
 		tags.setTag("input", itemStack[SLOT_INPUT] != null? itemStack[SLOT_INPUT].writeToNBT(new NBTTagCompound()) : new NBTTagCompound());
 		tags.setTag("output", itemStack[SLOT_OUTPUT] != null? itemStack[SLOT_OUTPUT].writeToNBT(new NBTTagCompound()) : new NBTTagCompound());

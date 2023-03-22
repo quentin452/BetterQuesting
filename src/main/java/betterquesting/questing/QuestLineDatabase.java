@@ -3,7 +3,7 @@ package betterquesting.questing;
 import betterquesting.api.questing.IQuestLine;
 import betterquesting.api.questing.IQuestLineDatabase;
 import betterquesting.api.utils.NBTConverter;
-import betterquesting.api2.storage.IUuidDatabase;
+import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.storage.UuidDatabase;
 import betterquesting.api2.utils.QuestLineSorter;
 import net.minecraft.nbt.NBTTagCompound;
@@ -87,17 +87,17 @@ public class QuestLineDatabase extends UuidDatabase<IQuestLine> implements IQues
 	@Override
 	public NBTTagList writeToNBT(NBTTagList json, @Nullable List<UUID> subset)
 	{
-		for (Map.Entry<UUID, IQuestLine> entry : entrySet())
-		{
+		orderedEntries().forEach(entry ->
+        {
             if (subset != null && !subset.contains(entry.getKey()))
             {
-                continue;
+                return;
             }
-			NBTTagCompound jObj = entry.getValue().writeToNBT(new NBTTagCompound(), null);
+            NBTTagCompound jObj = entry.getValue().writeToNBT(new NBTTagCompound(), null);
             NBTConverter.UuidValueType.QUEST_LINE.writeId(entry.getKey(), jObj);
-			jObj.setInteger("order", getOrderIndex(entry.getKey()));
-			json.appendTag(jObj);
-		}
+            jObj.setInteger("order", getOrderIndex(entry.getKey()));
+            json.appendTag(jObj);
+        });
 		
 		return json;
 	}
@@ -125,7 +125,7 @@ public class QuestLineDatabase extends UuidDatabase<IQuestLine> implements IQues
             }
             else if (jql.hasKey("lineID", 99))
             {
-                lineID = IUuidDatabase.convertLegacyId(jql.getInteger("lineID"));
+                lineID = UuidConverter.convertLegacyId(jql.getInteger("lineID"));
             }
 			int order = jql.hasKey("order", 99) ? jql.getInteger("order") : -1;
 

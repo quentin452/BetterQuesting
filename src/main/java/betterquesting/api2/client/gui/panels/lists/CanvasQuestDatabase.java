@@ -2,6 +2,7 @@ package betterquesting.api2.client.gui.panels.lists;
 
 import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
+import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.utils.QuestTranslation;
 import betterquesting.questing.QuestDatabase;
@@ -28,7 +29,7 @@ public abstract class CanvasQuestDatabase extends CanvasSearch<Map.Entry<UUID, I
     @Override
     protected void queryMatches(Map.Entry<UUID, IQuest> entry, String query, final ArrayDeque<Map.Entry<UUID, IQuest>> results)
     {
-        if ((entry.getKey().toString()).contains(query) || entry.getValue().getProperty(NativeProps.NAME).toLowerCase().contains(query) || QuestTranslation.translateQuestName(entry).toLowerCase().contains(query))
+        if (UuidConverter.encodeUuid(entry.getKey()).toLowerCase().contains(query) || entry.getValue().getProperty(NativeProps.NAME).toLowerCase().contains(query) || QuestTranslation.translateQuestName(entry).toLowerCase().contains(query))
         {
             results.add(entry);
         }

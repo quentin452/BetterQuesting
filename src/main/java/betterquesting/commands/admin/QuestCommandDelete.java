@@ -2,6 +2,7 @@ package betterquesting.commands.admin;
 
 import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
+import betterquesting.api.utils.UuidConverter;
 import betterquesting.commands.QuestCommandBase;
 import betterquesting.handlers.SaveLoadHandler;
 import betterquesting.network.handlers.NetChapterSync;
@@ -44,7 +45,7 @@ public class QuestCommandDelete extends QuestCommandBase
 			
 			for (UUID id : QuestDatabase.INSTANCE.keySet())
 			{
-				list.add(id.toString());
+                list.add(UuidConverter.encodeUuid(id));
 			}
 		}
 		
@@ -74,7 +75,7 @@ public class QuestCommandDelete extends QuestCommandBase
 		{
 			try
 			{
-				UUID id = UUID.fromString(args[1].trim());
+				UUID id = UuidConverter.decodeUuid(args[1].trim());
 				IQuest quest = QuestDatabase.INSTANCE.get(id);
                 NetQuestEdit.deleteQuests(Collections.singletonList(id));
 				

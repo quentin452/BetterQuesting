@@ -3,7 +3,7 @@ package betterquesting.questing;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.IQuestDatabase;
 import betterquesting.api.utils.NBTConverter;
-import betterquesting.api2.storage.IUuidDatabase;
+import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.storage.UuidDatabase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -69,17 +69,17 @@ public class QuestDatabase extends UuidDatabase<IQuest> implements IQuestDatabas
 	@Override
 	public synchronized NBTTagList writeToNBT(NBTTagList nbt, @Nullable List<UUID> subset)
 	{
-		for (Map.Entry<UUID, IQuest> entry : entrySet())
+		orderedEntries().forEach(entry ->
 		{
             if (subset != null && !subset.contains(entry.getKey()))
             {
-                continue;
+                return;
             }
 			NBTTagCompound jq = new NBTTagCompound();
 			entry.getValue().writeToNBT(jq);
             NBTConverter.UuidValueType.QUEST.writeId(entry.getKey(), jq);
 			nbt.appendTag(jq);
-		}
+		});
 		
 		return nbt;
 	}
@@ -105,7 +105,7 @@ public class QuestDatabase extends UuidDatabase<IQuest> implements IQuestDatabas
             else if (qTag.hasKey("questID", 99))
             {
                 // This block is needed for old questbook data.
-                questID = IUuidDatabase.convertLegacyId(qTag.getInteger("questID"));
+                questID = UuidConverter.convertLegacyId(qTag.getInteger("questID"));
             }
             else
             {
@@ -147,7 +147,7 @@ public class QuestDatabase extends UuidDatabase<IQuest> implements IQuestDatabas
             else if (qTag.hasKey("questID", 99))
             {
                 // This block is needed for old player progress data.
-                questID = IUuidDatabase.convertLegacyId(qTag.getInteger("questID"));
+                questID = UuidConverter.convertLegacyId(qTag.getInteger("questID"));
             }
 
             if (questID == null)

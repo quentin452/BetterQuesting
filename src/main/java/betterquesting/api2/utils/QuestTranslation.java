@@ -5,6 +5,7 @@ import betterquesting.api.properties.IPropertyType;
 import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.IQuestLine;
+import betterquesting.api.utils.UuidConverter;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.StatCollector;
 
@@ -30,7 +31,7 @@ public class QuestTranslation {
     }
 
     public static String buildQuestNameKey(UUID questId) {
-        return String.format(QUEST_NAME_KEY, questId);
+        return String.format(QUEST_NAME_KEY, UuidConverter.encodeUuid(questId));
     }
 
     public static String translateQuestName(UUID questId, IQuest quest) {
@@ -42,7 +43,7 @@ public class QuestTranslation {
     }
 
     public static String buildQuestDescriptionKey(UUID questId) {
-        return String.format(QUEST_DESCRIPTION_KEY, questId);
+        return String.format(QUEST_DESCRIPTION_KEY, UuidConverter.encodeUuid(questId));
     }
 
     public static String translateQuestDescription(UUID questId, IQuest quest) {
@@ -54,7 +55,7 @@ public class QuestTranslation {
     }
 
     public static String buildQuestLineNameKey(UUID questLineId) {
-        return String.format(QUEST_LINE_NAME_KEY, questLineId);
+        return String.format(QUEST_LINE_NAME_KEY, UuidConverter.encodeUuid(questLineId));
     }
 
     public static String translateQuestLineName(UUID questLineId, IQuestLine questLine) {
@@ -66,7 +67,7 @@ public class QuestTranslation {
     }
 
     public static String buildQuestLineDescriptionKey(UUID questLineId) {
-        return String.format(QUEST_LINE_DESCRIPTION_KEY, questLineId);
+        return String.format(QUEST_LINE_DESCRIPTION_KEY, UuidConverter.encodeUuid(questLineId));
     }
 
     public static String translateQuestLineDescription(UUID questLineId, IQuestLine questLine) {

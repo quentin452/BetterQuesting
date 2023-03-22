@@ -2,6 +2,7 @@ package betterquesting.commands.client;
 
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.questing.IQuest;
+import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.cache.QuestCache;
 import betterquesting.client.gui2.GuiQuest;
 import betterquesting.client.gui2.GuiQuestLines;
@@ -46,7 +47,7 @@ public class QuestCommandShow extends QuestCommandBase {
     public void runCommand(MinecraftServer server, CommandBase command, ICommandSender sender, String[] args) throws CommandException {
         if (sender instanceof EntityPlayerSP && args.length == 2) {
             try {
-                questId = UUID.fromString(args[1]);
+                questId = UuidConverter.decodeUuid(args[1]);
                 if (sentViaClick) {
                     sentViaClick = false;
                     Minecraft.getMinecraft().displayGuiScreen(new GuiQuest(new GuiQuestLines(null), questId));
