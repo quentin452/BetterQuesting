@@ -23,6 +23,7 @@ import betterquesting.storage.QuestSettings;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.gson.JsonObject;
 import net.minecraft.command.CommandBase;
@@ -306,8 +307,10 @@ public class QuestCommandDefaults extends QuestCommandBase {
                                 QuestTranslation.buildQuestLineDescriptionKey(questLineId),
                                 escapeLangString.apply(questLine.getProperty(NativeProps.DESC))));
 
+                Set<UUID> questIds =
+                        Sets.difference(questLine.keySet(), questsInMultipleQuestLines.keySet());
                 SortedMap<UUID, IQuest> quests =
-                        new TreeMap<>(QuestDatabase.INSTANCE.filterKeys(questLine.keySet()));
+                        new TreeMap<>(QuestDatabase.INSTANCE.filterKeys(questIds));
                 orderByRequirements(quests).forEach(writeQuest);
             }
 
