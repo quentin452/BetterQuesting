@@ -20,6 +20,7 @@ import betterquesting.questing.QuestInstance;
 import betterquesting.questing.QuestLine;
 import betterquesting.questing.QuestLineDatabase;
 import betterquesting.storage.QuestSettings;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.MultimapBuilder;
@@ -42,8 +43,11 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,6 +64,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
     public static final String LANG_FILE = "en_US.lang";
     public static final String SETTINGS_FILE = "QuestSettings.json";
     public static final String QUEST_LINE_DIR = "QuestLines";
+    public static final String QUEST_LINE_ORDER_FILE = "QuestLinesOrder.txt";
     public static final String QUEST_DIR = "Quests";
     public static final String MULTI_QUEST_LINE_DIRECTORY = "MultipleQuestLine";
     public static final String NO_QUEST_LINE_DIRECTORY = "NoQuestLine";
@@ -152,10 +157,7 @@ public class QuestCommandDefaults extends QuestCommandBase {
         // Remove chat formatting, as well as simplifying names for use in file paths.
         BiFunction<String, UUID, String> buildFileName =
                 (name, id) -> {
-                    String formattedName =
-                            name
-                                    .replaceAll("§[0-9a-fk-or]", "")
-                                    .replaceAll("[^a-zA-Z0-9]", "");
+                    String formattedName = removeChatFormatting(name).replaceAll("[^a-zA-Z0-9]", "");
 
                     if (formattedName.length() > FILE_NAME_MAX_LENGTH) {
                         formattedName = formattedName.substring(0, FILE_NAME_MAX_LENGTH);
@@ -203,9 +205,9 @@ public class QuestCommandDefaults extends QuestCommandBase {
             return;
         }
 
-        int questLineIndex = 0;
         ListMultimap<UUID, IQuestLine> questToQuestLineMultimap =
                 MultimapBuilder.hashKeys().arrayListValues().build();
+        List<String> questLineOrderLines = new ArrayList<>(QuestLineDatabase.INSTANCE.size());
 
         for (Map.Entry<UUID, IQuestLine> entry : QuestLineDatabase.INSTANCE.getOrderedEntries()) {
             UUID questLineId = entry.getKey();
@@ -213,12 +215,25 @@ public class QuestCommandDefaults extends QuestCommandBase {
             questLine.keySet().forEach(key -> questToQuestLineMultimap.put(key, questLine));
 
             String questLineName = questLine.getProperty(NativeProps.NAME);
-            File questLineFile = new File(questLineDir, buildFileName.apply(questLineName, questLineId) + ".json");
+            questLineOrderLines.add(
+                    String.format(
+                            "%s: %s",
+                            UuidConverter.encodeUuid(questLineId),
+                            removeChatFormatting(questLineName)));
 
+            File questLineFile = new File(questLineDir, buildFileName.apply(questLineName, questLineId) + ".json");
             NBTTagCompound questLineTag = questLine.writeToNBT(new NBTTagCompound());
             NBTConverter.UuidValueType.QUEST_LINE.writeId(questLineId, questLineTag);
-            questLineTag.setInteger("order", questLineIndex++);
             JsonHelper.WriteToFile(questLineFile, NBTConverter.NBTtoJSON_Compound(questLineTag, new JsonObject(), true));
+        }
+
+        File questLineOrderFile = new File(dataDir, QUEST_LINE_ORDER_FILE);
+        try {
+            Files.write(questLineOrderFile.toPath(), questLineOrderLines, StandardOpenOption.CREATE_NEW);
+        } catch (IOException e) {
+            QuestingAPI.getLogger().log(Level.ERROR, "Failed to create file\n" + questLineOrderFile, e);
+            sendChatMessage(sender, "betterquesting.cmd.error");
+            return;
         }
 
         SortedMap<UUID, IQuest> questsInMultipleQuestLines = new TreeMap<>();
@@ -388,25 +403,17 @@ public class QuestCommandDefaults extends QuestCommandBase {
         QuestSettings.INSTANCE.readFromNBT(readNbt.apply(settingsFile));
 
         File questLineDir = new File(dataDir, QUEST_LINE_DIR);
-        SortedMap<Integer, Map.Entry<UUID, IQuestLine>> questLines = new TreeMap<>();
+        Map<UUID, IQuestLine> questLines = new HashMap<>();
         try (Stream<Path> paths = Files.walk(questLineDir.toPath())) {
             paths.filter(Files::isRegularFile).forEach(
                     path -> {
                         File questLineFile = path.toFile();
                         NBTTagCompound questLineTag = readNbt.apply(questLineFile);
                         UUID questLineId = NBTConverter.UuidValueType.QUEST_LINE.readId(questLineTag);
-                        int order = questLineTag.getInteger("order");
-
-                        if (questLines.containsKey(order)) {
-                            QuestingAPI.getLogger().log(Level.ERROR, "Found duplicate quest line order: {}, {}", order, UuidConverter.encodeUuid(questLineId));
-                            QuestingAPI.getLogger().log(Level.ERROR, "You most likely have left over quest line files!");
-                            sendChatMessage(sender, "betterquesting.cmd.error");
-                            return;
-                        }
 
                         IQuestLine questLine = new QuestLine();
                         questLine.readFromNBT(questLineTag);
-                        questLines.put(order, Maps.immutableEntry(questLineId, questLine));
+                        questLines.put(questLineId, questLine);
                     }
             );
         } catch (IOException e) {
@@ -414,7 +421,29 @@ public class QuestCommandDefaults extends QuestCommandBase {
             sendChatMessage(sender, "betterquesting.cmd.error");
             return;
         }
-        QuestLineDatabase.INSTANCE.setOrderedEntries(questLines.values());
+
+        File questLineOrderFile = new File(dataDir, QUEST_LINE_ORDER_FILE);
+        List<String> questLineOrderLines;
+        try {
+            questLineOrderLines = Files.readAllLines(questLineOrderFile.toPath());
+        } catch (IOException e) {
+            QuestingAPI.getLogger().log(Level.ERROR, "Failed to read file\n" + questLineOrderFile, e);
+            sendChatMessage(sender, "betterquesting.cmd.error");
+            return;
+        }
+
+        List<Map.Entry<UUID, IQuestLine>> orderedQuestLines = new ArrayList<>(questLineOrderLines.size());
+        Splitter splitter = Splitter.on(':');
+        for (String line : questLineOrderLines) {
+            Iterator<String> iter = splitter.split(line).iterator();
+            if (!iter.hasNext()) {
+                continue;
+            }
+
+            UUID questLineId = UuidConverter.decodeUuid(iter.next());
+            orderedQuestLines.add(Maps.immutableEntry(questLineId, questLines.get(questLineId)));
+        }
+        QuestLineDatabase.INSTANCE.setOrderedEntries(orderedQuestLines);
 
         File questDir = new File(dataDir, QUEST_DIR);
         QuestDatabase.INSTANCE.clear();
@@ -533,6 +562,10 @@ public class QuestCommandDefaults extends QuestCommandBase {
         } else {
             sendChatMessage(sender, "betterquesting.cmd.default.none");
         }
+    }
+
+    private static String removeChatFormatting(String string) {
+        return string.replaceAll("§[0-9a-fk-or]", "");
     }
 
     /**
