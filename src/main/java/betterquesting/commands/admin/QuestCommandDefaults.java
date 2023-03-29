@@ -23,6 +23,7 @@ import betterquesting.storage.QuestSettings;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.gson.JsonObject;
 import net.minecraft.command.CommandBase;
@@ -57,12 +58,16 @@ import java.util.stream.Stream;
 public class QuestCommandDefaults extends QuestCommandBase {
     public static final String DEFAULT_FILE = "DefaultQuests";
     public static final String LANG_FILE = "en_US.lang";
-
     public static final String SETTINGS_FILE = "QuestSettings.json";
     public static final String QUEST_LINE_DIR = "QuestLines";
     public static final String QUEST_DIR = "Quests";
     public static final String MULTI_QUEST_LINE_DIRECTORY = "MultipleQuestLine";
     public static final String NO_QUEST_LINE_DIRECTORY = "NoQuestLine";
+    /**
+     * This limit applies to the "name" portion of file names, but UUID will be appended, so the
+     * actual file name will be longer.
+     */
+    public static final int FILE_NAME_MAX_LENGTH = 16;
 
     @Override
     public String getUsageSuffix() {
@@ -146,13 +151,18 @@ public class QuestCommandDefaults extends QuestCommandBase {
     public static void save(@Nullable ICommandSender sender, @Nullable String databaseName, File dataDir) {
         // Remove chat formatting, as well as simplifying names for use in file paths.
         BiFunction<String, UUID, String> buildFileName =
-                (name, id) ->
-                        String.format(
-                                "%s-%s",
-                                name
-                                        .replaceAll("§[0-9a-fk-or]", "")
-                                        .replaceAll("[^a-zA-Z0-9]", ""),
-                                UuidConverter.encodeUuid(id));
+                (name, id) -> {
+                    String formattedName =
+                            name
+                                    .replaceAll("§[0-9a-fk-or]", "")
+                                    .replaceAll("[^a-zA-Z0-9]", "");
+
+                    if (formattedName.length() > FILE_NAME_MAX_LENGTH) {
+                        formattedName = formattedName.substring(0, FILE_NAME_MAX_LENGTH);
+                    }
+
+                    return String.format("%s-%s", formattedName, UuidConverter.encodeUuid(id));
+                };
 
         File settingsFile = new File(dataDir, SETTINGS_FILE);
         if (dataDir.exists()) {
@@ -306,8 +316,10 @@ public class QuestCommandDefaults extends QuestCommandBase {
                                 QuestTranslation.buildQuestLineDescriptionKey(questLineId),
                                 escapeLangString.apply(questLine.getProperty(NativeProps.DESC))));
 
+                Set<UUID> questIds =
+                        Sets.difference(questLine.keySet(), questsInMultipleQuestLines.keySet());
                 SortedMap<UUID, IQuest> quests =
-                        new TreeMap<>(QuestDatabase.INSTANCE.filterKeys(questLine.keySet()));
+                        new TreeMap<>(QuestDatabase.INSTANCE.filterKeys(questIds));
                 orderByRequirements(quests).forEach(writeQuest);
             }
 
