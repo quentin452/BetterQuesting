@@ -31,7 +31,7 @@ public class QuestTranslation {
     }
 
     public static String buildQuestNameKey(UUID questId) {
-        return String.format(QUEST_NAME_KEY, UuidConverter.encodeUuid(questId));
+        return String.format(QUEST_NAME_KEY, UuidConverter.encodeUuidStripPadding(questId));
     }
 
     public static String translateQuestName(UUID questId, IQuest quest) {
@@ -43,7 +43,7 @@ public class QuestTranslation {
     }
 
     public static String buildQuestDescriptionKey(UUID questId) {
-        return String.format(QUEST_DESCRIPTION_KEY, UuidConverter.encodeUuid(questId));
+        return String.format(QUEST_DESCRIPTION_KEY, UuidConverter.encodeUuidStripPadding(questId));
     }
 
     public static String translateQuestDescription(UUID questId, IQuest quest) {
@@ -55,7 +55,7 @@ public class QuestTranslation {
     }
 
     public static String buildQuestLineNameKey(UUID questLineId) {
-        return String.format(QUEST_LINE_NAME_KEY, UuidConverter.encodeUuid(questLineId));
+        return String.format(QUEST_LINE_NAME_KEY, UuidConverter.encodeUuidStripPadding(questLineId));
     }
 
     public static String translateQuestLineName(UUID questLineId, IQuestLine questLine) {
@@ -67,7 +67,7 @@ public class QuestTranslation {
     }
 
     public static String buildQuestLineDescriptionKey(UUID questLineId) {
-        return String.format(QUEST_LINE_DESCRIPTION_KEY, UuidConverter.encodeUuid(questLineId));
+        return String.format(QUEST_LINE_DESCRIPTION_KEY, UuidConverter.encodeUuidStripPadding(questLineId));
     }
 
     public static String translateQuestLineDescription(UUID questLineId, IQuestLine questLine) {
