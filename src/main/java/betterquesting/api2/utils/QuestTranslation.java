@@ -86,7 +86,8 @@ public class QuestTranslation {
     private static String translateProperty(
             String key, IPropertyContainer container, IPropertyType<String> property) {
         if (StatCollector.canTranslate(key)) {
-            return StatCollector.translateToLocal(key);
+            // Need to use formatted translation, to properly handle "%%" and "%n".
+            return StatCollector.translateToLocalFormatted(key);
         }
 
         return container.getProperty(property);
