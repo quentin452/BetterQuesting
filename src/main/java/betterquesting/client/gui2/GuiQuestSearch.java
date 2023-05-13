@@ -21,6 +21,9 @@ import net.minecraft.client.gui.GuiScreen;
 import java.util.function.Consumer;
 
 public class GuiQuestSearch extends GuiScreenCanvas {
+
+    private String prevSearch;
+
     public GuiQuestSearch(GuiScreen parent) {
         super(parent);
     }
@@ -42,8 +45,6 @@ public class GuiQuestSearch extends GuiScreenCanvas {
         createSearchBox(cvInner);
     }
 
-
-
     private void createExitButton(CanvasEmpty cvInner) {
         PanelButton btnExit = new PanelButton(
                 new GuiTransform(GuiAlign.BOTTOM_CENTER, -100, -16, 200, 16, 0),
@@ -64,10 +65,19 @@ public class GuiQuestSearch extends GuiScreenCanvas {
         cvInner.addPanel(canvasQuestSearch);
 
         searchBox.setCallback(canvasQuestSearch::setSearchFilter);
+        searchBox.setCallback((String searchText) -> {
+            this.prevSearch = searchText;
+            canvasQuestSearch.setSearchFilter(searchText);
+        });
 
         PanelVScrollBar scDb = new PanelVScrollBar(new GuiTransform(GuiAlign.RIGHT_EDGE, new GuiPadding(-8, 32, 0, 24), 0));
         cvInner.addPanel(scDb);
         canvasQuestSearch.setScrollDriverY(scDb);
+
+        if (this.prevSearch != null) {
+            searchBox.setText(this.prevSearch);
+            canvasQuestSearch.setSearchFilter(this.prevSearch);
+        }
     }
 
     private CanvasQuestSearch createSearchCanvas(){

@@ -116,6 +116,8 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
     private int questsCompleted = 0;
     private int totalQuests = 0;
 
+    private GuiQuestSearch searchGui;
+
     private final List<PanelButtonStorage<Map.Entry<UUID, IQuestLine>>> btnListRef = new ArrayList<>();
 
     public GuiQuestLines(GuiScreen parent)
@@ -751,21 +753,23 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
     }
 
     private void openSearch(PanelButton panelButton) {
-        GuiQuestSearch guiQuestSearch = new GuiQuestSearch(this);
-        guiQuestSearch.setCallback(entry -> {
-            openQuestLine(entry.getQuestLineEntry());
-            UUID selectedQuestId = entry.getQuest().getKey();
-            Optional<PanelButtonQuest> targetQuestButton = cvQuest.getQuestButtons().stream().filter(panelButtonQuest -> panelButtonQuest.getStoredValue().getKey().equals(selectedQuestId)).findFirst();
-            targetQuestButton.ifPresent(panelButtonQuest -> {
-                GuiTextureColored newTexture = new GuiTextureColored(panelButtonQuest.txFrame,
-                        new GuiColorPulse(
-                                new GuiColorStatic(255, 220, 115, 255),
-                                new GuiColorStatic(255, 191, 0, 255),
-                                1, 0
-                        ));
-                panelButtonQuest.setTextures(newTexture, newTexture, newTexture);
+        if (searchGui == null) {
+            searchGui = new GuiQuestSearch(this);
+            searchGui.setCallback(entry -> {
+                openQuestLine(entry.getQuestLineEntry());
+                UUID selectedQuestId = entry.getQuest().getKey();
+                Optional<PanelButtonQuest> targetQuestButton = cvQuest.getQuestButtons().stream().filter(panelButtonQuest -> panelButtonQuest.getStoredValue().getKey().equals(selectedQuestId)).findFirst();
+                targetQuestButton.ifPresent(panelButtonQuest -> {
+                    GuiTextureColored newTexture = new GuiTextureColored(panelButtonQuest.txFrame,
+                            new GuiColorPulse(
+                                    new GuiColorStatic(255, 220, 115, 255),
+                                    new GuiColorStatic(255, 191, 0, 255),
+                                    1, 0
+                            ));
+                    panelButtonQuest.setTextures(newTexture, newTexture, newTexture);
+                });
             });
-        });
-        mc.displayGuiScreen(guiQuestSearch);
+        }
+        mc.displayGuiScreen(searchGui);
     }
 }
