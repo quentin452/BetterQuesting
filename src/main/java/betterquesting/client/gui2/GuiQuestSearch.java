@@ -59,6 +59,7 @@ public class GuiQuestSearch extends GuiScreenCanvas {
         PanelTextField<String> searchBox = new PanelTextField<>(new GuiTransform(GuiAlign.TOP_EDGE, new GuiPadding(0, 16, 8, -32), 0), "", FieldFilterString.INSTANCE);
         searchBox.setWatermark("Search...");
         searchBox.lockFocus(true);
+        searchBox.enableClearingOnRightClick(true);
         cvInner.addPanel(searchBox);
 
         CanvasQuestSearch canvasQuestSearch = createSearchCanvas();
@@ -76,6 +77,7 @@ public class GuiQuestSearch extends GuiScreenCanvas {
 
         if (this.prevSearch != null) {
             searchBox.setText(this.prevSearch);
+            searchBox.setCursorPosition(Integer.MAX_VALUE); // move cursor to the end of the input text
             canvasQuestSearch.setSearchFilter(this.prevSearch);
         }
     }
