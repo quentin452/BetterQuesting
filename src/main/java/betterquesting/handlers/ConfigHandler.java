@@ -46,6 +46,7 @@ public class ConfigHandler
 		BQ_Settings.viewModeBtn = config.getBoolean("View mode button", Configuration.CATEGORY_GENERAL, false, "If true, show view mode button.");
 		BQ_Settings.alwaysDrawImplicit = config.getBoolean("Always draw implicit dependency", Configuration.CATEGORY_GENERAL, false, "If true, always draw implicit dependency. This property can be changed by the GUI");
 		BQ_Settings.urlDebug = config.getBoolean("Highlight detected clickable url hotzone.", Configuration.CATEGORY_GENERAL, false, "If true, render each hotzone using alternating color.");
+		BQ_Settings.loadDefaultsOnStartup = config.getBoolean("Load the default quest DB on world startup.", Configuration.CATEGORY_GENERAL, true, "Does an equivalent of '/bq_admin default load' on every world load");
 
 		config.save();
 	}

@@ -37,4 +37,5 @@ public class BQ_Settings
 	public static boolean viewModeBtn = false;
 	public static boolean alwaysDrawImplicit = false;
 	public static boolean urlDebug = false;
+	public static boolean loadDefaultsOnStartup = true;
 }
