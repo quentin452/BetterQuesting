@@ -32,6 +32,7 @@ import static betterquesting.api.storage.BQ_Settings.textWidthCorrection;
 public class PanelTextBox implements IGuiPanel
 {
 	private static final Pattern url = Pattern.compile("\\[url] *(.*?) *\\[/url]");
+	private static final String defaultUrlProtocol = "https";
 	private static final Set<String> supportedUrlProtocol = ImmutableSet.of("http", "https");
 	private final GuiRectText transform;
 	private final List<HotZone> hotZones = new ArrayList<>();
@@ -93,8 +94,8 @@ public class PanelTextBox implements IGuiPanel
 		
 		if(autoFit)
 		{
-			@SuppressWarnings("unchecked")
-			List<String> sl = fr.listFormattedStringToWidth(this.text, bounds.getWidth());
+			float scale = fontScale / 12F;
+			List<String> sl = RenderUtils.splitStringWithoutFormat(this.text, (int)Math.floor(bounds.getWidth() / scale / textWidthCorrection), fr);
 			lines = sl.size() - 1;
 			
 			this.transform.h = fr.FONT_HEIGHT * sl.size();
@@ -108,21 +109,19 @@ public class PanelTextBox implements IGuiPanel
 		return this;
 	}
 
-	private void bakeHotZones(List<String> sl) {
+	private void bakeHotZones(List<String> lines) {
 		hotZones.clear();
 		if (!isHyperlinkAware()) return; // not enabled
 		if (StringUtils.isBlank(text)) return; // nothing to do
 		FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
 		IGuiRect fullbox = getTransform();
-		if (sl == null)
+		if (lines == null)
 		{
-			@SuppressWarnings("unchecked")
-			List<String> sl1 = fr.listFormattedStringToWidth(text, fullbox.getWidth());
-			sl = sl1;
+			float scale = fontScale / 12F;
+			lines = RenderUtils.splitStringWithoutFormat(this.text, (int) Math.floor(fullbox.getWidth() / scale / textWidthCorrection), fr);
 		}
 
-		// minecraft code removes line breaks for us, so to keep offset in sync, we have to do a manual replaceAll here
-		Matcher matcher = url.matcher(rawText.replaceAll("\n", ""));
+		Matcher matcher = url.matcher(rawText);
 		// removal of [url] and whitespace on either side of the url can affect string pos
 		int toDeduct = 0;
 
@@ -132,50 +131,47 @@ public class PanelTextBox implements IGuiPanel
 			int start = matcher.start() - toDeduct;
 			int end = start + url.length();
 
-			int c = 0;
-			boolean b1 = false, b2 = false;
-			for(int i = 0, slSize = sl.size(); i < slSize; c += sl.get(i++).length())
+			int currentPos = 0;
+			boolean foundUrlStart = false;
+			for(int lineIndex = 0, lineCount = lines.size(); lineIndex < lineCount; currentPos += lines.get(lineIndex++).length())
 			{
-				String s = sl.get(i);
-				if(!b1)
+				String line = lines.get(lineIndex);
+				if(!foundUrlStart)
 				{
-					if(start < c + s.length())
+					if(start < currentPos + line.length())
 					{
-						int left = fr.getStringWidth(s.substring(0, start - c));
-						if (end <= c + s.length())
+						int left = RenderUtils.getStringWidth(line.substring(0, start - currentPos), fr);
+						if (end <= currentPos + line.length())
 						{
 							// url on same line, early exit
-							int right = fr.getStringWidth(s.substring(0, end - c));
-							GuiTransform location = new GuiTransform(GuiAlign.FULL_BOX, left, fr.FONT_HEIGHT * i, right - left, fr.FONT_HEIGHT, 0);
+							int right = RenderUtils.getStringWidth(line.substring(0, end - currentPos), fr);
+							GuiTransform location = new GuiTransform(GuiAlign.FULL_BOX, left, fr.FONT_HEIGHT * lineIndex, right - left, fr.FONT_HEIGHT, 0);
 							location.setParent(fullbox);
 							hotZones.add(new HotZone(location, url));
 							break;
 						}
 						// url span multiple lines
-						b1 = true;
-						GuiTransform location = new GuiTransform(GuiAlign.FULL_BOX, left, fr.FONT_HEIGHT * i, fullbox.getWidth(), fr.FONT_HEIGHT, 0);
-						location.setParent(fullbox);
-						hotZones.add(new HotZone(location, url));
-					}
-				} else if(!b2)
-				{
-					if (end <= c + s.length())
-					{
-						// url ends at current line
-						b2 = true;
-						GuiTransform location = new GuiTransform(GuiAlign.FULL_BOX, 0, fr.FONT_HEIGHT * i, fr.getStringWidth(s.substring(0, end - c)), fr.FONT_HEIGHT, 0);
-						location.setParent(fullbox);
-						hotZones.add(new HotZone(location, url));
-					} else
-					{
-						// url still going...
-						GuiTransform location = new GuiTransform(GuiAlign.FULL_BOX, 0, fr.FONT_HEIGHT * i, fullbox.getWidth(), fr.FONT_HEIGHT, 0);
+						foundUrlStart = true;
+						GuiTransform location = new GuiTransform(GuiAlign.FULL_BOX, left, fr.FONT_HEIGHT * lineIndex, fullbox.getWidth(), fr.FONT_HEIGHT, 0);
 						location.setParent(fullbox);
 						hotZones.add(new HotZone(location, url));
 					}
 				} else
 				{
-					break;
+					if (end <= currentPos + line.length())
+					{
+						// url ends at current line
+						GuiTransform location = new GuiTransform(GuiAlign.FULL_BOX, 0, fr.FONT_HEIGHT * lineIndex, RenderUtils.getStringWidth(line.substring(0, end - currentPos), fr), fr.FONT_HEIGHT, 0);
+						location.setParent(fullbox);
+						hotZones.add(new HotZone(location, url));
+						break;
+					} else
+					{
+						// url still going...
+						GuiTransform location = new GuiTransform(GuiAlign.FULL_BOX, 0, fr.FONT_HEIGHT * lineIndex, fullbox.getWidth(), fr.FONT_HEIGHT, 0);
+						location.setParent(fullbox);
+						hotZones.add(new HotZone(location, url));
+					}
 				}
 			}
 			toDeduct += matcher.end() - matcher.start() - url.length();
@@ -225,7 +221,7 @@ public class PanelTextBox implements IGuiPanel
 			return;
 		}
 		
-		List<String> sl = fr.listFormattedStringToWidth(text, (int)Math.floor(bounds.getWidth() / scale / textWidthCorrection));
+		List<String> sl = RenderUtils.splitStringWithoutFormat(text, (int)Math.floor(bounds.getWidth() / scale / textWidthCorrection), fr);
 		lines = sl.size() - 1;
 		bakeHotZones(sl);
 
@@ -291,7 +287,11 @@ public class PanelTextBox implements IGuiPanel
 			if (hotZone.location.contains(mxt, myt)) {
 				URI uri;
 				try {
-					uri = new URI(hotZone.url);
+					URI tmp;
+					tmp = new URI(hotZone.url);
+					if (tmp.getScheme() == null)
+						tmp = new URI(defaultUrlProtocol + "://" + hotZone.url);
+					uri = tmp;
 				} catch(URISyntaxException ex) {
 					return false;
 				}
