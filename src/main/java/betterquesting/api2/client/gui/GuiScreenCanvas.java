@@ -10,6 +10,7 @@ import betterquesting.api2.client.gui.themes.presets.PresetIcon;
 import betterquesting.api2.utils.QuestTranslation;
 import betterquesting.client.BQ_Keybindings;
 import com.mojang.realmsclient.gui.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -98,17 +99,17 @@ public class GuiScreenCanvas extends GuiScreen implements IScene
 	public final void initGui()
 	{
 		super.initGui();
-		
+
 		initPanel();
 	}
-	
+
 	@Override
-    public void onGuiClosed()
-    {
-    	super.onGuiClosed();
-		
+	public void onGuiClosed()
+	{
+		super.onGuiClosed();
+
 		Keyboard.enableRepeatEvents(false);
-    }
+	}
 	
 	@Override
 	public void initPanel()
