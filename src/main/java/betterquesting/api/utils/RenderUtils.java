@@ -15,6 +15,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.MathHelper;
 import org.lwjgl.BufferUtils;
@@ -132,35 +133,94 @@ public class RenderUtils
     {
     	RenderEntity(posX, posY, 64F, scale, rotation, pitch, entity);
 	}
-	
-    public static void RenderEntity(float posX, float posY, float posZ, int scale, float rotation, float pitch, Entity entity)
-    {
-    	try
-    	{
-	        GL11.glEnable(GL11.GL_COLOR_MATERIAL);
-	        GL11.glPushMatrix();
-	        GL11.glEnable(GL11.GL_DEPTH_TEST);
-	        GL11.glTranslatef(posX, posY, posZ);
-	        GL11.glScalef((float)-scale, (float)scale, (float)scale); // Not entirely sure why mobs are flipped but this is how vanilla GUIs fix it so...
-	        GL11.glRotatef(180.0F, 0.0F, 0.0F, 1.0F);
-	        GL11.glRotatef(pitch, 1F, 0F, 0F);
-	        GL11.glRotatef(rotation, 0F, 1F, 0F);
-	        RenderHelper.enableStandardItemLighting();
-	        RenderManager.instance.playerViewY = 180.0F;
-	        RenderManager.instance.renderEntityWithPosYaw(entity, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F);
-	        GL11.glDisable(GL11.GL_DEPTH_TEST);
-	        GL11.glPopMatrix();
-	        RenderHelper.disableStandardItemLighting();
-	        GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-	        OpenGlHelper.setActiveTexture(OpenGlHelper.lightmapTexUnit);
-            GL11.glDisable(GL11.GL_TEXTURE_2D);
-	        OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
-	        GL11.glEnable(GL11.GL_TEXTURE_2D); // Breaks subsequent text rendering if not included
-    	} catch(Exception e)
-    	{
-    		// Hides rendering errors with entities which are common for invalid/technical entities
-    	}
-    }
+
+	public static void RenderEntity(float posX, float posY, float posZ, int scale, float rotation, float pitch, Entity entity) {
+		try {
+			GL11.glEnable(GL11.GL_COLOR_MATERIAL);
+			GL11.glPushMatrix();
+			GL11.glEnable(GL11.GL_DEPTH_TEST);
+			GL11.glTranslatef(posX, posY, posZ);
+			GL11.glScalef((float) -scale, (float) scale, (float) scale); // Not entirely sure why mobs are flipped but this is how vanilla GUIs fix it so...
+			GL11.glRotatef(180F, 0F, 0F, 1F);
+			GL11.glRotatef(pitch, 1F, 0F, 0F);
+			GL11.glRotatef(rotation, 0F, 1F, 0F);
+			RenderHelper.enableStandardItemLighting();
+			RenderManager.instance.playerViewY = 180F;
+			RenderManager.instance.renderEntityWithPosYaw(entity, 0D, 0D, 0D, 0F, 1F);
+			if (EntityList.getEntityString(entity).equals("TwilightForest.Naga")) {
+				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+				int bodySize = 11;    // 0 to 12
+				Entity part = entity.getParts()[0];
+				float [][] xyzYaw = getNagaXyzYaw();
+				for (int i = 0; i < bodySize; i++)
+					RenderManager.instance.renderEntityWithPosYaw(part, xyzYaw[i][0], xyzYaw[i][1], xyzYaw[i][2], xyzYaw[i][3], 1F);
+			} else if (EntityList.getEntityString(entity).equals("TwilightForest.Hydra")) {
+				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+				int headsNumber = 7;    // 0 to 7, optimal 3, 5, 7
+				Entity part = EntityList.createEntityByName("TwilightForest.HydraHead", Minecraft.getMinecraft().theWorld);
+				part.rotationYaw = 0;
+				part.rotationPitch = 0;
+				float [][] xyz = getHydraHeadXyz();
+				for (int i = 0; i < headsNumber; i++)
+					RenderManager.instance.renderEntityWithPosYaw(part, xyz[i][0], xyz[i][1], xyz[i][2], 0F, 1F);
+				part = entity.getParts()[4];
+				xyz = getHydraNeckXyz();
+				for (int i = 0; i < 5 * headsNumber; i++)
+					RenderManager.instance.renderEntityWithPosYaw(part, xyz[i][0], xyz[i][1], xyz[i][2], 0F, 1F);
+			}
+			GL11.glDisable(GL11.GL_DEPTH_TEST);
+			GL11.glPopMatrix();
+			RenderHelper.disableStandardItemLighting();
+			GL11.glDisable(GL12.GL_RESCALE_NORMAL);
+			OpenGlHelper.setActiveTexture(OpenGlHelper.lightmapTexUnit);
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
+			GL11.glEnable(GL11.GL_TEXTURE_2D); // Breaks subsequent text rendering if not included
+		} catch (Exception e) {
+			// Hides rendering errors with entities which are common for invalid/technical entities
+		}
+	}
+
+	private static float[][] getHydraHeadXyz() {
+		return new float[][] {
+				{0.0F, 9.1F, 3.6F},
+				{-7.5F, 5.5F, 4.4F},
+				{7.5F, 5.5F, 4.4F},
+				{-5.1F, 9.1F, 0.0F},
+				{5.1F, 9.1F, 0.0F},
+				{-8.9F, 1.5F, 0.0F},
+				{8.9F, 1.5F, 0.0F},
+		};
+	}
+
+	private static float[][] getHydraNeckXyz() {
+		return new float[][] {
+				{0.0F, 9.0F, 2.6F}, {0.0F, 7.5F, 1.7F}, {0.0F, 6.0F, 0.8F}, {0.0F, 4.5F, -0.1F}, {0.0F, 3.0F, -1.0F},
+				{-7.4F, 5.4F, 3.4F}, {-6.3F, 4.8F, 2.3F}, {-5.2F, 4.2F, 1.2F}, {-4.1F, 3.6F, 0.1F}, {-3.0F, 3.0F, -1.0F},
+				{7.4F, 5.4F, 3.4F}, {6.3F, 4.8F, 2.3F}, {5.2F, 4.2F, 1.2F}, {4.1F, 3.6F, 0.1F}, {3.0F, 3.0F, -1.0F},
+				{-5.0F, 9.0F, -1.0F}, {-4.1F, 7.5F, -1.4F}, {-3.2F, 6.0F, -1.9F}, {-2.3F, 4.5F, -2.3F}, {-1.4F, 3.0F, -2.8F},
+				{5.0F, 9.0F, -1.0F}, {4.1F, 7.5F, -1.4F}, {3.2F, 6.0F, -1.9F}, {2.3F, 4.5F, -2.3F}, {1.4F, 3.0F, -2.8F},
+				{-8.8F, 1.4F, -1.0F}, {-7.3F, 1.8F, -1.8F}, {-5.8F, 2.2F, -2.6F}, {-4.3F, 2.6F, -3.4F}, {-2.8F, 3.0F, -4.2F},
+				{8.8F, 1.4F, -1.0F}, {7.3F, 1.8F, -1.8F}, {5.8F, 2.2F, -2.6F}, {4.3F, 2.6F, -3.4F}, {2.8F, 3.0F, -4.2F}
+		};
+	}
+
+	private static float[][] getNagaXyzYaw() {
+		return new float[][] {
+				{0, 0, -2, 0},
+				{0, -2, -2, 0},
+				{-1.366F, -2, -1.634F, -30},
+				{-2.366F, -2, -.634F, -60},
+				{-2.732F, -2, .732F, -90},
+				{-2.366F, -2, 2.098F, -120},
+				{-1.366F, -2, 3.098F, -150},
+				{0, -2, 3.464F, 0},
+				{1.366F, -2, 3.098F, -30},
+				{2.366F, -2, 2.098F, -60},
+				{2.732F, -2, .732F, -90},
+				{2.366F, -2, -.634F, -120}
+		};
+	}
 	
 	public static void DrawLine(int x1, int y1, int x2, int y2, float width, int color)
 	{

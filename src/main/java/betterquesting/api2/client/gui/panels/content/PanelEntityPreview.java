@@ -28,7 +28,7 @@ public class PanelEntityPreview implements IGuiPanel
 	private IValueIO<Float> yawDriver;
 	
 	private float zDepth = 100F;
-    
+
     public PanelEntityPreview(IGuiRect rect, Entity entity)
     {
 		this.transform = rect;
@@ -111,6 +111,9 @@ public class PanelEntityPreview implements IGuiPanel
 		if (EntityList.getEntityString(entity).contains("Wisp")) {
 			changeTheCameraPitch(90F);
 			pitch = 90F;
+		} else if (EntityList.getEntityString(entity).equals("TwilightForest.Naga")) {
+			pitch = pitchDriver.readValue();
+			scale /= 2;
 		} else
 			pitch = pitchDriver.readValue();
 
@@ -120,6 +123,7 @@ public class PanelEntityPreview implements IGuiPanel
 
 		if (thePlayerPitch != Minecraft.getMinecraft().thePlayer.rotationPitch)
 			changeTheCameraPitch(thePlayerPitch);
+		GL11.glColor4f(1F, 1F, 1F, 1F);
     }
 
 	private void changeTheCameraPitch(float pitch) {
