@@ -70,9 +70,22 @@ public class GuiTextEditor extends GuiScreenCanvas implements IPEventListener, I
         cvBackground.addPanel(cvFormatList);
         
         EnumChatFormatting[] tfValues = EnumChatFormatting.values();
+        // Specify how many macro buttons are manually added, before the buttons for the default colors and formatting
+        int macroCount = 10;
+
+        cvFormatList.addPanel(new PanelButtonStorage<>(new GuiRectangle(0, 16 * 0, 100, 16), 1, "§9§nHyperlink§r", "§9§n[url][/url]§r"));
+        cvFormatList.addPanel(new PanelButtonStorage<>(new GuiRectangle(0, 16 * 1, 100, 16), 1, "§3PS:§r", "§3PS: text§r"));
+        cvFormatList.addPanel(new PanelButtonStorage<>(new GuiRectangle(0, 16 * 2, 100, 16), 1, "§cNote§r", "§cNote: text§r"));
+        cvFormatList.addPanel(new PanelButtonStorage<>(new GuiRectangle(0, 16 * 3, 100, 16), 1, "§4§lWarning§r", "§4§lWARNING:§r§4 text§r"));
+        cvFormatList.addPanel(new PanelButtonStorage<>(new GuiRectangle(0, 16 * 4, 100, 16), 1, "§6§oKeyword§r", "§6§otext§r"));
+        cvFormatList.addPanel(new PanelButtonStorage<>(new GuiRectangle(0, 16 * 5, 100, 16), 1, "§2Positive Focus§r", "§2text§r"));
+        cvFormatList.addPanel(new PanelButtonStorage<>(new GuiRectangle(0, 16 * 6, 100, 16), 1, "§5Neutral Focus§r", "§5text§r"));
+        cvFormatList.addPanel(new PanelButtonStorage<>(new GuiRectangle(0, 16 * 7, 100, 16), 1, "§2§nEU Gained§r", "§2§n100 EU§r"));
+        cvFormatList.addPanel(new PanelButtonStorage<>(new GuiRectangle(0, 16 * 8, 100, 16), 1, "§c§nEU Spent§r", "§c§n100 EU§r"));
+        cvFormatList.addPanel(new PanelButtonStorage<>(new GuiRectangle(0, 16 * 9, 100, 16), 1, "§d§oRecipe Time§r", "§d§o100s§r"));
         for(int i = 0; i < tfValues.length; i++)
         {
-            cvFormatList.addPanel(new PanelButtonStorage<>(new GuiRectangle(0, i * 16, 100, 16), 1, tfValues[i].getFriendlyName(), tfValues[i].toString()));
+            cvFormatList.addPanel(new PanelButtonStorage<>(new GuiRectangle(0, (i + macroCount) * 16, 100, 16), 1, tfValues[i].getFriendlyName(), tfValues[i].toString()));
         }
     
         PanelVScrollBar scFormatScroll = new PanelVScrollBar(new GuiTransform(GuiAlign.RIGHT_EDGE, new GuiPadding(0, 0, -8, 0), 0));
