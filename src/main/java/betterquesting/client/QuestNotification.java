@@ -76,8 +76,6 @@ public class QuestNotification {
             alpha = MathHelper.clamp_float(alpha, 0.02F, 1F);
             final int color = new Color(1F, 1F, 1F, alpha).getRGB();
 
-            GL11.glColor4f(1F, 1F, 1F, alpha);
-
             if (notice.icon != null && alpha > 0.2F) {
                 RenderUtils.RenderItemStack(mc, notice.icon, width / 2 - 8, height / 4 - 20, "", color);
             }
@@ -94,6 +92,7 @@ public class QuestNotification {
                 txtW = RenderUtils.getStringWidth(tmp, mc.fontRenderer);
                 mc.fontRenderer.drawString(tmp, width / 2 - txtW / 2, height / 4 + 12, color, true);
             }
+            GL11.glColor4f(1F, 1F, 1F, 1F);
         }
         GL11.glPopMatrix();
     }
