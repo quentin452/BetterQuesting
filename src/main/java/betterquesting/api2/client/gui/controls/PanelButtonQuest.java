@@ -9,11 +9,13 @@ import betterquesting.api.questing.tasks.ITask;
 import betterquesting.api.storage.BQ_Settings;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api2.client.gui.misc.GuiRectangle;
+import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.resources.colors.IGuiColor;
 import betterquesting.api2.client.gui.resources.textures.GuiTextureColored;
 import betterquesting.api2.client.gui.resources.textures.IGuiTexture;
 import betterquesting.api2.client.gui.resources.textures.OreDictTexture;
 import betterquesting.api2.client.gui.themes.presets.PresetColor;
+import betterquesting.api2.client.gui.themes.presets.PresetIcon;
 import betterquesting.api2.client.gui.themes.presets.PresetTexture;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.QuestTranslation;
@@ -34,9 +36,12 @@ import java.util.UUID;
 
 public class PanelButtonQuest extends PanelButtonStorage<Map.Entry<UUID, IQuest>>
 {
+	private static final IGuiTexture PIN_TEX = PresetIcon.ICON_PIN_IN.getTexture();
     public final GuiRectangle rect;
     public final EntityPlayer player;
 	public final IGuiTexture txFrame;
+
+	private boolean isPinned = false;
 
 	public PanelButtonQuest(GuiRectangle rect, int id, String txt, Map.Entry<UUID, IQuest> value)
     {
@@ -81,7 +86,25 @@ public class PanelButtonQuest extends PanelButtonStorage<Map.Entry<UUID, IQuest>
         setIcon(new OreDictTexture(1F, value == null ? new BigItemStack(Items.nether_star) : value.getValue().getProperty(NativeProps.ICON), false, true), 4);
         //setTooltip(value == null ? Collections.emptyList() : value.getValue().getTooltip(player));
         setActive(QuestingAPI.getAPI(ApiReference.SETTINGS).canUserEdit(player) || !lock || BQ_Settings.viewMode);
+		setPinned(value.getValue().isPinned(QuestingAPI.getQuestingUUID(player)));
     }
+
+	@Override
+	public void drawPanel(int mx, int my, float partialTick) {
+		super.drawPanel(mx, my, partialTick);
+		if (isPinned){
+			IGuiRect bounds = this.getTransform();
+			PIN_TEX.drawTexture(bounds.getX(), bounds.getY() - 4, bounds.getWidth()/3,  bounds.getHeight()/3, 1, partialTick);
+		}
+	}
+
+	public boolean isPinned() {
+		return isPinned;
+	}
+
+	public void setPinned(boolean pinned) {
+		isPinned = pinned;
+	}
 
     @Override
     public List<String> getTooltip(int mx, int my)

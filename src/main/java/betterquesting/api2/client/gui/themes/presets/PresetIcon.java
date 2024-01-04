@@ -97,6 +97,9 @@ public enum PresetIcon
     ICON_ZOOM("icon_zoom"),
     ICON_ZOOM_IN("icon_zoom_in"),
     ICON_ZOOM_OUT("icon_zoom_out"),
+
+	ICON_PIN_IN("icon_pin_in"),
+	ICON_PIN_OUT("icon_pin_out"),
     
     ICON_CHEST("icon_chest"),
     ICON_CHEST_ALL("icon_chest_all"),
@@ -191,6 +194,9 @@ public enum PresetIcon
         reg.setDefaultTexture(ICON_VISIBILITY_NORMAL.key, new SimpleTexture(TX_ICONS, new GuiRectangle(192, 80, 16, 16)).maintainAspect(true));
         reg.setDefaultTexture(ICON_VISIBILITY_IMPLICIT.key, new SimpleTexture(TX_ICONS, new GuiRectangle(208, 80, 16, 16)).maintainAspect(true));
         reg.setDefaultTexture(ICON_VISIBILITY_HIDDEN.key, new SimpleTexture(TX_ICONS, new GuiRectangle(224, 80, 16, 16)).maintainAspect(true));
+
+		reg.setDefaultTexture(ICON_PIN_IN.key, new SimpleTexture(TX_ICONS, new GuiRectangle(240, 80, 16, 16)).maintainAspect(true));
+		reg.setDefaultTexture(ICON_PIN_OUT.key, new SimpleTexture(TX_ICONS, new GuiRectangle(0, 96, 16, 16)).maintainAspect(true));
 
         reg.setDefaultTexture(ICON_LOCKED.key, new SimpleTexture(TX_ICONS, new GuiRectangle(80, 48, 16, 16)).maintainAspect(true));
         reg.setDefaultTexture(ICON_UNLOCKED.key, new SimpleTexture(TX_ICONS, new GuiRectangle(96, 48, 16, 16)).maintainAspect(true));

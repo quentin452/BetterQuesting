@@ -28,6 +28,7 @@ import net.minecraft.init.Items;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
 import net.minecraftforge.common.util.Constants;
 import org.apache.logging.log4j.Level;
 
@@ -49,6 +50,7 @@ public class QuestInstance implements IQuest
 
 	private final HashMap<UUID, NBTTagCompound> completeUsers = new HashMap<>();
     private Set<UUID> preRequisites = new HashSet<>();
+    private final HashSet<UUID> pinnedUsers = new HashSet<>();
     private HashMap<UUID, RequirementType> prereqTypes = new HashMap<>();
 
 	private final PropertyContainer qInfo = new PropertyContainer();
@@ -478,7 +480,27 @@ public class QuestInstance implements IQuest
 		return rewards;
 	}
 
-	@Nonnull
+    @Override
+    public boolean isPinned(UUID uuid) {
+        synchronized(pinnedUsers)
+        {
+            return pinnedUsers.contains(uuid);
+        }
+    }
+
+    @Override
+    public void setPinned(UUID uuid, boolean pinState) {
+        synchronized(pinnedUsers)
+        {
+            if (pinState)
+                pinnedUsers.add(uuid);
+            else pinnedUsers.remove(uuid);
+
+            DirtyPlayerMarker.markDirty(uuid);
+        }
+    }
+
+    @Nonnull
 	@Override
     public Set<UUID> getRequirements()
     {
@@ -616,7 +638,6 @@ public class QuestInstance implements IQuest
                 comJson.appendTag(tags);
             }
             json.setTag("completed", comJson);
-
             NBTTagList tskJson = tasks.writeProgressToNBT(new NBTTagList(), users);
             json.setTag("tasks", tskJson);
 
@@ -648,6 +669,34 @@ public class QuestInstance implements IQuest
             tasks.readProgressFromNBT(json.getTagList("tasks", 10), merge);
         }
 	}
+
+    @Override
+    public NBTTagCompound writePinnedToNBT(NBTTagCompound json, @Nullable List<UUID> users)
+    {
+        synchronized(pinnedUsers)
+        {
+            NBTTagList list = new NBTTagList();
+            for(UUID entry : pinnedUsers)
+            {
+                if(entry == null) continue;
+                if(users != null && !users.contains(entry)) continue;
+                list.appendTag(new NBTTagString(entry.toString()));
+            }
+            json.setTag("pinned", list);
+
+            return json;
+        }
+    }
+
+    @Override
+    public void readPinnedFromNBT(UUID player, boolean merge)
+    {
+        synchronized(pinnedUsers)
+        {
+            if(!merge) pinnedUsers.clear();
+            pinnedUsers.add(player);
+        }
+    }
 
     @Override
 	public void setClaimed(UUID uuid, long timestamp)

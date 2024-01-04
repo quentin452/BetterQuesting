@@ -5,8 +5,10 @@ import betterquesting.api.questing.IQuestDatabase;
 import betterquesting.api.utils.NBTConverter;
 import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.storage.UuidDatabase;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -25,8 +27,10 @@ public class QuestDatabase extends UuidDatabase<IQuest> implements IQuestDatabas
 	    put(questID, quest);
 		return quest;
 	}
-	
-	@Override
+
+
+
+    @Override
     public IQuest remove(Object key)
     {
         if (!(key instanceof UUID))
@@ -65,8 +69,8 @@ public class QuestDatabase extends UuidDatabase<IQuest> implements IQuestDatabas
     {
         quest.getRequirements().remove(questID);
     }
-	
-	@Override
+
+    @Override
 	public synchronized NBTTagList writeToNBT(NBTTagList nbt, @Nullable List<UUID> subset)
 	{
 		orderedEntries().forEach(entry ->
@@ -163,4 +167,57 @@ public class QuestDatabase extends UuidDatabase<IQuest> implements IQuestDatabas
             }
 		}
 	}
+
+    public void readPinnedFromNBT(NBTTagCompound nbt) {
+        UUID uuid = UUID.fromString(nbt.getString("uuid"));
+        NBTTagList json = nbt.getTagList("quests", 10);
+
+
+        for (int i = 0; i < json.tagCount(); i++)
+        {
+            NBTTagCompound qTag = json.getCompoundTagAt(i);
+
+            Optional<UUID> questIDOptional = NBTConverter.UuidValueType.QUEST.tryReadId(qTag);
+            UUID questID = null;
+            if (questIDOptional.isPresent())
+            {
+                questID = questIDOptional.get();
+            }
+            else if (qTag.hasKey("questID", 99))
+            {
+                // This block is needed for old player progress data.
+                questID = UuidConverter.convertLegacyId(qTag.getInteger("questID"));
+            }
+
+            if (questID == null)
+            {
+                // Quest was deleted
+                continue;
+            }
+
+            IQuest quest = get(questID);
+            if (quest != null)
+            {
+                quest.readPinnedFromNBT(uuid, true);
+            }
+        }
+    }
+
+
+    public NBTTagCompound writePinnedToNBT(UUID user) {
+        NBTTagCompound json = new NBTTagCompound();
+        NBTTagList list = new NBTTagList();
+        for (Map.Entry<UUID, IQuest> entry : entrySet())
+        {
+            if (entry.getValue().isPinned(user)){
+                NBTTagCompound jq = new NBTTagCompound();
+                NBTConverter.UuidValueType.QUEST.writeId(entry.getKey(), jq);
+                list.appendTag(jq);
+            }
+        }
+        json.setString("uuid", user.toString());
+        json.setTag("quests", list);
+
+        return json;
+    }
 }

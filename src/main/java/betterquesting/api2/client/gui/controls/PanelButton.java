@@ -8,6 +8,7 @@ import betterquesting.api2.client.gui.resources.colors.GuiColorStatic;
 import betterquesting.api2.client.gui.resources.colors.IGuiColor;
 import betterquesting.api2.client.gui.resources.textures.IGuiTexture;
 import betterquesting.api2.client.gui.themes.presets.PresetColor;
+import betterquesting.api2.client.gui.themes.presets.PresetIcon;
 import betterquesting.api2.client.gui.themes.presets.PresetTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -23,6 +24,7 @@ import java.util.function.Consumer;
 public class PanelButton implements IPanelButton
 {
     private static final ResourceLocation CLICK_SND = new ResourceLocation("gui.button.press");
+
 	private final IGuiRect transform;
 	private boolean enabled = true;
 	
@@ -36,6 +38,7 @@ public class PanelButton implements IPanelButton
 	private String btnText;
 	private int textAlign = 1;
 	private boolean isActive = true;
+
 	private final int btnID;
 	
 	private boolean pendingRelease = false;
@@ -51,13 +54,13 @@ public class PanelButton implements IPanelButton
 		this.setTextures(PresetTexture.BTN_NORMAL_0.getTexture(), PresetTexture.BTN_NORMAL_1.getTexture(), PresetTexture.BTN_NORMAL_2.getTexture());
 		this.setTextHighlight(PresetColor.BTN_DISABLED.getColor(), PresetColor.BTN_IDLE.getColor(), PresetColor.BTN_HOVER.getColor());
 	}
-	
+
 	public PanelButton setClickAction(Consumer<PanelButton> action)
     {
         this.clickAction = action;
         return this;
     }
-	
+
 	public PanelButton setTextHighlight(IGuiColor disabled, IGuiColor idle, IGuiColor hover)
 	{
 		this.colStates[0] = disabled;

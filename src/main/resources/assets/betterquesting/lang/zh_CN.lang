@@ -59,6 +59,8 @@ betterquesting.btn.always_draw_implicit=始终显示隐藏前置任务
 betterquesting.btn.prereq_visbility.normal=默认
 betterquesting.btn.prereq_visbility.implicit=除悬停或按住Shift时，其余隐藏
 betterquesting.btn.prereq_visbility.hidden=始终隐藏
+betterquesting.btn.pin_quest=Pin Quest
+betterquesting.btn.unpin_quest=Unpin Quest
 
 betterquesting.home.exit=退出
 betterquesting.home.quests=任务
@@ -71,6 +73,7 @@ betterquesting.gui.quest_line=章节列表
 betterquesting.gui.database=任务数据
 betterquesting.gui.selection=选择
 betterquesting.gui.search=查找
+betterquesting.gui.pins=Pins
 betterquesting.gui.folder=文件夹
 betterquesting.gui.party_invites=邀请列表
 betterquesting.gui.party_members=成员列表

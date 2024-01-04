@@ -15,6 +15,7 @@ import net.minecraft.nbt.NBTTagList;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
@@ -61,6 +62,12 @@ public interface IQuest extends INBTSaveLoad<NBTTagCompound>, INBTProgress<NBTTa
 	
 	IDatabaseNBT<ITask, NBTTagList, NBTTagList> getTasks();
 	IDatabaseNBT<IReward, NBTTagList, NBTTagList> getRewards();
+
+	boolean isPinned(UUID uuid);
+	void setPinned(UUID uuid, boolean pinState);
+
+	NBTTagCompound writePinnedToNBT(NBTTagCompound json, @Nullable List<UUID> users);
+	void readPinnedFromNBT(UUID player, boolean merge);
 
     /** Returns a mutable set. Changes made to the returned set will be reflected in the quest! */
 	@Nonnull

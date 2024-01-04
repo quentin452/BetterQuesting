@@ -122,6 +122,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
     private int totalQuests = 0;
 
     private GuiQuestSearch searchGui;
+    private GuiPins pinsGui;
 
     private final List<PanelButtonStorage<Map.Entry<UUID, IQuestLine>>> btnListRef = new ArrayList<>();
 
@@ -196,14 +197,23 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
         btnSearch.setTooltip(Collections.singletonList(QuestTranslation.translate("betterquesting.gui.search")));
         cvBackground.addPanel(btnSearch);
 
+        // Pins button
+        if (this.pinsGui == null) this.pinsGui = initPinsPanel();
+        PanelButton btnPins = new PanelButton(new GuiTransform(GuiAlign.BOTTOM_LEFT, 8, -56, 32, 16, 0), -1, "").setIcon(PresetIcon.ICON_PIN_OUT.getTexture());
+        btnPins.setClickAction((button) -> {
+            mc.displayGuiScreen(this.pinsGui);
+        });
+        btnPins.setTooltip(Collections.singletonList(QuestTranslation.translate("betterquesting.gui.pins")));
+        cvBackground.addPanel(btnPins);
+
         if(canEdit)
         {
-            PanelButton btnEdit = new PanelButton(new GuiTransform(GuiAlign.BOTTOM_LEFT, 8, -56, 16, 16, 0), -1, "").setIcon(PresetIcon.ICON_GEAR.getTexture());
+            PanelButton btnEdit = new PanelButton(new GuiTransform(GuiAlign.BOTTOM_LEFT, 8, -72, 16, 16, 0), -1, "").setIcon(PresetIcon.ICON_GEAR.getTexture());
             btnEdit.setClickAction((b) -> mc.displayGuiScreen(new GuiQuestLinesEditor(this)));
             btnEdit.setTooltip(Collections.singletonList(QuestTranslation.translate("betterquesting.btn.edit")));
             cvBackground.addPanel(btnEdit);
 
-            PanelButton btnDesign = new PanelButton(new GuiTransform(GuiAlign.BOTTOM_LEFT, 24, -56, 16, 16, 0), -1, "").setIcon(PresetIcon.ICON_SORT.getTexture());
+            PanelButton btnDesign = new PanelButton(new GuiTransform(GuiAlign.BOTTOM_LEFT, 24, -72, 16, 16, 0), -1, "").setIcon(PresetIcon.ICON_SORT.getTexture());
             btnDesign.setClickAction((b) -> {
                 if(selectedLine != null) mc.displayGuiScreen(new GuiDesigner(this, selectedLine));
             });
@@ -391,13 +401,32 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
                 if (click == 1)
                 {
                     FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
-                    boolean questExistsUnderMouse = cvQuest.getButtonAt(mx, my) != null;
 
-                    if (questExistsUnderMouse) {
-                        UUID questId = cvQuest.getButtonAt(mx, my).getStoredValue().getKey();
-                        int maxWidth = questExistsUnderMouse ? RenderUtils.getStringWidth(QuestTranslation.translate("betterquesting.btn.share_quest"), fr) : 0;
+                    PanelButtonQuest btnQuest = cvQuest.getButtonAt(mx, my);
 
-                        PopContextMenu popup = new PopContextMenu(new GuiRectangle(mx, my, maxWidth + 12, questExistsUnderMouse ? 48 : 16), true);
+                    if (btnQuest != null) {
+                        UUID questId = btnQuest.getStoredValue().getKey();
+                        IQuest quest = btnQuest.getStoredValue().getValue();
+                        int maxWidth = RenderUtils.getStringWidth(QuestTranslation.translate("betterquesting.btn.share_quest"), fr);
+
+                        PopContextMenu popup = new PopContextMenu(new GuiRectangle(mx, my, maxWidth + 12, 48), true);
+
+                        UUID playerID = QuestingAPI.getQuestingUUID(mc.thePlayer);
+                        Runnable pinQuest = () -> {
+                            boolean pinned = !quest.isPinned(playerID);
+                            quest.setPinned(playerID, pinned);
+                            btnQuest.setPinned(pinned);
+                            closePopup();
+                        };
+
+                        String pinPopupText;
+                        if (quest.isPinned(playerID)){
+                            pinPopupText = QuestTranslation.translate("betterquesting.btn.unpin_quest");
+                        }else {
+                            pinPopupText = QuestTranslation.translate("betterquesting.btn.pin_quest");
+                        }
+                        popup.addButton(pinPopupText, null, pinQuest);
+
                         Runnable questSharer = () -> {
                             mc.thePlayer.sendChatMessage("betterquesting.msg.sharequest:" + UuidConverter.encodeUuid(questId));
                             closePopup();
@@ -461,6 +490,25 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
 
         cvLines.setScrollY(scrollPosition.getChapterScrollY());
         cvLines.updatePanelScroll();
+    }
+
+    private GuiPins initPinsPanel() {
+        GuiPins pinsGui = new GuiPins(this);
+        pinsGui.setCallback(entry -> {
+            openQuestLine(entry.getQuestLineEntry());
+            UUID selectedQuestId = entry.getQuest().getKey();
+            Optional<PanelButtonQuest> targetQuestButton = cvQuest.getQuestButtons().stream().filter(panelButtonQuest -> panelButtonQuest.getStoredValue().getKey().equals(selectedQuestId)).findFirst();
+            targetQuestButton.ifPresent(panelButtonQuest -> {
+                GuiTextureColored newTexture = new GuiTextureColored(panelButtonQuest.txFrame,
+                        new GuiColorPulse(
+                                new GuiColorStatic(255, 220, 115, 255),
+                                new GuiColorStatic(255, 191, 0, 255),
+                                1, 0
+                        ));
+                panelButtonQuest.setTextures(newTexture, newTexture, newTexture);
+            });
+        });
+        return pinsGui;
     }
 
     private GuiQuestSearch initSearchPanel() {
