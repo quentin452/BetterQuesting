@@ -9,7 +9,7 @@ import betterquesting.api2.client.gui.panels.CanvasEmpty;
 import betterquesting.api2.client.gui.panels.CanvasTextured;
 import betterquesting.api2.client.gui.panels.bars.PanelVScrollBar;
 import betterquesting.api2.client.gui.panels.content.PanelTextBox;
-import betterquesting.api2.client.gui.panels.lists.CanvasQuestPins;
+import betterquesting.api2.client.gui.panels.lists.CanvasQuestBookmarks;
 import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.client.gui.themes.presets.PresetTexture;
 import betterquesting.api2.utils.QuestTranslation;
@@ -18,10 +18,10 @@ import net.minecraft.client.gui.GuiScreen;
 
 import java.util.function.Consumer;
 
-public class GuiPins extends GuiScreenCanvas {
+public class GuiBookmarks extends GuiScreenCanvas {
     private Consumer<QuestSearchEntry> callback;
 
-    public GuiPins(GuiScreen parent) {
+    public GuiBookmarks(GuiScreen parent) {
         super(parent);
     }
 
@@ -36,10 +36,10 @@ public class GuiPins extends GuiScreenCanvas {
 
         createExitButton(cvInner);
 
-        PanelTextBox txtDb = new PanelTextBox(new GuiTransform(GuiAlign.TOP_EDGE, new GuiPadding(0, 0, 0, -16), 0), QuestTranslation.translate("betterquesting.gui.pins")).setAlignment(1).setColor(PresetColor.TEXT_MAIN.getColor());
+        PanelTextBox txtDb = new PanelTextBox(new GuiTransform(GuiAlign.TOP_EDGE, new GuiPadding(0, 0, 0, -16), 0), QuestTranslation.translate("betterquesting.gui.bookmarks")).setAlignment(1).setColor(PresetColor.TEXT_MAIN.getColor());
         cvInner.addPanel(txtDb);
 
-        CanvasQuestPins pins = createMainCanvas();
+        CanvasQuestBookmarks pins = createMainCanvas();
         cvInner.addPanel(pins);
 
         PanelVScrollBar scDb = new PanelVScrollBar(new GuiTransform(GuiAlign.RIGHT_EDGE, new GuiPadding(-8, 32, 0, 24), 0));
@@ -47,8 +47,8 @@ public class GuiPins extends GuiScreenCanvas {
         pins.setScrollDriverY(scDb);
     }
 
-    private CanvasQuestPins createMainCanvas() {
-        CanvasQuestPins pins = new CanvasQuestPins(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 32, 8, 24), 0), mc.thePlayer);
+    private CanvasQuestBookmarks createMainCanvas() {
+        CanvasQuestBookmarks pins = new CanvasQuestBookmarks(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 32, 8, 24), 0), mc.thePlayer);
         pins.setQuestOpenCallback(pinEntry -> {
             acceptCallback(pinEntry);
             GuiHome.bookmark = new GuiQuest(parent, pinEntry.getQuest().getKey());

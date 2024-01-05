@@ -122,7 +122,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
     private int totalQuests = 0;
 
     private GuiQuestSearch searchGui;
-    private GuiPins pinsGui;
+    private GuiBookmarks pinsGui;
 
     private final List<PanelButtonStorage<Map.Entry<UUID, IQuestLine>>> btnListRef = new ArrayList<>();
 
@@ -203,7 +203,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
         btnPins.setClickAction((button) -> {
             mc.displayGuiScreen(this.pinsGui);
         });
-        btnPins.setTooltip(Collections.singletonList(QuestTranslation.translate("betterquesting.gui.pins")));
+        btnPins.setTooltip(Collections.singletonList(QuestTranslation.translate("betterquesting.gui.bookmarks")));
         cvBackground.addPanel(btnPins);
 
         if(canEdit)
@@ -421,9 +421,9 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
 
                         String pinPopupText;
                         if (quest.isPinned(playerID)){
-                            pinPopupText = QuestTranslation.translate("betterquesting.btn.unpin_quest");
+                            pinPopupText = QuestTranslation.translate("betterquesting.btn.unbookmark_quest");
                         }else {
-                            pinPopupText = QuestTranslation.translate("betterquesting.btn.pin_quest");
+                            pinPopupText = QuestTranslation.translate("betterquesting.btn.bookmark_quest");
                         }
                         popup.addButton(pinPopupText, null, pinQuest);
 
@@ -492,8 +492,8 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
         cvLines.updatePanelScroll();
     }
 
-    private GuiPins initPinsPanel() {
-        GuiPins pinsGui = new GuiPins(this);
+    private GuiBookmarks initPinsPanel() {
+        GuiBookmarks pinsGui = new GuiBookmarks(this);
         pinsGui.setCallback(entry -> {
             openQuestLine(entry.getQuestLineEntry());
             UUID selectedQuestId = entry.getQuest().getKey();

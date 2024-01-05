@@ -27,7 +27,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class CanvasQuestPins extends CanvasScrolling {
+public class CanvasQuestBookmarks extends CanvasScrolling {
 
     private List<QuestSearchEntry> questList;
     private Consumer<QuestSearchEntry> questOpenCallback;
@@ -35,7 +35,7 @@ public class CanvasQuestPins extends CanvasScrolling {
     private EntityPlayer player;
     private final UUID questingUUID;
     private int resultWidth = 256;
-    public CanvasQuestPins(IGuiRect rect, EntityPlayer player) {
+    public CanvasQuestBookmarks(IGuiRect rect, EntityPlayer player) {
         super(rect);
         this.player = player;
         questingUUID = QuestingAPI.getQuestingUUID(player);
