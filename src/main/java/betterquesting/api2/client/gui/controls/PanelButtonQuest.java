@@ -36,7 +36,7 @@ import java.util.UUID;
 
 public class PanelButtonQuest extends PanelButtonStorage<Map.Entry<UUID, IQuest>>
 {
-	private static final IGuiTexture PIN_TEX = PresetIcon.ICON_PIN_IN.getTexture();
+	private static final IGuiTexture PIN_TEX = PresetIcon.ICON_BOOKMARK.getTexture();
     public final GuiRectangle rect;
     public final EntityPlayer player;
 	public final IGuiTexture txFrame;
@@ -94,7 +94,7 @@ public class PanelButtonQuest extends PanelButtonStorage<Map.Entry<UUID, IQuest>
 		super.drawPanel(mx, my, partialTick);
 		if (isBookmarked){
 			IGuiRect bounds = this.getTransform();
-			PIN_TEX.drawTexture(bounds.getX(), bounds.getY() - 4, bounds.getWidth()/3,  bounds.getHeight()/3, 1, partialTick);
+			PIN_TEX.drawTexture(bounds.getX(), bounds.getY(), bounds.getWidth()/4,  bounds.getHeight()/4, 1, partialTick);
 		}
 	}
 

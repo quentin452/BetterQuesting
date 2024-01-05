@@ -199,7 +199,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
 
         // Pins button
         if (this.bookmarksGui == null) this.bookmarksGui = initBookmarksPanel();
-        PanelButton btnBookmarks = new PanelButton(new GuiTransform(GuiAlign.BOTTOM_LEFT, 8, -56, 32, 16, 0), -1, "").setIcon(PresetIcon.ICON_PIN_OUT.getTexture());
+        PanelButton btnBookmarks = new PanelButton(new GuiTransform(GuiAlign.BOTTOM_LEFT, 8, -56, 32, 16, 0), -1, "").setIcon(PresetIcon.ICON_BOOKMARK.getTexture());
         btnBookmarks.setClickAction((button) -> {
             mc.displayGuiScreen(this.bookmarksGui);
         });
@@ -298,11 +298,11 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
         // === LEFT SIDEBAR ===
         int yOff = 24;
         PanelButton btnTrayToggle = new PanelButton(new GuiTransform(GuiAlign.TOP_LEFT, 8, yOff, 32, 16, 0), -1, "");
-        btnTrayToggle.setIcon(PresetIcon.ICON_BOOKMARK.getTexture(), selectedLineId == null && !chapterTrayOpened ? new GuiColorPulse(0xFFFFFFFF, 0xFF444444, 2F, 0F) : new GuiColorStatic(0xFFFFFFFF), 0);
+        btnTrayToggle.setIcon(PresetIcon.ICON_QUEST.getTexture(), selectedLineId == null && !chapterTrayOpened ? new GuiColorPulse(0xFFFFFFFF, 0xFF444444, 2F, 0F) : new GuiColorStatic(0xFFFFFFFF), 0);
         btnTrayToggle.setClickAction((b) -> {
             cvFrame.setTrayState(cvChapterTray.isTrayOpen(), 200);
             cvChapterTray.setTrayState(!cvChapterTray.isTrayOpen(), 200);
-            btnTrayToggle.setIcon(PresetIcon.ICON_BOOKMARK.getTexture());
+            btnTrayToggle.setIcon(PresetIcon.ICON_QUEST.getTexture());
         });
         btnTrayToggle.setTooltip(Collections.singletonList(QuestTranslation.translate("betterquesting.title.quest_lines")));
         cvBackground.addPanel(btnTrayToggle);
