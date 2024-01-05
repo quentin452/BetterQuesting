@@ -63,11 +63,8 @@ public interface IQuest extends INBTSaveLoad<NBTTagCompound>, INBTProgress<NBTTa
 	IDatabaseNBT<ITask, NBTTagList, NBTTagList> getTasks();
 	IDatabaseNBT<IReward, NBTTagList, NBTTagList> getRewards();
 
-	boolean isPinned(UUID uuid);
-	void setPinned(UUID uuid, boolean pinState);
-
-	NBTTagCompound writePinnedToNBT(NBTTagCompound json, @Nullable List<UUID> users);
-	void readPinnedFromNBT(UUID player, boolean merge);
+	boolean isBookmarked(UUID uuid);
+	void setBookmarked(UUID uuid, boolean state);
 
     /** Returns a mutable set. Changes made to the returned set will be reflected in the quest! */
 	@Nonnull

@@ -63,9 +63,9 @@ public class CanvasQuestBookmarks extends CanvasScrolling {
 
     protected Iterator<QuestSearchEntry> getIterator() {
         if (questList != null)
-            return questList.stream().filter(e -> e.getQuest().getValue().isPinned(questingUUID)).iterator();
+            return questList.stream().filter(e -> e.getQuest().getValue().isBookmarked(questingUUID)).iterator();
         questList = collectQuests();
-        return questList.stream().filter(e -> e.getQuest().getValue().isPinned(questingUUID)).iterator();
+        return questList.stream().filter(e -> e.getQuest().getValue().isBookmarked(questingUUID)).iterator();
     }
 
     private List<QuestSearchEntry> collectQuests() {

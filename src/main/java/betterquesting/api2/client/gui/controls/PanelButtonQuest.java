@@ -41,7 +41,7 @@ public class PanelButtonQuest extends PanelButtonStorage<Map.Entry<UUID, IQuest>
     public final EntityPlayer player;
 	public final IGuiTexture txFrame;
 
-	private boolean isPinned = false;
+	private boolean isBookmarked = false;
 
 	public PanelButtonQuest(GuiRectangle rect, int id, String txt, Map.Entry<UUID, IQuest> value)
     {
@@ -86,24 +86,20 @@ public class PanelButtonQuest extends PanelButtonStorage<Map.Entry<UUID, IQuest>
         setIcon(new OreDictTexture(1F, value == null ? new BigItemStack(Items.nether_star) : value.getValue().getProperty(NativeProps.ICON), false, true), 4);
         //setTooltip(value == null ? Collections.emptyList() : value.getValue().getTooltip(player));
         setActive(QuestingAPI.getAPI(ApiReference.SETTINGS).canUserEdit(player) || !lock || BQ_Settings.viewMode);
-		setPinned(value.getValue().isPinned(QuestingAPI.getQuestingUUID(player)));
+		setBookmarked(value.getValue().isBookmarked(QuestingAPI.getQuestingUUID(player)));
     }
 
 	@Override
 	public void drawPanel(int mx, int my, float partialTick) {
 		super.drawPanel(mx, my, partialTick);
-		if (isPinned){
+		if (isBookmarked){
 			IGuiRect bounds = this.getTransform();
 			PIN_TEX.drawTexture(bounds.getX(), bounds.getY() - 4, bounds.getWidth()/3,  bounds.getHeight()/3, 1, partialTick);
 		}
 	}
 
-	public boolean isPinned() {
-		return isPinned;
-	}
-
-	public void setPinned(boolean pinned) {
-		isPinned = pinned;
+	public void setBookmarked(boolean state) {
+		isBookmarked = state;
 	}
 
     @Override

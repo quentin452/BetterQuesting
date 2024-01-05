@@ -5,10 +5,8 @@ import betterquesting.api.questing.IQuestDatabase;
 import betterquesting.api.utils.NBTConverter;
 import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.storage.UuidDatabase;
-import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -168,8 +166,13 @@ public class QuestDatabase extends UuidDatabase<IQuest> implements IQuestDatabas
 		}
 	}
 
-    public void readPinnedFromNBT(NBTTagCompound nbt) {
-        UUID uuid = UUID.fromString(nbt.getString("uuid"));
+    public void readBookmarksFromNBT(NBTTagCompound nbt) {
+        UUID uuid;
+        try{
+            uuid = UUID.fromString(nbt.getString("uuid"));
+        }catch (IllegalArgumentException ignored){
+            return;
+        }
         NBTTagList json = nbt.getTagList("quests", 10);
 
 
@@ -198,18 +201,18 @@ public class QuestDatabase extends UuidDatabase<IQuest> implements IQuestDatabas
             IQuest quest = get(questID);
             if (quest != null)
             {
-                quest.readPinnedFromNBT(uuid, true);
+                quest.setBookmarked(uuid, true);
             }
         }
     }
 
 
-    public NBTTagCompound writePinnedToNBT(UUID user) {
+    public NBTTagCompound writeBookmarksToNBT(UUID user) {
         NBTTagCompound json = new NBTTagCompound();
         NBTTagList list = new NBTTagList();
         for (Map.Entry<UUID, IQuest> entry : entrySet())
         {
-            if (entry.getValue().isPinned(user)){
+            if (entry.getValue().isBookmarked(user)){
                 NBTTagCompound jq = new NBTTagCompound();
                 NBTConverter.UuidValueType.QUEST.writeId(entry.getKey(), jq);
                 list.appendTag(jq);

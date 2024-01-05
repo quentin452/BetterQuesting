@@ -122,7 +122,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
     private int totalQuests = 0;
 
     private GuiQuestSearch searchGui;
-    private GuiBookmarks pinsGui;
+    private GuiBookmarks bookmarksGui;
 
     private final List<PanelButtonStorage<Map.Entry<UUID, IQuestLine>>> btnListRef = new ArrayList<>();
 
@@ -198,13 +198,13 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
         cvBackground.addPanel(btnSearch);
 
         // Pins button
-        if (this.pinsGui == null) this.pinsGui = initPinsPanel();
-        PanelButton btnPins = new PanelButton(new GuiTransform(GuiAlign.BOTTOM_LEFT, 8, -56, 32, 16, 0), -1, "").setIcon(PresetIcon.ICON_PIN_OUT.getTexture());
-        btnPins.setClickAction((button) -> {
-            mc.displayGuiScreen(this.pinsGui);
+        if (this.bookmarksGui == null) this.bookmarksGui = initBookmarksPanel();
+        PanelButton btnBookmarks = new PanelButton(new GuiTransform(GuiAlign.BOTTOM_LEFT, 8, -56, 32, 16, 0), -1, "").setIcon(PresetIcon.ICON_PIN_OUT.getTexture());
+        btnBookmarks.setClickAction((button) -> {
+            mc.displayGuiScreen(this.bookmarksGui);
         });
-        btnPins.setTooltip(Collections.singletonList(QuestTranslation.translate("betterquesting.gui.bookmarks")));
-        cvBackground.addPanel(btnPins);
+        btnBookmarks.setTooltip(Collections.singletonList(QuestTranslation.translate("betterquesting.gui.bookmarks")));
+        cvBackground.addPanel(btnBookmarks);
 
         if(canEdit)
         {
@@ -413,14 +413,14 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
 
                         UUID playerID = QuestingAPI.getQuestingUUID(mc.thePlayer);
                         Runnable pinQuest = () -> {
-                            boolean pinned = !quest.isPinned(playerID);
-                            quest.setPinned(playerID, pinned);
-                            btnQuest.setPinned(pinned);
+                            boolean bookmarked = !quest.isBookmarked(playerID);
+                            quest.setBookmarked(playerID, bookmarked);
+                            btnQuest.setBookmarked(bookmarked);
                             closePopup();
                         };
 
                         String pinPopupText;
-                        if (quest.isPinned(playerID)){
+                        if (quest.isBookmarked(playerID)){
                             pinPopupText = QuestTranslation.translate("betterquesting.btn.unbookmark_quest");
                         }else {
                             pinPopupText = QuestTranslation.translate("betterquesting.btn.bookmark_quest");
@@ -492,7 +492,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
         cvLines.updatePanelScroll();
     }
 
-    private GuiBookmarks initPinsPanel() {
+    private GuiBookmarks initBookmarksPanel() {
         GuiBookmarks pinsGui = new GuiBookmarks(this);
         pinsGui.setCallback(entry -> {
             openQuestLine(entry.getQuestLineEntry());
