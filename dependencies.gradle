@@ -5,5 +5,5 @@ dependencies {
     compileOnly 'com.github.GTNewHorizons:DuraDisplay:1.2.0:dev'
 
     // For testing translations
-    runtimeOnly 'com.github.GTNewHorizons:TX-Loader:1.5.3'
+    runtimeOnly 'com.github.GTNewHorizons:TX-Loader:1.7.0'
 }
