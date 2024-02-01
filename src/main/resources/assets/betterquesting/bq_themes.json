@@ -1485,6 +1485,16 @@
         "padding": [11, 11, 11, 11],
         "sliceMode": 2
       }
+    },
+    "colors": {
+      "betterquesting:text_header": {
+        "colorType": "betterquesting:color_static",
+        "color": "FF000000"
+      },
+      "betterquesting:text_main": {
+        "colorType": "betterquesting:color_static",
+        "color": "FF000000"
+      }
     }
   },
   {
