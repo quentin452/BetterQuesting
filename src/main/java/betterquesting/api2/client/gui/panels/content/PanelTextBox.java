@@ -9,6 +9,7 @@ import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.api2.client.gui.resources.colors.GuiColorStatic;
 import betterquesting.api2.client.gui.resources.colors.IGuiColor;
 import betterquesting.core.BetterQuesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -37,6 +38,33 @@ public class PanelTextBox implements IGuiPanel
 	private final GuiRectText transform;
 	private final List<HotZone> hotZones = new ArrayList<>();
 	private boolean enabled = true;
+
+	// List of colors set for specific themes, usually dark ones, to improve readability
+	private static final ImmutableMap<String, String> urlColors = ImmutableMap.of(
+			"betterquesting:dark", "§9§n",
+			"betterquesting:stronghold", "§9§n",
+			"betterquesting:overworld", "§9§n");
+
+	private static final ImmutableMap<String, String> warningColors = ImmutableMap.of(
+			"betterquesting:dark", "§c",
+			"betterquesting:stronghold", "§c",
+			"betterquesting:overworld", "§c");
+
+	private static final ImmutableMap<String, String> noteColors = ImmutableMap.of(
+			"betterquesting:stronghold", "§b",
+			"betterquesting:ender", "§b",
+			"betterquesting:overworld", "§b");
+
+	private static final ImmutableMap<String, String> questReferenceColors = ImmutableMap.of(
+			"betterquesting:dark", "§a§n",
+			"betterquesting:stronghold", "§a§n",
+			"betterquesting:overworld", "§a§n");
+
+	private static final Pattern urlTagStart = Pattern.compile("\\[url]");
+	private static final Pattern warningTagStart = Pattern.compile("\\[warn]");
+	private static final Pattern noteTagStart = Pattern.compile("\\[note]");
+	private static final Pattern questRefTagStart = Pattern.compile("\\[quest]");
+	private static final Pattern allTagEnds = Pattern.compile("\\[/url]|\\[/warn]|\\[/note]|\\[/quest]");
 
 	private String text = "", rawText = "";
 	private boolean shadow = false;
@@ -82,8 +110,19 @@ public class PanelTextBox implements IGuiPanel
 	{
 		if(hyperlinkAware)
 		{
+			String coloredText = "";
+			String currentTheme = BQ_Settings.curTheme;
+			String urlColor = urlColors.getOrDefault(currentTheme, "§1§n"); // default dark blue + underlined
+			String warningColor = warningColors.getOrDefault(currentTheme, "§4"); // default dark red
+			String noteColor = noteColors.getOrDefault(currentTheme, "§3"); // default dark aqua
+			String questRefColor = questReferenceColors.getOrDefault(currentTheme, "§2§n"); // default dark green + underlined
+
 			this.rawText = text;
-			this.text = url.matcher(text).replaceAll("$1");
+			coloredText = warningTagStart.matcher(text).replaceAll(warningColor);
+			coloredText = noteTagStart.matcher(coloredText).replaceAll(noteColor);
+			coloredText = questRefTagStart.matcher(coloredText).replaceAll(questRefColor);
+			coloredText = urlTagStart.matcher(coloredText).replaceAll(urlColor);
+			this.text = allTagEnds.matcher(coloredText).replaceAll("§r");
 		} else
 		{
 			this.text = text;
