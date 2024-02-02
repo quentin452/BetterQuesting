@@ -81,7 +81,6 @@ public class QuestTranslation {
     }
 
     public static int getColor(String key) {
-        BetterQuesting.logger.warn("Getting Colors! for: " + key);
         String hex = translate(key);
         int color = 0x000000;
         if (hex.length() <= 6) {
