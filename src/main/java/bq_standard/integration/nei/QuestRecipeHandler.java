@@ -65,6 +65,10 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
     private static final int GUI_WIDTH = 166;
     private static final int LINE_SPACE = GuiDraw.fontRenderer.FONT_HEIGHT + 1;
 
+    private Stopwatch stopwatch;
+    private int textColor;
+    private int textColorHovered;
+
     @Override
     public void loadTransferRects() {
         transferRects.add(new RecipeTransferRect(new Rectangle(75, 59, 16, 13), getOverlayIdentifier()));
@@ -73,7 +77,8 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
     @Override
     public void loadCraftingRecipes(String outputId, Object... results) {
         if (outputId.equals(getOverlayIdentifier())) {
-            Stopwatch stopwatch = Stopwatch.createStarted();
+            if (debug) stopwatch = Stopwatch.createStarted();
+            setTextColors();
             for (Map.Entry<UUID, IQuest> entry : getVisibleQuests().entrySet()) {
                 if (getTaskItemInputs(getTasks(entry.getValue())).isEmpty()
                         && getRewardItemOutputs(getRewards(entry.getValue())).isEmpty()) {
@@ -92,7 +97,8 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
 
     @Override
     public void loadCraftingRecipes(ItemStack result) {
-        Stopwatch stopwatch = Stopwatch.createStarted();
+        if (debug) stopwatch = Stopwatch.createStarted();
+        setTextColors();
         for (Map.Entry<UUID, IQuest> entry : getVisibleQuests().entrySet()) {
             for (BigItemStack compareTo : getRewardItemOutputs(getRewards(entry.getValue()))) {
                 if (matchStack(result, compareTo)) {
@@ -108,7 +114,8 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
 
     @Override
     public void loadUsageRecipes(ItemStack ingredient) {
-        Stopwatch stopwatch = Stopwatch.createStarted();
+        if (debug) stopwatch = Stopwatch.createStarted();
+        setTextColors();
         for (Map.Entry<UUID, IQuest> entry : getVisibleQuests().entrySet()) {
             for (BigItemStack compareTo : getTaskItemInputs(getTasks(entry.getValue()))) {
                 if (matchStack(ingredient, compareTo)) {
@@ -139,9 +146,9 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
 
         int color;
         if (isMouseOverTitle(recipeIndex)) {
-            color = 0xa87a5e;
+            color = textColorHovered;
         } else {
-            color = 0x000000;
+            color = textColor;
         }
 
         //noinspection unchecked
@@ -300,6 +307,11 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
                 titleWidth + 1 * 2,
                 titleHeight + 1);
         return titleArea.contains(relMousePos);
+    }
+
+    private void setTextColors() {
+        textColor = QuestTranslation.getColor("bq_standard.gui.neiQuestNameColor");
+        textColorHovered = QuestTranslation.getColor("bq_standard.gui.neiQuestNameHoveredColor");
     }
 
     private class CachedQuestRecipe extends CachedRecipe {
