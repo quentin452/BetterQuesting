@@ -6,6 +6,7 @@ import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.IQuestLine;
 import betterquesting.api.utils.UuidConverter;
+import betterquesting.core.BetterQuesting;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.StatCollector;
 
@@ -77,6 +78,20 @@ public class QuestTranslation {
 
     public static String translateQuestLineDescription(Map.Entry<UUID, IQuestLine> entry) {
         return translateQuestLineDescription(entry.getKey(), entry.getValue());
+    }
+
+    public static int getColor(String key) {
+        BetterQuesting.logger.warn("Getting Colors! for: " + key);
+        String hex = translate(key);
+        int color = 0x000000;
+        if (hex.length() <= 6) {
+            try {
+                color = Integer.parseUnsignedInt(hex, 16);
+            } catch (NumberFormatException e) {
+                BetterQuesting.logger.warn("Couldn't format color correctly for: " + key, e);
+            }
+        }
+        return color;
     }
 
     /**
