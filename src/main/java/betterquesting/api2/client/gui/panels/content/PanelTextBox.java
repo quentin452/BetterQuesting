@@ -56,9 +56,9 @@ public class PanelTextBox implements IGuiPanel
 			"betterquesting:overworld", "§b");
 
 	private static final ImmutableMap<String, String> questReferenceColors = ImmutableMap.of(
-			"betterquesting:dark", "§a§n",
-			"betterquesting:stronghold", "§a§n",
-			"betterquesting:overworld", "§a§n");
+			"betterquesting:dark", "§a§l",
+			"betterquesting:stronghold", "§a§l",
+			"betterquesting:overworld", "§a§l");
 
 	private static final Pattern urlTagStart = Pattern.compile("\\[url]");
 	private static final Pattern warningTagStart = Pattern.compile("\\[warn]");
@@ -115,7 +115,7 @@ public class PanelTextBox implements IGuiPanel
 			String urlColor = urlColors.getOrDefault(currentTheme, "§1§n"); // default dark blue + underlined
 			String warningColor = warningColors.getOrDefault(currentTheme, "§4"); // default dark red
 			String noteColor = noteColors.getOrDefault(currentTheme, "§3"); // default dark aqua
-			String questRefColor = questReferenceColors.getOrDefault(currentTheme, "§2§n"); // default dark green + underlined
+			String questRefColor = questReferenceColors.getOrDefault(currentTheme, "§2§l"); // default dark green + bold
 
 			this.rawText = text;
 			coloredText = warningTagStart.matcher(text).replaceAll(warningColor);
