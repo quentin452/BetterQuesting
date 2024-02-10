@@ -70,9 +70,17 @@ public class GuiTextEditor extends GuiScreenCanvas implements IPEventListener, I
         cvBackground.addPanel(cvFormatList);
         
         EnumChatFormatting[] tfValues = EnumChatFormatting.values();
+        // Specify how many macro buttons are manually added, before the buttons for the default colors and formatting
+        int macroCount = 4;
+
+        cvFormatList.addPanel(new PanelButtonStorage<>(new GuiRectangle(0, 16 * 0, 100, 16), 2, "§9§nHyperlink§r", "[url] [/url]"));
+        cvFormatList.addPanel(new PanelButtonStorage<>(new GuiRectangle(0, 16 * 1, 100, 16), 2, "§4§lWarning§r", "[warn] [/warn]"));
+        cvFormatList.addPanel(new PanelButtonStorage<>(new GuiRectangle(0, 16 * 2, 100, 16), 2, "§3Note§r", "[note] [/note]"));
+        cvFormatList.addPanel(new PanelButtonStorage<>(new GuiRectangle(0, 16 * 3, 100, 16), 2, "§2§nQuest Title§r", "[quest] [/quest]"));
+
         for(int i = 0; i < tfValues.length; i++)
         {
-            cvFormatList.addPanel(new PanelButtonStorage<>(new GuiRectangle(0, i * 16, 100, 16), 1, tfValues[i].getFriendlyName(), tfValues[i].toString()));
+            cvFormatList.addPanel(new PanelButtonStorage<>(new GuiRectangle(0, (i + macroCount) * 16, 100, 16), 1, tfValues[i].getFriendlyName(), tfValues[i].toString()));
         }
     
         PanelVScrollBar scFormatScroll = new PanelVScrollBar(new GuiTransform(GuiAlign.RIGHT_EDGE, new GuiPadding(0, 0, -8, 0), 0));
@@ -102,6 +110,11 @@ public class GuiTextEditor extends GuiScreenCanvas implements IPEventListener, I
         } else if(btn.getButtonID() == 1 && btn instanceof PanelButtonStorage)
         {
             String format = ((PanelButtonStorage<String>)btn).getStoredValue();
+            flText.writeText(format);
+        }else if(btn.getButtonID() == 2 && btn instanceof PanelButtonStorage)
+        {
+            String[] tagPair = ((PanelButtonStorage<String>)btn).getStoredValue().split(" ");
+            String format = tagPair[0] + flText.getSelectedText() + tagPair[1];
             flText.writeText(format);
         }
     }
