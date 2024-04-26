@@ -26,7 +26,7 @@ import java.util.zip.ZipFile;
 
 public class QuestResourcesFile implements IResourcePack, Closeable
 {
-	private static final File rootFolder = new File("config/betterquesting/resources/");
+	public static final File rootFolder = new File("config/betterquesting/resources/");
     public static final Splitter entryNameSplitter = Splitter.on('/').omitEmptyStrings().limit(3);
     ArrayList<ZipFile> zipList = null;
     

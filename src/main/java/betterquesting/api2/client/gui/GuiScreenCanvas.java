@@ -52,13 +52,24 @@ public class GuiScreenCanvas extends GuiScreen implements IScene
 	private GuiScreen previousScreen;
 	
 	private IGuiPanel popup = null;
+	private boolean noEscape;
 	//private IGuiPanel focused = null;
 	
 	public GuiScreenCanvas(GuiScreen parent)
 	{
 		this.parent = parent;
 	}
-    
+
+	public boolean isNoEscape()
+	{
+		return noEscape;
+	}
+
+	public void setNoEscape(boolean noEscape)
+	{
+		this.noEscape = noEscape;
+	}
+
     @Override
     public void openPopup(@Nonnull IGuiPanel panel)
     {
@@ -244,7 +255,7 @@ public class GuiScreenCanvas extends GuiScreen implements IScene
 	@Override
     public void keyTyped(char c, int keyCode)
     {
-		if (keyCode == 1) // ESCAPE
+		if (keyCode == 1 && !this.noEscape) // ESCAPE
 		{
 			if(this.isVolatile || this instanceof IVolatileScreen)
 			{
