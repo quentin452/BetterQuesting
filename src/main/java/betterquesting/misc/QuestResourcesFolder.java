@@ -1,6 +1,7 @@
 package betterquesting.misc;
 
 import betterquesting.core.BetterQuesting;
+import com.google.common.collect.ImmutableSet;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.IMetadataSerializer;
@@ -18,6 +19,7 @@ import java.util.Set;
 public class QuestResourcesFolder implements IResourcePack
 {
 	private static final File rootFolder = new File("config/betterquesting/resources/");
+	public static Set<String> lastResourceDomains;
 	
 	@Override
 	public InputStream getInputStream(ResourceLocation location) throws IOException
@@ -63,7 +65,7 @@ public class QuestResourcesFolder implements IResourcePack
 				}
 			}
 		}
-		
+		lastResourceDomains = ImmutableSet.copyOf(folders);
 		return folders;
 	}
 	
