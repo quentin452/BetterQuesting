@@ -234,7 +234,7 @@ public class GuiQuestEditor extends GuiScreenCanvas implements IPEventListener, 
             }
             case 7: // Description Editor
             {
-                mc.displayGuiScreen(new GuiTextEditor(this, quest.getProperty(NativeProps.DESC), value -> {
+                mc.displayGuiScreen(new GuiTextEditor(this, quest.getProperty(NativeProps.DESC), true, value -> {
                     quest.setProperty(NativeProps.DESC, value);
                     SendChanges();
                 }));
