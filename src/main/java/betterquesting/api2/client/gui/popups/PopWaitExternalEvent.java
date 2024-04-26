@@ -69,8 +69,8 @@ public class PopWaitExternalEvent<T> extends CanvasEmpty
         // there isn't an otherwise good place to poll for this..
         if (future.isDone())
         {
-            handleComplete();
             if(SceneController.getActiveScene() != null) SceneController.getActiveScene().closePopup();
+            handleComplete();
         }
     }
 

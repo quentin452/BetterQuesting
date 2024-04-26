@@ -26,6 +26,7 @@ import betterquesting.api2.client.gui.themes.presets.PresetTexture;
 import betterquesting.api2.utils.QuestTranslation;
 import betterquesting.core.BetterQuesting;
 import betterquesting.misc.QuestResourcesFile;
+import betterquesting.misc.QuestResourcesFolder;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.server.MinecraftServer;
@@ -162,6 +163,11 @@ public class GuiTextEditor extends GuiScreenCanvas implements IPEventListener, I
                 @Override
                 protected void onComplete(String resourceLoc)
                 {
+                    String domain = resourceLoc.substring(0, resourceLoc.lastIndexOf(':'));
+                    if (!QuestResourcesFolder.lastResourceDomains.contains(domain))
+                    {
+                        mc.refreshResources();
+                    }
                     writeImageTag(resourceLoc);
                 }
             };
