@@ -1,25 +1,39 @@
 package betterquesting.client.gui2;
 
+import betterquesting.api.utils.RenderUtils;
+import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.client.gui.GuiScreenCanvas;
 import betterquesting.api2.client.gui.controls.PanelButton;
+import betterquesting.api2.client.gui.controls.PanelButtonQuest;
 import betterquesting.api2.client.gui.misc.GuiAlign;
 import betterquesting.api2.client.gui.misc.GuiPadding;
+import betterquesting.api2.client.gui.misc.GuiRectangle;
 import betterquesting.api2.client.gui.misc.GuiTransform;
 import betterquesting.api2.client.gui.panels.CanvasEmpty;
 import betterquesting.api2.client.gui.panels.CanvasTextured;
 import betterquesting.api2.client.gui.panels.bars.PanelVScrollBar;
 import betterquesting.api2.client.gui.panels.content.PanelTextBox;
 import betterquesting.api2.client.gui.panels.lists.CanvasQuestBookmarks;
+import betterquesting.api2.client.gui.popups.PopContextMenu;
 import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.client.gui.themes.presets.PresetTexture;
 import betterquesting.api2.utils.QuestTranslation;
+import betterquesting.client.BookmarkHandler;
 import betterquesting.misc.QuestSearchEntry;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.EnumChatFormatting;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 public class GuiBookmarks extends GuiScreenCanvas {
     private Consumer<QuestSearchEntry> callback;
+    private CanvasQuestBookmarks cvBookmarks;
 
     public GuiBookmarks(GuiScreen parent) {
         super(parent);
@@ -39,12 +53,14 @@ public class GuiBookmarks extends GuiScreenCanvas {
         PanelTextBox txtDb = new PanelTextBox(new GuiTransform(GuiAlign.TOP_EDGE, new GuiPadding(0, 0, 0, -16), 0), QuestTranslation.translate("betterquesting.gui.bookmarks")).setAlignment(1).setColor(PresetColor.TEXT_MAIN.getColor());
         cvInner.addPanel(txtDb);
 
-        CanvasQuestBookmarks pins = createMainCanvas();
-        cvInner.addPanel(pins);
+        cvBookmarks = createMainCanvas();
+        cvInner.addPanel(cvBookmarks);
+
+        cvInner.addPanel(createPopupMenu());
 
         PanelVScrollBar scDb = new PanelVScrollBar(new GuiTransform(GuiAlign.RIGHT_EDGE, new GuiPadding(-8, 32, 0, 24), 0));
         cvInner.addPanel(scDb);
-        pins.setScrollDriverY(scDb);
+        cvBookmarks.setScrollDriverY(scDb);
     }
 
     private CanvasQuestBookmarks createMainCanvas() {
@@ -69,6 +85,69 @@ public class GuiBookmarks extends GuiScreenCanvas {
         );
         btnExit.setClickAction((b) -> mc.displayGuiScreen(parent));
         cvInner.addPanel(btnExit);
+    }
+
+    private CanvasEmpty createPopupMenu() {
+        return new CanvasEmpty(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 0, 0, 0), 0)) {
+            @Override
+            public boolean onMouseClick(int mx, int my, int click) {
+                if (!this.getTransform().contains(mx, my)) return false;
+                if (click == 1) {
+                    FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
+                    PanelButtonQuest btn = cvBookmarks.getButtonAt(mx, my);
+
+                    if (btn != null) {
+                        UUID questId = btn.getStoredValue().getKey();
+                        int maxWidth = RenderUtils.getStringWidth(QuestTranslation.translate("betterquesting.btn.share_quest"), fr);
+
+                        PopContextMenu popup = new PopContextMenu(new GuiRectangle(mx, my, maxWidth + 12, 48), true);
+
+                        Runnable pinQuest = () -> {
+                            boolean bookmarked = BookmarkHandler.bookmarkQuest(questId);
+                            btn.setBookmarked(bookmarked);
+                            closePopup();
+                        };
+
+                        String pinPopupText;
+                        if (BookmarkHandler.isBookmarked(questId)){
+                            pinPopupText = QuestTranslation.translate("betterquesting.btn.unbookmark_quest");
+                        }else {
+                            pinPopupText = QuestTranslation.translate("betterquesting.btn.bookmark_quest");
+                        }
+                        popup.addButton(pinPopupText, null, pinQuest);
+
+                        Runnable questSharer = () -> {
+                            mc.thePlayer.sendChatMessage("betterquesting.msg.sharequest:" + UuidConverter.encodeUuid(questId));
+                            closePopup();
+                        };
+                        popup.addButton(QuestTranslation.translate("betterquesting.btn.share_quest"), null, questSharer);
+
+                        Runnable copyQuestId = () -> {
+                            StringSelection stringToCopy = new StringSelection(UuidConverter.encodeUuid(questId));
+                            try {
+                                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringToCopy, null);
+                                mc.thePlayer.addChatMessage(
+                                        new ChatComponentText(
+                                                QuestTranslation.translate("betterquesting.msg.copy_quest_copied")));
+                                mc.thePlayer.addChatMessage(
+                                        new ChatComponentText(
+                                                "  " + EnumChatFormatting.AQUA + UuidConverter.encodeUuid(questId)));
+                            } catch (IllegalStateException e) {
+                                mc.thePlayer.addChatMessage(
+                                        new ChatComponentText(
+                                                QuestTranslation.translate("betterquesting.msg.copy_quest_failed")));
+                            }
+                            closePopup();
+                        };
+                        popup.addButton(QuestTranslation.translate("betterquesting.btn.copy_quest"), null, copyQuestId);
+
+                        openPopup(popup);
+                        return true;
+                    }
+                }
+                return false;
+            }
+        };
     }
 
     public void setCallback(Consumer<QuestSearchEntry> callback) {

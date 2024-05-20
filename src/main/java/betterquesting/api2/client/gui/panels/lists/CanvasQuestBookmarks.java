@@ -10,6 +10,7 @@ import betterquesting.api2.client.gui.controls.PanelButtonCustom;
 import betterquesting.api2.client.gui.controls.PanelButtonQuest;
 import betterquesting.api2.client.gui.misc.GuiRectangle;
 import betterquesting.api2.client.gui.misc.IGuiRect;
+import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.api2.client.gui.panels.content.PanelGeneric;
 import betterquesting.api2.client.gui.panels.content.PanelTextBox;
 import betterquesting.api2.client.gui.resources.textures.OreDictTexture;
@@ -146,4 +147,20 @@ public class CanvasQuestBookmarks extends CanvasScrolling {
         return questButton;
     }
 
+    public PanelButtonQuest getButtonAt(int mx, int my) {
+        for(IGuiPanel panel : getChildren()) {
+            if(panel instanceof PanelButtonCustom){
+                int smx = mx - getTransform().getX() + getScrollX();
+                int smy = my - getTransform().getY() + getScrollY();
+                if(panel.getTransform().contains(smx, smy)){
+                    for(IGuiPanel btn : ((PanelButtonCustom) panel).getChildren()){
+                        if(btn instanceof PanelButtonQuest){
+                            return (PanelButtonQuest) btn;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
 }
