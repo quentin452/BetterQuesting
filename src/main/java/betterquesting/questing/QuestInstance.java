@@ -28,7 +28,6 @@ import net.minecraft.init.Items;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
 import net.minecraftforge.common.util.Constants;
 import org.apache.logging.log4j.Level;
 
@@ -50,7 +49,6 @@ public class QuestInstance implements IQuest
 
 	private final HashMap<UUID, NBTTagCompound> completeUsers = new HashMap<>();
     private Set<UUID> preRequisites = new HashSet<>();
-    private final HashSet<UUID> bookmarkedUsers = new HashSet<>();
     private HashMap<UUID, RequirementType> prereqTypes = new HashMap<>();
 
 	private final PropertyContainer qInfo = new PropertyContainer();
@@ -479,26 +477,6 @@ public class QuestInstance implements IQuest
 	{
 		return rewards;
 	}
-
-    @Override
-    public boolean isBookmarked(UUID uuid) {
-        synchronized(bookmarkedUsers)
-        {
-            return bookmarkedUsers.contains(uuid);
-        }
-    }
-
-    @Override
-    public void setBookmarked(UUID uuid, boolean state) {
-        synchronized(bookmarkedUsers)
-        {
-            if (state)
-                bookmarkedUsers.add(uuid);
-            else bookmarkedUsers.remove(uuid);
-
-            DirtyPlayerMarker.markDirty(uuid);
-        }
-    }
 
     @Nonnull
 	@Override

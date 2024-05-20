@@ -63,9 +63,6 @@ public interface IQuest extends INBTSaveLoad<NBTTagCompound>, INBTProgress<NBTTa
 	IDatabaseNBT<ITask, NBTTagList, NBTTagList> getTasks();
 	IDatabaseNBT<IReward, NBTTagList, NBTTagList> getRewards();
 
-	boolean isBookmarked(UUID uuid);
-	void setBookmarked(UUID uuid, boolean state);
-
     /** Returns a mutable set. Changes made to the returned set will be reflected in the quest! */
 	@Nonnull
     Set<UUID> getRequirements();

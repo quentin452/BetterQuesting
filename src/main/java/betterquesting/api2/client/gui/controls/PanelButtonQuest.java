@@ -19,6 +19,7 @@ import betterquesting.api2.client.gui.themes.presets.PresetIcon;
 import betterquesting.api2.client.gui.themes.presets.PresetTexture;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.QuestTranslation;
+import betterquesting.client.BookmarkHandler;
 import betterquesting.questing.QuestDatabase;
 import betterquesting.storage.QuestSettings;
 import com.mojang.realmsclient.gui.ChatFormatting;
@@ -86,7 +87,7 @@ public class PanelButtonQuest extends PanelButtonStorage<Map.Entry<UUID, IQuest>
         setIcon(new OreDictTexture(1F, value == null ? new BigItemStack(Items.nether_star) : value.getValue().getProperty(NativeProps.ICON), false, true), 4);
         //setTooltip(value == null ? Collections.emptyList() : value.getValue().getTooltip(player));
         setActive(QuestingAPI.getAPI(ApiReference.SETTINGS).canUserEdit(player) || !lock || BQ_Settings.viewMode);
-		setBookmarked(value.getValue().isBookmarked(QuestingAPI.getQuestingUUID(player)));
+		setBookmarked(BookmarkHandler.isBookmarked(value.getKey()));
     }
 
 	@Override

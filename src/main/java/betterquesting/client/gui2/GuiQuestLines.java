@@ -45,6 +45,7 @@ import betterquesting.api2.client.gui.themes.presets.PresetIcon;
 import betterquesting.api2.client.gui.themes.presets.PresetTexture;
 import betterquesting.api2.utils.QuestTranslation;
 import betterquesting.api2.utils.Tuple2;
+import betterquesting.client.BookmarkHandler;
 import betterquesting.client.gui2.editors.GuiQuestLinesEditor;
 import betterquesting.client.gui2.editors.designer.GuiDesigner;
 import betterquesting.handlers.ConfigHandler;
@@ -406,21 +407,18 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
 
                     if (btnQuest != null) {
                         UUID questId = btnQuest.getStoredValue().getKey();
-                        IQuest quest = btnQuest.getStoredValue().getValue();
                         int maxWidth = RenderUtils.getStringWidth(QuestTranslation.translate("betterquesting.btn.share_quest"), fr);
 
                         PopContextMenu popup = new PopContextMenu(new GuiRectangle(mx, my, maxWidth + 12, 48), true);
 
-                        UUID playerID = QuestingAPI.getQuestingUUID(mc.thePlayer);
                         Runnable pinQuest = () -> {
-                            boolean bookmarked = !quest.isBookmarked(playerID);
-                            quest.setBookmarked(playerID, bookmarked);
+                            boolean bookmarked = BookmarkHandler.bookmarkQuest(questId);
                             btnQuest.setBookmarked(bookmarked);
                             closePopup();
                         };
 
                         String pinPopupText;
-                        if (quest.isBookmarked(playerID)){
+                        if (BookmarkHandler.isBookmarked(questId)){
                             pinPopupText = QuestTranslation.translate("betterquesting.btn.unbookmark_quest");
                         }else {
                             pinPopupText = QuestTranslation.translate("betterquesting.btn.bookmark_quest");
@@ -498,15 +496,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
             openQuestLine(entry.getQuestLineEntry());
             UUID selectedQuestId = entry.getQuest().getKey();
             Optional<PanelButtonQuest> targetQuestButton = cvQuest.getQuestButtons().stream().filter(panelButtonQuest -> panelButtonQuest.getStoredValue().getKey().equals(selectedQuestId)).findFirst();
-            targetQuestButton.ifPresent(panelButtonQuest -> {
-                GuiTextureColored newTexture = new GuiTextureColored(panelButtonQuest.txFrame,
-                        new GuiColorPulse(
-                                new GuiColorStatic(255, 220, 115, 255),
-                                new GuiColorStatic(255, 191, 0, 255),
-                                1, 0
-                        ));
-                panelButtonQuest.setTextures(newTexture, newTexture, newTexture);
-            });
+            targetQuestButton.ifPresent(this::highlightButton);
         });
         return pinsGui;
     }
@@ -517,17 +507,7 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
             openQuestLine(entry.getQuestLineEntry());
             UUID selectedQuestId = entry.getQuest().getKey();
             Optional<PanelButtonQuest> targetQuestButton = cvQuest.getQuestButtons().stream().filter(panelButtonQuest -> panelButtonQuest.getStoredValue().getKey().equals(selectedQuestId)).findFirst();
-            targetQuestButton.ifPresent(panelButtonQuest -> {
-                GuiTextureColored newTexture = new GuiTextureColored(panelButtonQuest.txFrame,
-                        new GuiColorPulse(
-                                new GuiColorStatic(0, 0, 0, 255),
-                                new GuiColorStatic(255, 191, 0, 255),
-                                0.7, 0
-                        ));
-                panelButtonQuest.setTextures(newTexture, newTexture, newTexture);
-                cvQuest.setZoom(2f);
-                cvQuest.centerOn(panelButtonQuest);
-            });
+            targetQuestButton.ifPresent(this::highlightButton);
         });
 
         return searchGui;
@@ -828,5 +808,17 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
 
         claimAll.setIcon(PresetIcon.ICON_CHEST_ALL.getTexture(), new GuiColorStatic(0xFF444444), 0);
         claimAll.setActive(false);
+    }
+
+    private void highlightButton(PanelButtonQuest panelButtonQuest){
+        GuiTextureColored newTexture = new GuiTextureColored(panelButtonQuest.txFrame,
+                new GuiColorPulse(
+                        new GuiColorStatic(0, 0, 0, 255),
+                        new GuiColorStatic(255, 191, 0, 255),
+                        0.7, 0
+                ));
+        panelButtonQuest.setTextures(newTexture, newTexture, newTexture);
+        cvQuest.setZoom(2f);
+        cvQuest.centerOn(panelButtonQuest);
     }
 }

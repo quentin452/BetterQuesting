@@ -14,6 +14,7 @@ import betterquesting.api2.client.gui.panels.content.PanelGeneric;
 import betterquesting.api2.client.gui.panels.content.PanelTextBox;
 import betterquesting.api2.client.gui.resources.textures.OreDictTexture;
 import betterquesting.api2.utils.QuestTranslation;
+import betterquesting.client.BookmarkHandler;
 import betterquesting.misc.QuestSearchEntry;
 import betterquesting.questing.QuestDatabase;
 import betterquesting.questing.QuestLineDatabase;
@@ -32,9 +33,10 @@ public class CanvasQuestBookmarks extends CanvasScrolling {
     private List<QuestSearchEntry> questList;
     private Consumer<QuestSearchEntry> questOpenCallback;
     private Consumer<QuestSearchEntry> questHighlightCallback;
-    private EntityPlayer player;
+    private final EntityPlayer player;
     private final UUID questingUUID;
     private int resultWidth = 256;
+
     public CanvasQuestBookmarks(IGuiRect rect, EntityPlayer player) {
         super(rect);
         this.player = player;
@@ -62,10 +64,10 @@ public class CanvasQuestBookmarks extends CanvasScrolling {
     }
 
     protected Iterator<QuestSearchEntry> getIterator() {
-        if (questList != null)
-            return questList.stream().filter(e -> e.getQuest().getValue().isBookmarked(questingUUID)).iterator();
-        questList = collectQuests();
-        return questList.stream().filter(e -> e.getQuest().getValue().isBookmarked(questingUUID)).iterator();
+        if(questList == null){
+            questList = collectQuests();
+        }
+        return questList.stream().filter(e -> BookmarkHandler.isBookmarked(e.getQuest().getKey())).iterator();
     }
 
     private List<QuestSearchEntry> collectQuests() {

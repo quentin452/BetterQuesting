@@ -259,8 +259,6 @@ public class SaveLoadHandler {
             JsonObject json = JsonHelper.ReadFromFile(file);
             NBTTagCompound nbt = NBTConverter.JSONtoNBT_Object(json, new NBTTagCompound(), true);
             QuestDatabase.INSTANCE.readProgressFromNBT(nbt.getTagList("questProgress", 10), true);
-            if (nbt.hasKey("bookmarkedQuests"))
-                QuestDatabase.INSTANCE.readBookmarksFromNBT(nbt.getCompoundTag("bookmarkedQuests"));
         });
     }
 
@@ -344,7 +342,6 @@ public class SaveLoadHandler {
         NBTTagCompound json = new NBTTagCompound();
 
         json.setTag("questProgress", QuestDatabase.INSTANCE.writeProgressToNBT(new NBTTagList(), Collections.singletonList(player)));
-        json.setTag("bookmarkedQuests", QuestDatabase.INSTANCE.writeBookmarksToNBT(player));
 
         return JsonHelper.WriteToFile2(new File(dirProgress, player.toString() + ".json"), out -> NBTConverter.NBTtoJSON_Compound(json, out, true));
     }
