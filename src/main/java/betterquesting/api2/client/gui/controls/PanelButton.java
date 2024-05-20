@@ -8,7 +8,6 @@ import betterquesting.api2.client.gui.resources.colors.GuiColorStatic;
 import betterquesting.api2.client.gui.resources.colors.IGuiColor;
 import betterquesting.api2.client.gui.resources.textures.IGuiTexture;
 import betterquesting.api2.client.gui.themes.presets.PresetColor;
-import betterquesting.api2.client.gui.themes.presets.PresetIcon;
 import betterquesting.api2.client.gui.themes.presets.PresetTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -24,7 +23,6 @@ import java.util.function.Consumer;
 public class PanelButton implements IPanelButton
 {
     private static final ResourceLocation CLICK_SND = new ResourceLocation("gui.button.press");
-
 	private final IGuiRect transform;
 	private boolean enabled = true;
 	
@@ -38,7 +36,6 @@ public class PanelButton implements IPanelButton
 	private String btnText;
 	private int textAlign = 1;
 	private boolean isActive = true;
-
 	private final int btnID;
 	
 	private boolean pendingRelease = false;

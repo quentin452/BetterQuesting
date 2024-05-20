@@ -15,7 +15,6 @@ import net.minecraft.nbt.NBTTagList;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
