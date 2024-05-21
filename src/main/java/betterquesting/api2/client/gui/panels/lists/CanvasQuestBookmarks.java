@@ -22,7 +22,7 @@ import betterquesting.questing.QuestLineDatabase;
 import com.google.common.collect.Maps;
 import net.minecraft.entity.player.EntityPlayer;
 
-import java.util.Iterator;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -34,9 +34,9 @@ public class CanvasQuestBookmarks extends CanvasScrolling {
     private List<QuestSearchEntry> questList;
     private Consumer<QuestSearchEntry> questOpenCallback;
     private Consumer<QuestSearchEntry> questHighlightCallback;
+    private static List<QuestSearchEntry> bookmarkedQuests;
     private final EntityPlayer player;
     private final UUID questingUUID;
-    private int resultWidth = 256;
 
     public CanvasQuestBookmarks(IGuiRect rect, EntityPlayer player) {
         super(rect);
@@ -48,27 +48,23 @@ public class CanvasQuestBookmarks extends CanvasScrolling {
     public void initPanel()
     {
         super.initPanel();
-        this.resultWidth = this.getTransform().getWidth();
-        Iterator<QuestSearchEntry> results = getIterator();
-        int idx = 0;
-        while(results.hasNext()){
-            if (addResult(results.next(), idx, resultWidth)){
-                idx++;
-            }
+        int resultWidth = this.getTransform().getWidth();
+        if(BookmarkHandler.hasChanged()) {
+            bookmarkedQuests = getBookmarkedQuests();
+        }
+
+        for (int i = 0; i < bookmarkedQuests.size(); i++) {
+            QuestSearchEntry entry = bookmarkedQuests.get(i);
+            addResult(entry, i, resultWidth);
         }
     }
 
-    @Override
-    public void drawPanel(int mx, int my, float partialTick)
-    {
-        super.drawPanel(mx, my, partialTick);
-    }
-
-    protected Iterator<QuestSearchEntry> getIterator() {
-        if(questList == null){
+    protected List<QuestSearchEntry> getBookmarkedQuests() {
+        if(questList == null) {
             questList = collectQuests();
         }
-        return questList.stream().filter(e -> BookmarkHandler.isBookmarked(e.getQuest().getKey())).iterator();
+        return questList.stream().filter(e -> BookmarkHandler.isBookmarked(e.getQuest().getKey()))
+                .sorted(Comparator.comparing(e -> BookmarkHandler.getIndexOf(e.getQuest().getKey()))).collect(Collectors.toList());
     }
 
     private List<QuestSearchEntry> collectQuests() {
@@ -92,13 +88,11 @@ public class CanvasQuestBookmarks extends CanvasScrolling {
         this.questOpenCallback = questOpenCallback;
     }
 
-    protected boolean addResult(QuestSearchEntry entry, int index, int cachedWidth) {
+    protected void addResult(QuestSearchEntry entry, int index, int cachedWidth) {
         PanelButtonCustom buttonContainer = createContainerButton(entry, index, cachedWidth);
 
         addTextBox(cachedWidth, buttonContainer, 56, 6, QuestTranslation.translateQuestLineName(entry.getQuestLineEntry()));
         addTextBox(cachedWidth, buttonContainer, 36, 20, QuestTranslation.translateQuestName(entry.getQuest()));
-
-        return true;
     }
 
     private void addTextBox(int cachedWidth, PanelButtonCustom buttonContainer, int xOffset, int yOffset, String text) {

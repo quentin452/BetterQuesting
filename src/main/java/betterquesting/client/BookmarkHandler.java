@@ -17,6 +17,7 @@ public class BookmarkHandler {
     private static final List<String> BOOKMARKS = new ArrayList<>();
     private static final String BOOKMARK_DIR = BetterQuesting.MODID + "/bookmarks/";
     private static File bookmarkFile;
+    private static boolean hasChanged = true;
 
     public static boolean bookmarkQuest(UUID questId) {
         String uuid = questId.toString();
@@ -28,13 +29,25 @@ public class BookmarkHandler {
             added = true;
         }
 
+        hasChanged = true;
         saveBookmarks();
         return added;
     }
 
+    public static int getIndexOf(UUID questId) {
+        return BOOKMARKS.indexOf(questId.toString());
+    }
+
     public static boolean isBookmarked(UUID questId) {
-        String uuid = questId.toString();
-        return BOOKMARKS.contains(uuid);
+        return BOOKMARKS.contains(questId.toString());
+    }
+
+    public static boolean hasChanged() {
+        if(hasChanged) {
+            hasChanged = false;
+            return true;
+        }
+        return false;
     }
 
     private static void saveBookmarks() {
