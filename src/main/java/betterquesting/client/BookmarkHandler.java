@@ -59,9 +59,10 @@ public class BookmarkHandler {
     }
 
     public static void loadBookmarks(String address) {
-        BOOKMARKS.clear();
         String identifier = getIdentifier(address);
         bookmarkFile = new File(BOOKMARK_DIR, String.format("%s.txt", identifier));
+        BOOKMARKS.clear();
+        hasChanged = true;
 
         if(!bookmarkFile.exists()) return;
 
