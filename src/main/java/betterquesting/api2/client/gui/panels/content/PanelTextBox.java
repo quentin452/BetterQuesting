@@ -10,7 +10,6 @@ import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.api2.client.gui.resources.colors.GuiColorStatic;
 import betterquesting.api2.client.gui.resources.colors.IGuiColor;
 import betterquesting.core.BetterQuesting;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -20,50 +19,38 @@ import org.lwjgl.opengl.GL11;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
+import java.util.Optional;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static betterquesting.api.storage.BQ_Settings.textWidthCorrection;
 
 public class PanelTextBox implements IGuiPanel {
-    private static final Pattern url = Pattern.compile("\\[url(?: text=([^]]+))?] *(.*?) *\\[/url]");
+    /**
+     * Tokenizer pattern which is used to tokenize raw text into literal text fragments,
+     * (potential) formatting tags, and formatting codes.
+     *
+     * <p>This is accomplished by matching empty strings which immediately precede or follow a
+     * square bracket or formatting code.
+     */
+    private static final Pattern TOKEN_DELIMITER = Pattern.compile("(?=\\[)|(?=§.)|(?<=])|(?<=§.)");
+    private static final Pattern COLOUR_FORMATTING_CODE_PATTERN = Pattern.compile("§[0-9a-f]");
+    private static final String FORMATTING_CODE_RESET = "§r";
+
     private static final String defaultUrlProtocol = "https";
     private static final Set<String> supportedUrlProtocol = ImmutableSet.of("http", "https");
     private final GuiRectText transform;
+    private final List<UrlRange> urlRanges = new ArrayList<>();
     private final List<HotZone> hotZones = new ArrayList<>();
     private boolean enabled = true;
 
-    // List of colors set for specific themes, usually dark ones, to improve readability
-    private static final ImmutableMap<String, String> urlColors = ImmutableMap.of(
-            "betterquesting:dark", "§9§n",
-            "betterquesting:stronghold", "§9§n",
-            "betterquesting:overworld", "§9§n");
-
-    private static final ImmutableMap<String, String> warningColors = ImmutableMap.of(
-            "betterquesting:dark", "§c",
-            "betterquesting:stronghold", "§c",
-            "betterquesting:overworld", "§c");
-
-    private static final ImmutableMap<String, String> noteColors = ImmutableMap.of(
-            "betterquesting:stronghold", "§b",
-            "betterquesting:ender", "§b",
-            "betterquesting:overworld", "§b");
-
-    private static final ImmutableMap<String, String> questReferenceColors = ImmutableMap.of(
-            "betterquesting:dark", "§a§n",
-            "betterquesting:stronghold", "§a§n",
-            "betterquesting:overworld", "§a§n");
-
-    private static final Pattern warningTagStart = Pattern.compile("\\[warn]");
-    private static final Pattern noteTagStart = Pattern.compile("\\[note]");
-    private static final Pattern questRefTagStart = Pattern.compile("\\[quest]");
-    private static final Pattern allTagEnds = Pattern.compile("\\[/warn]|\\[/note]|\\[/quest]");
-
-    private String text = "", rawText = "";
+    private String text = "";
     private boolean shadow = false;
     private IGuiColor color = new GuiColorStatic(255, 255, 255, 255);
     private final boolean autoFit;
@@ -100,35 +87,90 @@ public class PanelTextBox implements IGuiPanel {
 
     public PanelTextBox setText(String text) {
         if (hyperlinkAware) {
-            String coloredText = "";
-            String currentTheme = BQ_Settings.curTheme;
-            String urlColor = urlColors.getOrDefault(currentTheme, "§1§n"); // default dark blue + underlined
-            String warningColor = warningColors.getOrDefault(currentTheme, "§4"); // default dark red
-            String noteColor = noteColors.getOrDefault(currentTheme, "§3"); // default dark aqua
-            String questRefColor = questReferenceColors.getOrDefault(currentTheme, "§2§n"); // default dark green + bold
+            StringBuilder textBuilder = new StringBuilder();
+            urlRanges.clear();
 
-            coloredText = warningTagStart.matcher(text).replaceAll(warningColor);
-            coloredText = noteTagStart.matcher(coloredText).replaceAll(noteColor);
-            coloredText = questRefTagStart.matcher(coloredText).replaceAll(questRefColor);
-            coloredText = allTagEnds.matcher(coloredText).replaceAll("§r");
-            coloredText = url.matcher(coloredText).replaceAll(urlColor + "$0§r");
-            this.rawText = coloredText;
-            StringBuilder sb = new StringBuilder();
-            Matcher matcher = url.matcher(coloredText);
-            int last = 0;
-            while (matcher.find()) {
-                sb.append(coloredText, last, matcher.start());
-                if (matcher.start(1) != -1) {
-                    sb.append(coloredText, matcher.start(1), matcher.end(1));
-                } else {
-                    sb.append(coloredText, matcher.start(2), matcher.end(2));
+            int currUrlStart = -1;
+            Deque<FormattingTag.TagInstance> tags = new ArrayDeque<>();
+            Scanner scanner = new Scanner(text).useDelimiter(TOKEN_DELIMITER);
+            while (scanner.hasNext()) {
+                String token = scanner.next();
+                if (token.equals(FORMATTING_CODE_RESET)) {
+                    // Reset the formatting, then reapply all active tags
+                    // in order of outermost to innermost (reverse of stack order).
+                    textBuilder.append(FORMATTING_CODE_RESET);
+                    tags.descendingIterator()
+                            .forEachRemaining(
+                                    t -> textBuilder.append(t.getTag().getColourFormattingString()));
+                    tags.descendingIterator()
+                            .forEachRemaining(
+                                    t -> textBuilder.append(t.getTag().getTextFormattingString()));
+                    continue;
+                } else if (COLOUR_FORMATTING_CODE_PATTERN.matcher(token).matches()) {
+                    textBuilder.append(token);
+                    // Re-apply text formatting codes since we just changed the colour.
+                    tags.descendingIterator()
+                            .forEachRemaining(
+                                    t -> textBuilder.append(t.getTag().getTextFormattingString()));
+                    continue;
                 }
-                last = matcher.end();
+
+                Optional<FormattingTag.TagInstance> openingTagOptional =
+                        FormattingTag.parseOpeningTag(token);
+                if (openingTagOptional.isPresent()) {
+                    FormattingTag.TagInstance openingTag = openingTagOptional.get();
+                    if (openingTag.getTag() == FormattingTag.RESET) {
+                        textBuilder.append(FORMATTING_CODE_RESET);
+                        continue;
+                    }
+
+                    tags.push(openingTag);
+                    textBuilder.append(openingTag.getTag().getColourFormattingString());
+                    // Re-apply text formatting codes since we may have just changed the colour.
+                    tags.descendingIterator()
+                            .forEachRemaining(
+                                    t -> textBuilder.append(t.getTag().getTextFormattingString()));
+
+                    if (openingTag.getTag() == FormattingTag.URL) {
+                        currUrlStart = textBuilder.length();
+                    }
+
+                    continue;
+                }
+
+                Optional<FormattingTag> closingTagOptional = FormattingTag.parseClosingTag(token);
+                if (closingTagOptional.isPresent()) {
+                    FormattingTag closingTag = closingTagOptional.get();
+
+                    if (!tags.isEmpty() && closingTag == tags.peek().getTag()) {
+                        FormattingTag.TagInstance openingTag = tags.pop();
+                        if (closingTag == FormattingTag.URL) {
+                            String url =
+                                    openingTag.getParams()
+                                            .getOrDefault(
+                                                    "link", textBuilder.substring(currUrlStart));
+                            urlRanges.add(new UrlRange(currUrlStart, textBuilder.length(), url));
+                        }
+
+                        // Reset the formatting, then reapply all active tags
+                        // in order of outermost to innermost (reverse of stack order).
+                        // Note that the tag we just closed was already popped off the stack.
+                        textBuilder.append(FORMATTING_CODE_RESET);
+                        tags.descendingIterator()
+                                .forEachRemaining(
+                                        t -> textBuilder.append(t.getTag().getColourFormattingString()));
+                        tags.descendingIterator()
+                                .forEachRemaining(
+                                        t -> textBuilder.append(t.getTag().getTextFormattingString()));
+                    }  // Else the closing tag doesn't match the current tag, so ignore it.
+
+                    continue;
+                }
+
+                textBuilder.append(token);
             }
-            if (last < coloredText.length()) {
-                sb.append(coloredText, last, coloredText.length());
-            }
-            this.text = sb.toString();
+
+            this.text = textBuilder.toString();
         } else {
             this.text = text;
         }
@@ -162,15 +204,10 @@ public class PanelTextBox implements IGuiPanel {
             lines = RenderUtils.splitStringWithoutFormat(this.text, (int) Math.floor(fullbox.getWidth() / scale / textWidthCorrection), fr);
         }
 
-        Matcher matcher = url.matcher(rawText);
-        // removal of [url] and whitespace on either side of the url can affect string pos
-        int toDeduct = 0;
-
-        while (matcher.find()) {
-            String url = matcher.group(2);
-            int displayTextLength = matcher.start(1) == -1 ? url.length() : matcher.end(1) - matcher.start(1);
-            int start = matcher.start() - toDeduct;
-            int end = start + displayTextLength;
+        for (UrlRange urlRange : urlRanges) {
+            String url = urlRange.url;
+            int start = urlRange.start;
+            int end = urlRange.end;
 
             int currentPos = 0;
             boolean foundUrlStart = false;
@@ -208,7 +245,6 @@ public class PanelTextBox implements IGuiPanel {
                     }
                 }
             }
-            toDeduct += matcher.end() - matcher.start() - displayTextLength;
         }
     }
 
@@ -415,6 +451,18 @@ public class PanelTextBox implements IGuiPanel {
         @Override
         public int compareTo(IGuiRect o) {
             return proxy.compareTo(o);
+        }
+    }
+
+    private static class UrlRange {
+        final int start;
+        final int end;
+        final String url;
+
+        public UrlRange(int start, int end, String url) {
+            this.start = start;
+            this.end = end;
+            this.url = url;
         }
     }
 
