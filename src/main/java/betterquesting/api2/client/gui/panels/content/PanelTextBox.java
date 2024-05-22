@@ -119,11 +119,6 @@ public class PanelTextBox implements IGuiPanel {
                         FormattingTag.parseOpeningTag(token);
                 if (openingTagOptional.isPresent()) {
                     FormattingTag.TagInstance openingTag = openingTagOptional.get();
-                    if (openingTag.getTag() == FormattingTag.RESET) {
-                        textBuilder.append(FORMATTING_CODE_RESET);
-                        continue;
-                    }
-
                     tags.push(openingTag);
                     textBuilder.append(openingTag.getTag().getColourFormattingString());
                     // Re-apply text formatting codes since we may have just changed the colour.

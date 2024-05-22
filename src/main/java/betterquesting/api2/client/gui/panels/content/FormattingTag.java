@@ -24,16 +24,6 @@ public enum FormattingTag {
     OBFUSCATED("obfuscated"),
 
     /**
-     * Special tag which forcibly resets all formatting, even within other tags.
-     *
-     * <p>Unlike most tags, the reset tag should not be closed.
-     *
-     * <p>The active tags' formatting will be restored by the next encountered tag or literal
-     * {@code "§r"}.
-     */
-    RESET("reset"),
-
-    /**
      * Defines a clickable hyperlink.
      *
      * <p>Params:
