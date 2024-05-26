@@ -478,7 +478,7 @@ public class QuestInstance implements IQuest
 		return rewards;
 	}
 
-	@Nonnull
+    @Nonnull
 	@Override
     public Set<UUID> getRequirements()
     {
@@ -616,7 +616,6 @@ public class QuestInstance implements IQuest
                 comJson.appendTag(tags);
             }
             json.setTag("completed", comJson);
-
             NBTTagList tskJson = tasks.writeProgressToNBT(new NBTTagList(), users);
             json.setTag("tasks", tskJson);
 

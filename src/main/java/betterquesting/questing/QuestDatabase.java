@@ -25,8 +25,10 @@ public class QuestDatabase extends UuidDatabase<IQuest> implements IQuestDatabas
 	    put(questID, quest);
 		return quest;
 	}
-	
-	@Override
+
+
+
+    @Override
     public IQuest remove(Object key)
     {
         if (!(key instanceof UUID))
@@ -65,8 +67,8 @@ public class QuestDatabase extends UuidDatabase<IQuest> implements IQuestDatabas
     {
         quest.getRequirements().remove(questID);
     }
-	
-	@Override
+
+    @Override
 	public synchronized NBTTagList writeToNBT(NBTTagList nbt, @Nullable List<UUID> subset)
 	{
 		orderedEntries().forEach(entry ->

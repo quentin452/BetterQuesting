@@ -97,10 +97,12 @@ public enum PresetIcon
     ICON_ZOOM("icon_zoom"),
     ICON_ZOOM_IN("icon_zoom_in"),
     ICON_ZOOM_OUT("icon_zoom_out"),
+
+	ICON_BOOKMARK("icon_bookmark"),
+	ICON_QUEST("icon_quest"),
     
     ICON_CHEST("icon_chest"),
     ICON_CHEST_ALL("icon_chest_all"),
-    ICON_BOOKMARK("icon_bookmark"),
     ICON_MENU("icon_menu"),
 	
 	ICON_PATREON("icon_patreon"),
@@ -207,6 +209,7 @@ public enum PresetIcon
         reg.setDefaultTexture(ICON_CHEST.key, new SimpleTexture(TX_ICONS, new GuiRectangle(160, 64, 16, 16)).maintainAspect(true));
         reg.setDefaultTexture(ICON_BOOKMARK.key, new SimpleTexture(TX_ICONS, new GuiRectangle(176, 64, 16, 16)).maintainAspect(true));
         reg.setDefaultTexture(ICON_MENU.key, new SimpleTexture(TX_ICONS, new GuiRectangle(192, 64, 16, 16)).maintainAspect(true));
+		reg.setDefaultTexture(ICON_QUEST.key, new SimpleTexture(TX_ICONS, new GuiRectangle(80, 80, 16, 16)).maintainAspect(true));
         
         reg.setDefaultTexture(ICON_PATREON.key, new SimpleTexture(TX_ICONS, new GuiRectangle(144, 80, 16, 16)).maintainAspect(true));
         reg.setDefaultTexture(ICON_TWITCH.key, new SimpleTexture(TX_ICONS, new GuiRectangle(160, 80, 16, 16)).maintainAspect(true));

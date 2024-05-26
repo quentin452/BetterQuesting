@@ -9,14 +9,17 @@ import betterquesting.api.questing.tasks.ITask;
 import betterquesting.api.storage.BQ_Settings;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api2.client.gui.misc.GuiRectangle;
+import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.resources.colors.IGuiColor;
 import betterquesting.api2.client.gui.resources.textures.GuiTextureColored;
 import betterquesting.api2.client.gui.resources.textures.IGuiTexture;
 import betterquesting.api2.client.gui.resources.textures.OreDictTexture;
 import betterquesting.api2.client.gui.themes.presets.PresetColor;
+import betterquesting.api2.client.gui.themes.presets.PresetIcon;
 import betterquesting.api2.client.gui.themes.presets.PresetTexture;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.QuestTranslation;
+import betterquesting.client.BookmarkHandler;
 import betterquesting.questing.QuestDatabase;
 import betterquesting.storage.QuestSettings;
 import com.mojang.realmsclient.gui.ChatFormatting;
@@ -34,9 +37,12 @@ import java.util.UUID;
 
 public class PanelButtonQuest extends PanelButtonStorage<Map.Entry<UUID, IQuest>>
 {
+	private static final IGuiTexture PIN_TEX = PresetIcon.ICON_BOOKMARK.getTexture();
     public final GuiRectangle rect;
     public final EntityPlayer player;
 	public final IGuiTexture txFrame;
+
+	private boolean isBookmarked = false;
 
 	public PanelButtonQuest(GuiRectangle rect, int id, String txt, Map.Entry<UUID, IQuest> value)
     {
@@ -81,7 +87,21 @@ public class PanelButtonQuest extends PanelButtonStorage<Map.Entry<UUID, IQuest>
         setIcon(new OreDictTexture(1F, value == null ? new BigItemStack(Items.nether_star) : value.getValue().getProperty(NativeProps.ICON), false, true), 4);
         //setTooltip(value == null ? Collections.emptyList() : value.getValue().getTooltip(player));
         setActive(QuestingAPI.getAPI(ApiReference.SETTINGS).canUserEdit(player) || !lock || BQ_Settings.viewMode);
+		setBookmarked(BookmarkHandler.isBookmarked(value.getKey()));
     }
+
+	@Override
+	public void drawPanel(int mx, int my, float partialTick) {
+		super.drawPanel(mx, my, partialTick);
+		if (isBookmarked){
+			IGuiRect bounds = this.getTransform();
+			PIN_TEX.drawTexture(bounds.getX(), bounds.getY(), bounds.getWidth()/4,  bounds.getHeight()/4, 1, partialTick);
+		}
+	}
+
+	public void setBookmarked(boolean state) {
+		isBookmarked = state;
+	}
 
     @Override
     public List<String> getTooltip(int mx, int my)
