@@ -7,7 +7,6 @@ import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.tasks.ITask;
 import betterquesting.api.storage.BQ_Settings;
-import betterquesting.api.utils.BigItemStack;
 import betterquesting.api2.client.gui.misc.GuiRectangle;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.resources.colors.IGuiColor;
@@ -21,13 +20,15 @@ import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.QuestTranslation;
 import betterquesting.client.BookmarkHandler;
 import betterquesting.questing.QuestDatabase;
+import betterquesting.questing.QuestInstance;
 import betterquesting.storage.QuestSettings;
+import com.google.common.collect.Maps;
 import com.mojang.realmsclient.gui.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Items;
 import net.minecraft.nbt.NBTTagCompound;
 
+import javax.annotation.Nullable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,15 +45,20 @@ public class PanelButtonQuest extends PanelButtonStorage<Map.Entry<UUID, IQuest>
 
 	private boolean isBookmarked = false;
 
-	public PanelButtonQuest(GuiRectangle rect, int id, String txt, Map.Entry<UUID, IQuest> value)
+	public PanelButtonQuest(GuiRectangle rect, int id, String txt, @Nullable Map.Entry<UUID, IQuest> value)
     {
 		super(rect, id, txt, value);
         this.rect = rect;
-        
         player = Minecraft.getMinecraft().thePlayer;
-        EnumQuestState qState = value == null ? EnumQuestState.LOCKED : value.getValue().getState(player);
+
+		if(value == null) {
+			IQuest dummyQuest = new QuestInstance();
+			value = Maps.immutableEntry(UUID.randomUUID(), dummyQuest);
+		}
+
+        EnumQuestState qState = value.getValue().getState(player);
         IGuiColor txIconCol = null;
-        boolean main = value == null ? false : value.getValue().getProperty(NativeProps.MAIN);
+        boolean main = value.getValue().getProperty(NativeProps.MAIN);
         boolean lock = false;
         
         switch(qState)
@@ -84,8 +90,7 @@ public class PanelButtonQuest extends PanelButtonStorage<Map.Entry<UUID, IQuest>
 
 		IGuiTexture btnTx = new GuiTextureColored(txFrame, txIconCol);
         setTextures(btnTx, btnTx, btnTx);
-        setIcon(new OreDictTexture(1F, value == null ? new BigItemStack(Items.nether_star) : value.getValue().getProperty(NativeProps.ICON), false, true), 4);
-        //setTooltip(value == null ? Collections.emptyList() : value.getValue().getTooltip(player));
+        setIcon(new OreDictTexture(1F, value.getValue().getProperty(NativeProps.ICON), false, true), 4);
         setActive(QuestingAPI.getAPI(ApiReference.SETTINGS).canUserEdit(player) || !lock || BQ_Settings.viewMode);
 		setBookmarked(BookmarkHandler.isBookmarked(value.getKey()));
     }
@@ -204,7 +209,7 @@ public class PanelButtonQuest extends PanelButtonStorage<Map.Entry<UUID, IQuest>
 		list.add(ChatFormatting.GRAY + QuestTranslation.translate("betterquesting.tooltip.quest_logic", quest.getProperty(NativeProps.LOGIC_QUEST).toString().toUpperCase()));
 		list.add(ChatFormatting.GRAY + QuestTranslation.translate("betterquesting.tooltip.simultaneous", quest.getProperty(NativeProps.SIMULTANEOUS)));
 		list.add(ChatFormatting.GRAY + QuestTranslation.translate("betterquesting.tooltip.auto_claim", quest.getProperty(NativeProps.AUTO_CLAIM)));
-		if(quest.getProperty(NativeProps.REPEAT_TIME).intValue() >= 0)
+		if(quest.getProperty(NativeProps.REPEAT_TIME) >= 0)
 		{
 			long time = quest.getProperty(NativeProps.REPEAT_TIME)/20;
 			DecimalFormat df = new DecimalFormat("00");
