@@ -14,6 +14,8 @@ import betterquesting.api2.client.gui.popups.PopChoice;
 import betterquesting.api2.client.gui.themes.presets.PresetIcon;
 import betterquesting.api2.utils.QuestTranslation;
 import betterquesting.client.BQ_Keybindings;
+import betterquesting.client.gui2.GuiHome;
+import betterquesting.client.gui2.GuiQuestLines;
 import betterquesting.core.BetterQuesting;
 import com.caedis.duradisplay.render.DurabilityRenderer;
 import com.mojang.realmsclient.gui.ChatFormatting;
@@ -201,7 +203,7 @@ public class GuiScreenCanvas extends GuiScreen implements IScene
 		
 		List<String> tt = this.getTooltip(mx, my);
 		
-		if(tt != null && tt.size() > 0)
+		if(tt != null && !tt.isEmpty())
 		{
 			this.drawHoveringText(tt, mx, my, mc.fontRenderer);
 		}
@@ -316,6 +318,14 @@ public class GuiScreenCanvas extends GuiScreen implements IScene
 			{
 				used = true;
 				break;
+			}
+		}
+
+		if(!used && click == 1) {
+			if(parent != null && parent instanceof GuiScreenCanvas &&
+					!(this instanceof GuiQuestLines && parent instanceof GuiHome)) {
+				mc.displayGuiScreen(parent);
+				return false;
 			}
 		}
 		
