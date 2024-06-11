@@ -47,4 +47,10 @@ public class EntityPlayerPreview extends EntityOtherPlayerMP
 	{
 		return "";
 	}
+
+	@Override
+	public boolean getHideCape()
+	{
+		return true;
+	}
 }
