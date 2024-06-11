@@ -147,27 +147,7 @@ public class RenderUtils
 			RenderHelper.enableStandardItemLighting();
 			RenderManager.instance.playerViewY = 180F;
 			RenderManager.instance.renderEntityWithPosYaw(entity, 0D, 0D, 0D, 0F, 1F);
-			if (EntityList.getEntityString(entity).equals("TwilightForest.Naga")) {
-				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
-				int bodySize = 11;    // 0 to 12
-				Entity part = entity.getParts()[0];
-				float [][] xyzYaw = getNagaXyzYaw();
-				for (int i = 0; i < bodySize; i++)
-					RenderManager.instance.renderEntityWithPosYaw(part, xyzYaw[i][0], xyzYaw[i][1], xyzYaw[i][2], xyzYaw[i][3], 1F);
-			} else if (EntityList.getEntityString(entity).equals("TwilightForest.Hydra")) {
-				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
-				int headsNumber = 7;    // 0 to 7, optimal 3, 5, 7
-				Entity part = EntityList.createEntityByName("TwilightForest.HydraHead", Minecraft.getMinecraft().theWorld);
-				part.rotationYaw = 0;
-				part.rotationPitch = 0;
-				float [][] xyz = getHydraHeadXyz();
-				for (int i = 0; i < headsNumber; i++)
-					RenderManager.instance.renderEntityWithPosYaw(part, xyz[i][0], xyz[i][1], xyz[i][2], 0F, 1F);
-				part = entity.getParts()[4];
-				xyz = getHydraNeckXyz();
-				for (int i = 0; i < 5 * headsNumber; i++)
-					RenderManager.instance.renderEntityWithPosYaw(part, xyz[i][0], xyz[i][1], xyz[i][2], 0F, 1F);
-			}
+			doSpecialRenders(entity);
 			GL11.glDisable(GL11.GL_DEPTH_TEST);
 			GL11.glPopMatrix();
 			RenderHelper.disableStandardItemLighting();
@@ -178,6 +158,31 @@ public class RenderUtils
 			GL11.glEnable(GL11.GL_TEXTURE_2D); // Breaks subsequent text rendering if not included
 		} catch (Exception e) {
 			// Hides rendering errors with entities which are common for invalid/technical entities
+		}
+	}
+
+	private static void doSpecialRenders(Entity entity){
+		String entityString = entity.getClass().getSimpleName();
+		if (entityString.equals("EntityTFNaga")) {
+			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+			int bodySize = 11;    // 0 to 12
+			Entity part = entity.getParts()[0];
+			float [][] xyzYaw = getNagaXyzYaw();
+			for (int i = 0; i < bodySize; i++)
+				RenderManager.instance.renderEntityWithPosYaw(part, xyzYaw[i][0], xyzYaw[i][1], xyzYaw[i][2], xyzYaw[i][3], 1F);
+		} else if (entityString.equals("EntityTFHydra")) {
+			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+			int headsNumber = 7;    // 0 to 7, optimal 3, 5, 7
+			Entity part = EntityList.createEntityByName("TwilightForest.HydraHead", Minecraft.getMinecraft().theWorld);
+			part.rotationYaw = 0;
+			part.rotationPitch = 0;
+			float [][] xyz = getHydraHeadXyz();
+			for (int i = 0; i < headsNumber; i++)
+				RenderManager.instance.renderEntityWithPosYaw(part, xyz[i][0], xyz[i][1], xyz[i][2], 0F, 1F);
+			part = entity.getParts()[4];
+			xyz = getHydraNeckXyz();
+			for (int i = 0; i < 5 * headsNumber; i++)
+				RenderManager.instance.renderEntityWithPosYaw(part, xyz[i][0], xyz[i][1], xyz[i][2], 0F, 1F);
 		}
 	}
 
