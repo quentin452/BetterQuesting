@@ -3,6 +3,8 @@ package betterquesting.client.gui2;
 import betterquesting.api.api.ApiReference;
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.client.gui.misc.INeedsRefresh;
+import betterquesting.api.enums.EnumLogic;
+import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.rewards.IReward;
 import betterquesting.api.questing.tasks.ITask;
@@ -381,10 +383,16 @@ public class GuiQuest extends GuiScreenCanvas implements IPEventListener, INeeds
         csTask.setScrollDriverY(scList);
 
         int yOffset = 0;
+        EnumLogic taskLogic = quest.getProperty(NativeProps.LOGIC_TASK);
+        if (taskLogic != EnumLogic.AND){
+            String logicText = QuestTranslation.translate("betterquesting.gui.logic."+taskLogic.name().toLowerCase());
+            PanelTextBox panelLogic = new PanelTextBox(new GuiTransform(new Vector4f(), 0, yOffset, rectTask.getWidth(), 12, 0), logicText);
+            csTask.addPanel(panelLogic);
+            yOffset = 20;
+        }
         List<DBEntry<ITask>> entries = quest.getTasks().getEntries();
         for (int i = 0; i < entries.size(); i++) {
             ITask tsk = entries.get(i).getValue();
-
             String taskName = (i + 1) + ". " + QuestTranslation.translate(tsk.getUnlocalisedName());
             PanelTextBox titleReward = new PanelTextBox(new GuiTransform(new Vector4f(), 0, yOffset, rectTask.getWidth(), 12, 0), taskName);
             titleReward.setColor(PresetColor.TEXT_HEADER.getColor()).setAlignment(1);
