@@ -148,13 +148,14 @@ public class QuestInstance implements IQuest
             ParticipantInfo partInfo = new ParticipantInfo(player);
             Map.Entry<UUID, IQuest> mapEntry = Maps.immutableEntry(questID, this);
 
+            int numTasks = tasks.size();
 			for (DBEntry<ITask> entry : tasks.getEntries())
 			{
-				if (!entry.getValue().isComplete(playerID) || !entry.getValue().ignored(playerID))
+				if (!entry.getValue().isComplete(playerID))
 				{
 					entry.getValue().detect(partInfo, mapEntry);
 
-					if (entry.getValue().isComplete(playerID) || entry.getValue().ignored(playerID))
+					if (entry.getValue().isComplete(playerID))
 					{
 						done++;
 						update = true;
@@ -164,9 +165,17 @@ public class QuestInstance implements IQuest
 				{
 					done++;
 				}
+
+                if (entry.getValue().ignored(playerID)){
+                    // values are only used for logic checking
+                    numTasks--;
+                    if (entry.getValue().isComplete(playerID)){
+                        done--;
+                    }
+                }
 			}
 			// Note: Tasks can mark the quest dirty themselves if progress changed but hasn't fully completed.
-			if (tasks.size() <= 0 || qInfo.getProperty(NativeProps.LOGIC_TASK).getResult(done, tasks.size()))
+			if (numTasks <= 0 || qInfo.getProperty(NativeProps.LOGIC_TASK).getResult(done, numTasks))
 			{
 			    // State won't be auto updated in edit mode so we force change it here and mark it for re-sync
 				if (QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE))
