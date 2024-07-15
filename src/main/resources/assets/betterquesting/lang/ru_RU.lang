@@ -82,6 +82,7 @@ betterquesting.gui.key=Название ключа
 betterquesting.gui.no_key=Без ключа
 betterquesting.gui.duplicate_key=Дубль ключа
 betterquesting.gui.yes_always=Да, всегда
+betterquesting.gui.logic.or=OR
 
 betterquesting.tooltip.tasks_complete=%s/%s заданий завершено
 betterquesting.tooltip.complete=ЗАВЕРШЕНО

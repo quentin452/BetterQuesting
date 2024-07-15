@@ -87,6 +87,7 @@ betterquesting.gui.key=键位名称
 betterquesting.gui.no_key=无效键位
 betterquesting.gui.duplicate_key=键位冲突
 betterquesting.gui.yes_always=总是
+betterquesting.gui.logic.or=OR
 
 betterquesting.tooltip.tasks_complete=%s/%s 已达成
 betterquesting.tooltip.complete=已达成
