@@ -384,12 +384,6 @@ public class GuiQuest extends GuiScreenCanvas implements IPEventListener, INeeds
 
         int yOffset = 0;
         EnumLogic taskLogic = quest.getProperty(NativeProps.LOGIC_TASK);
-        if (taskLogic != EnumLogic.AND){
-            String logicText = QuestTranslation.translate("betterquesting.gui.logic."+taskLogic.name().toLowerCase());
-            PanelTextBox panelLogic = new PanelTextBox(new GuiTransform(new Vector4f(), 0, yOffset, rectTask.getWidth(), 12, 0), logicText);
-            csTask.addPanel(panelLogic);
-            yOffset = 20;
-        }
         List<DBEntry<ITask>> entries = quest.getTasks().getEntries();
         for (int i = 0; i < entries.size(); i++) {
             ITask tsk = entries.get(i).getValue();
@@ -400,17 +394,26 @@ public class GuiQuest extends GuiScreenCanvas implements IPEventListener, INeeds
             csTask.addPanel(titleReward);
             yOffset += 10;
 
-            IGuiPanel taskGui = tsk.getTaskGui(new GuiTransform(GuiAlign.FULL_BOX, 0, 0, rectTask.getWidth(), rectTask.getHeight(), 0), Maps.immutableEntry(questID, quest));
+            IGuiPanel taskGui = tsk.getTaskGui(new GuiTransform(GuiAlign.FULL_BOX, 10, 10, rectTask.getWidth(), rectTask.getHeight(), 0), Maps.immutableEntry(questID, quest));
             if (taskGui != null) {
                 taskGui.initPanel();
                 // Wrapping into canvas allow avoid empty space at end
-                CanvasEmpty tempCanvas = new CanvasEmpty(new GuiTransform(GuiAlign.TOP_LEFT, 0, yOffset, rectTask.getWidth(), taskGui.getTransform().getHeight() - taskGui.getTransform().getY(), 1));
+                CanvasTextured tempCanvas = new CanvasTextured(new GuiTransform(GuiAlign.TOP_LEFT, 0, yOffset, rectTask.getWidth() - 15, taskGui.getTransform().getHeight() + 20 - taskGui.getTransform().getY(), 1), PresetTexture.PANEL_MAIN.getTexture());
                 csTask.addPanel(tempCanvas);
                 tempCanvas.addPanel(taskGui);
                 int guiHeight = tempCanvas.getTransform().getHeight();
-                yOffset += guiHeight;
-
+                yOffset += guiHeight + 5;
             }
+
+            if (taskLogic == EnumLogic.OR && i < entries.size() - 1) {
+                yOffset += 10;
+                String logicText = QuestTranslation.translate("betterquesting.gui.logic."+taskLogic.name().toLowerCase());
+                PanelTextBox panelLogic = new PanelTextBox(new GuiTransform(new Vector4f(), 0, yOffset, rectTask.getWidth(), 12, 0), logicText);
+                panelLogic.setColor(PresetColor.TEXT_HIGHLIGHT.getColor()).setAlignment(1);
+                csTask.addPanel(panelLogic);
+                yOffset += 10;
+            }
+
             //Indent from the previous
             yOffset += 8;
         }
