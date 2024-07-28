@@ -78,7 +78,7 @@ public class QuestingAPI
 
 	public static EntityPlayerMP getPlayer(UUID uuid){
 		Optional onlinePlayer = MinecraftServer.getServer().getConfigurationManager().playerEntityList.stream().filter(i -> i instanceof EntityPlayerMP)
-				.filter(o -> getQuestingUUID((EntityPlayer) o) == uuid).findFirst();
+				.filter(o -> getQuestingUUID((EntityPlayer) o).equals(uuid)).findFirst();
 		return onlinePlayer.isPresent() ? (EntityPlayerMP) onlinePlayer.get() : null;
 	}
 }
