@@ -24,9 +24,8 @@ public class PanelItemSlot extends PanelButtonStorage<BigItemStack>
 {
     private final boolean showCount;
     private final boolean oreDict;
-    
+    private final float interval;
     private final List<BigItemStack> oreVariants = new ArrayList<>();
-    
     public PanelItemSlot(IGuiRect rect, int id, BigItemStack value)
     {
         this(rect, id, value, false, false);
@@ -39,12 +38,27 @@ public class PanelItemSlot extends PanelButtonStorage<BigItemStack>
     
     public PanelItemSlot(IGuiRect rect, int id, BigItemStack value, boolean showCount, boolean oreDict)
     {
+        this(rect, id, value, showCount, showCount, 1F);
+    }
+    
+    public PanelItemSlot(IGuiRect rect, int id, BigItemStack value, boolean showCount, boolean oreDict, float interval)
+    {
         super(rect, id, "", value);
         this.showCount = showCount;
         this.oreDict = oreDict;
-        
+        this.interval = interval;
         this.setTextures(PresetTexture.ITEM_FRAME.getTexture(), PresetTexture.ITEM_FRAME.getTexture(), new LayeredTexture(PresetTexture.ITEM_FRAME.getTexture(), new ColorTexture(PresetColor.ITEM_HIGHLIGHT.getColor(), new GuiPadding(1, 1, 1, 1))));
         this.setStoredValue(value); // Need to run this again because of the instatiation order of showCount
+    }
+    
+    @Override
+    public BigItemStack getStoredValue()
+    {
+        if(!oreVariants.isEmpty())
+        {
+            return oreVariants.get((int)Math.floor((System.currentTimeMillis()/1000D)%(oreVariants.size() * interval) / interval));
+        }
+        return super.getStoredValue();
     }
     
     @Override
@@ -55,7 +69,7 @@ public class PanelItemSlot extends PanelButtonStorage<BigItemStack>
         if(value != null)
         {
             Minecraft mc = Minecraft.getMinecraft();
-            this.setIcon(oreDict || value.getBaseStack().getItemDamage() == OreDictionary.WILDCARD_VALUE ? new OreDictTexture(1F, value, showCount, true) : new ItemTexture(value, showCount, true), 1);
+            this.setIcon(oreDict || value.getBaseStack().getItemDamage() == OreDictionary.WILDCARD_VALUE ? new OreDictTexture(interval, value, showCount, true) : new ItemTexture(value, showCount, true), 1);
             try {
                 this.setTooltip(value.getBaseStack().getTooltip(mc.thePlayer, mc.gameSettings.advancedItemTooltips));
             } catch (NullPointerException ignored) {
