@@ -48,6 +48,7 @@ public class ConfigHandler
 		BQ_Settings.urlDebug = config.getBoolean("Highlight detected clickable url hotzone.", Configuration.CATEGORY_GENERAL, false, "If true, render each hotzone using alternating color.");
 		BQ_Settings.loadDefaultsOnStartup = config.getBoolean("Load the default quest DB on world startup.", Configuration.CATEGORY_GENERAL, true, "Does an equivalent of '/bq_admin default load' on every world load");
 		BQ_Settings.unrestrictAdminCommands = config.getBoolean("Unrestrict Admin Commands", Configuration.CATEGORY_GENERAL, false, "If true, all users can use /bq_admin commands regardless of op-status. Useful for single-player without cheats.");
+		BQ_Settings.logNullQuests = config.getBoolean("Log null quests", Configuration.CATEGORY_GENERAL, true, "Posts useful information in the log when encountering a null quest during loading.");
 
 		config.save();
 	}

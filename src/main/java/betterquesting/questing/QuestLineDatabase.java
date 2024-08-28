@@ -2,6 +2,7 @@ package betterquesting.questing;
 
 import betterquesting.api.questing.IQuestLine;
 import betterquesting.api.questing.IQuestLineDatabase;
+import betterquesting.api.storage.BQ_Settings;
 import betterquesting.api.utils.NBTConverter;
 import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.storage.UuidDatabase;
@@ -50,7 +51,7 @@ public class QuestLineDatabase extends UuidDatabase<IQuestLine> implements IQues
     @Nullable
     @Override
     public IQuestLine put(@Nullable UUID key, @Nullable IQuestLine value) {
-        if(value == null) {
+        if(value == null && BQ_Settings.logNullQuests) {
             BetterQuesting.logger.warn("A null questline was added with ID {}", key);
         }
         return super.put(key, value);
@@ -124,7 +125,9 @@ public class QuestLineDatabase extends UuidDatabase<IQuestLine> implements IQues
             }
 
             if(entry.getValue() == null) {
-                BetterQuesting.logger.warn("Tried saving null questline with ID {}", entry.getKey());
+                if(BQ_Settings.logNullQuests) {
+                    BetterQuesting.logger.warn("Tried saving null questline with ID {}", entry.getKey());
+                }
                 return;
             }
 

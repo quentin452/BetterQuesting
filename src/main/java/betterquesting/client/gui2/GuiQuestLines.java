@@ -720,7 +720,9 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
         for(Map.Entry<UUID, IQuestLineEntry> entry : selectedLine.entrySet()) {
             IQuest quest = QuestingAPI.getAPI(ApiReference.QUEST_DB).get(entry.getKey());
             if (quest == null) {
-                BetterQuesting.logger.warn("Skipping null quest with ID {}", entry.getKey());
+                if(BQ_Settings.logNullQuests) {
+                    BetterQuesting.logger.warn("Skipping null quest with ID {}", entry.getKey());
+                }
                 continue;
             }
 
