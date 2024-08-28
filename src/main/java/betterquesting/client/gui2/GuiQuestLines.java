@@ -48,6 +48,7 @@ import betterquesting.api2.utils.Tuple2;
 import betterquesting.client.BookmarkHandler;
 import betterquesting.client.gui2.editors.GuiQuestLinesEditor;
 import betterquesting.client.gui2.editors.designer.GuiDesigner;
+import betterquesting.core.BetterQuesting;
 import betterquesting.handlers.ConfigHandler;
 import betterquesting.network.handlers.NetQuestAction;
 import betterquesting.questing.QuestDatabase;
@@ -718,8 +719,10 @@ public class GuiQuestLines extends GuiScreenCanvas implements IPEventListener, I
 
         for(Map.Entry<UUID, IQuestLineEntry> entry : selectedLine.entrySet()) {
             IQuest quest = QuestingAPI.getAPI(ApiReference.QUEST_DB).get(entry.getKey());
-            if (quest == null)
+            if (quest == null) {
+                BetterQuesting.logger.warn("Skipping null quest with ID {}", entry.getKey());
                 continue;
+            }
 
             totalQuests++;
 

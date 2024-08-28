@@ -5,6 +5,7 @@ import betterquesting.api.questing.IQuestDatabase;
 import betterquesting.api.utils.NBTConverter;
 import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.storage.UuidDatabase;
+import betterquesting.core.BetterQuesting;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
@@ -26,7 +27,14 @@ public class QuestDatabase extends UuidDatabase<IQuest> implements IQuestDatabas
 		return quest;
 	}
 
-
+    @Nullable
+    @Override
+    public IQuest put(@Nullable UUID key, @Nullable IQuest value) {
+        if(value == null) {
+            BetterQuesting.logger.warn("A null quest was added with ID {}", key);
+        }
+        return super.put(key, value);
+    }
 
     @Override
     public IQuest remove(Object key)
@@ -77,6 +85,12 @@ public class QuestDatabase extends UuidDatabase<IQuest> implements IQuestDatabas
             {
                 return;
             }
+
+            if(entry.getValue() == null) {
+                BetterQuesting.logger.warn("Tried saving null quest with ID {}", entry.getKey());
+                return;
+            }
+
 			NBTTagCompound jq = new NBTTagCompound();
 			entry.getValue().writeToNBT(jq);
             NBTConverter.UuidValueType.QUEST.writeId(entry.getKey(), jq);
