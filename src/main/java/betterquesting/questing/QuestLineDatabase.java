@@ -2,10 +2,12 @@ package betterquesting.questing;
 
 import betterquesting.api.questing.IQuestLine;
 import betterquesting.api.questing.IQuestLineDatabase;
+import betterquesting.api.storage.BQ_Settings;
 import betterquesting.api.utils.NBTConverter;
 import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.storage.UuidDatabase;
 import betterquesting.api2.utils.QuestLineSorter;
+import betterquesting.core.BetterQuesting;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.MathHelper;
@@ -44,6 +46,15 @@ public class QuestLineDatabase extends UuidDatabase<IQuestLine> implements IQues
         IQuestLine ql = new QuestLine();
         put(lineID, ql);
         return ql;
+    }
+
+    @Nullable
+    @Override
+    public IQuestLine put(@Nullable UUID key, @Nullable IQuestLine value) {
+        if(value == null && BQ_Settings.logNullQuests) {
+            BetterQuesting.logger.warn("A null questline was added with ID {}", key);
+        }
+        return super.put(key, value);
     }
 
     @Override
@@ -112,6 +123,14 @@ public class QuestLineDatabase extends UuidDatabase<IQuestLine> implements IQues
             {
                 return;
             }
+
+            if(entry.getValue() == null) {
+                if(BQ_Settings.logNullQuests) {
+                    BetterQuesting.logger.warn("Tried saving null questline with ID {}", entry.getKey());
+                }
+                return;
+            }
+
             NBTTagCompound jObj = entry.getValue().writeToNBT(new NBTTagCompound(), null);
             NBTConverter.UuidValueType.QUEST_LINE.writeId(entry.getKey(), jObj);
             jObj.setInteger("order", getOrderIndex(entry.getKey()));

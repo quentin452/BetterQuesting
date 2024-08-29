@@ -1,5 +1,6 @@
 package betterquesting.commands;
 
+import betterquesting.api.storage.BQ_Settings;
 import betterquesting.commands.admin.QuestCommandCheckCompletion;
 import betterquesting.commands.admin.QuestCommandCleanupQuestLine;
 import betterquesting.commands.admin.QuestCommandComplete;
@@ -12,12 +13,10 @@ import betterquesting.commands.admin.QuestCommandPurge;
 import betterquesting.commands.admin.QuestCommandReportAllProgress;
 import betterquesting.commands.admin.QuestCommandReset;
 
-import betterquesting.handlers.ConfigHandler;
 import cpw.mods.fml.common.FMLCommonHandler;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
-import net.minecraftforge.common.config.Configuration;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -110,7 +109,7 @@ public class BQ_CommandAdmin extends CommandBase
 	@Override
 	public boolean canCommandSenderUseCommand(ICommandSender sender)
 	{
-		if(ConfigHandler.config.get(Configuration.CATEGORY_GENERAL,"Unrestrict Admin Commands", false).getBoolean(false)) return true;
+		if(BQ_Settings.unrestrictAdminCommands) return true;
 		else return super.canCommandSenderUseCommand(sender);
 	}
 
