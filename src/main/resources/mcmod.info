@@ -28,8 +28,8 @@
     "parent": "betterquesting"
   },{
     "modid": "questbook",
-    "name": "Standard Expansion",
-    "description": "Better Questing Quest Book",
+    "name": "BetterQuesting",
+    "description": "BetterQuesting Quest Book",
     "version": "${modVersion}",
     "mcversion": "${minecraftVersion}",
     "url": "",
