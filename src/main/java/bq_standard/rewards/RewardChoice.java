@@ -1,5 +1,20 @@
 package bq_standard.rewards;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.UUID;
+
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.ResourceLocation;
+
+import org.apache.logging.log4j.Level;
+
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.rewards.IReward;
@@ -13,21 +28,9 @@ import bq_standard.core.BQ_Standard;
 import bq_standard.rewards.factory.FactoryRewardChoice;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ResourceLocation;
-import org.apache.logging.log4j.Level;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.UUID;
 
 public class RewardChoice implements IReward, IRewardItemOutput {
+
     /**
      * The selected reward index to be claimed.<br>
      * Should only ever be used client side. NEVER onHit server
@@ -80,7 +83,9 @@ public class RewardChoice implements IReward, IRewardItemOutput {
 
         if (tmp < 0 || tmp >= choices.size()) {
             BQ_Standard.logger.log(
-                    Level.ERROR, "Choice reward was forcibly claimed with invalid choice", new IllegalStateException());
+                Level.ERROR,
+                "Choice reward was forcibly claimed with invalid choice",
+                new IllegalStateException());
             return;
         }
 
@@ -95,11 +100,13 @@ public class RewardChoice implements IReward, IRewardItemOutput {
         for (ItemStack s : stack.getCombinedStacks()) {
             if (s.getTagCompound() != null) {
                 s.setTagCompound(
-                        NBTReplaceUtil.replaceStrings(s.getTagCompound(), "VAR_NAME", player.getCommandSenderName()));
-                s.setTagCompound(NBTReplaceUtil.replaceStrings(
+                    NBTReplaceUtil.replaceStrings(s.getTagCompound(), "VAR_NAME", player.getCommandSenderName()));
+                s.setTagCompound(
+                    NBTReplaceUtil.replaceStrings(
                         s.getTagCompound(),
                         "VAR_UUID",
-                        QuestingAPI.getQuestingUUID(player).toString()));
+                        QuestingAPI.getQuestingUUID(player)
+                            .toString()));
             }
 
             if (!player.inventory.addItemStackToInventory(s)) {

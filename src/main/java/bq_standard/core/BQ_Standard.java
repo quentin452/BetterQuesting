@@ -1,5 +1,13 @@
 package bq_standard.core;
 
+import net.minecraft.command.ICommandManager;
+import net.minecraft.command.ServerCommandManager;
+import net.minecraft.item.Item;
+import net.minecraft.server.MinecraftServer;
+import net.minecraftforge.common.config.Configuration;
+
+import org.apache.logging.log4j.Logger;
+
 import betterquesting.core.BetterQuesting;
 import bq_standard.commands.BQS_Commands;
 import bq_standard.core.proxies.CommonProxy;
@@ -20,20 +28,15 @@ import cpw.mods.fml.common.event.FMLServerStoppedEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import cpw.mods.fml.common.registry.GameRegistry;
-import net.minecraft.command.ICommandManager;
-import net.minecraft.command.ServerCommandManager;
-import net.minecraft.item.Item;
-import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.common.config.Configuration;
-import org.apache.logging.log4j.Logger;
 
 @Mod(
-        modid = BQ_Standard.MODID,
-        name = BQ_Standard.NAME,
-        version = BQ_Standard.VERSION,
-        dependencies = "required-after:betterquesting",
-        guiFactory = "bq_standard.handlers.ConfigGuiFactory")
+    modid = BQ_Standard.MODID,
+    name = BQ_Standard.NAME,
+    version = BQ_Standard.VERSION,
+    dependencies = "required-after:betterquesting",
+    guiFactory = "bq_standard.handlers.ConfigGuiFactory")
 public class BQ_Standard {
+
     public static final String MODID = "bq_standard";
     public static final String NAME = "Standard Expansion";
     public static final String VERSION = BetterQuesting.VERSION;

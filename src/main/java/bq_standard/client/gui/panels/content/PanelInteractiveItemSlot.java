@@ -1,13 +1,14 @@
 package bq_standard.client.gui.panels.content;
 
-import betterquesting.api.utils.BigItemStack;
-import betterquesting.api2.client.gui.misc.IGuiRect;
-import betterquesting.api2.client.gui.panels.content.PanelItemSlot;
-import codechicken.nei.api.ShortcutInputHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+
+import betterquesting.api.utils.BigItemStack;
+import betterquesting.api2.client.gui.misc.IGuiRect;
+import betterquesting.api2.client.gui.panels.content.PanelItemSlot;
+import codechicken.nei.api.ShortcutInputHandler;
 
 /**
  * NEI compatible ItemSlot
@@ -65,6 +66,8 @@ public class PanelInteractiveItemSlot extends PanelItemSlot {
     }
 
     private void playClickSound() {
-        Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.func_147674_a(CLICK_SND, 1.0F));
+        Minecraft.getMinecraft()
+            .getSoundHandler()
+            .playSound(PositionedSoundRecord.func_147674_a(CLICK_SND, 1.0F));
     }
 }

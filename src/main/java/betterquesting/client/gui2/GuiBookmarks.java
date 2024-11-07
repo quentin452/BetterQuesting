@@ -1,5 +1,16 @@
 package betterquesting.client.gui2;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.util.UUID;
+import java.util.function.Consumer;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.EnumChatFormatting;
+
 import betterquesting.api.utils.RenderUtils;
 import betterquesting.api.utils.UuidConverter;
 import betterquesting.api2.client.gui.GuiScreenCanvas;
@@ -20,18 +31,9 @@ import betterquesting.api2.client.gui.themes.presets.PresetTexture;
 import betterquesting.api2.utils.QuestTranslation;
 import betterquesting.client.BookmarkHandler;
 import betterquesting.misc.QuestSearchEntry;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumChatFormatting;
-
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
-import java.util.UUID;
-import java.util.function.Consumer;
 
 public class GuiBookmarks extends GuiScreenCanvas {
+
     private Consumer<QuestSearchEntry> callback;
     private CanvasQuestBookmarks cvBookmarks;
 
@@ -42,7 +44,9 @@ public class GuiBookmarks extends GuiScreenCanvas {
     @Override
     public void initPanel() {
         super.initPanel();
-        CanvasTextured cvBackground = new CanvasTextured(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 0, 0, 0), 0), PresetTexture.PANEL_MAIN.getTexture());
+        CanvasTextured cvBackground = new CanvasTextured(
+            new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 0, 0, 0), 0),
+            PresetTexture.PANEL_MAIN.getTexture());
         this.addPanel(cvBackground);
 
         CanvasEmpty cvInner = new CanvasEmpty(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(8, 8, 8, 8), 0));
@@ -50,7 +54,10 @@ public class GuiBookmarks extends GuiScreenCanvas {
 
         createExitButton(cvInner);
 
-        PanelTextBox txtDb = new PanelTextBox(new GuiTransform(GuiAlign.TOP_EDGE, new GuiPadding(0, 0, 0, -16), 0), QuestTranslation.translate("betterquesting.gui.bookmarks")).setAlignment(1).setColor(PresetColor.TEXT_MAIN.getColor());
+        PanelTextBox txtDb = new PanelTextBox(
+            new GuiTransform(GuiAlign.TOP_EDGE, new GuiPadding(0, 0, 0, -16), 0),
+            QuestTranslation.translate("betterquesting.gui.bookmarks")).setAlignment(1)
+                .setColor(PresetColor.TEXT_MAIN.getColor());
         cvInner.addPanel(txtDb);
 
         cvBookmarks = createMainCanvas();
@@ -58,16 +65,22 @@ public class GuiBookmarks extends GuiScreenCanvas {
 
         cvInner.addPanel(createPopupMenu());
 
-        PanelVScrollBar scDb = new PanelVScrollBar(new GuiTransform(GuiAlign.RIGHT_EDGE, new GuiPadding(-8, 32, 0, 24), 0));
+        PanelVScrollBar scDb = new PanelVScrollBar(
+            new GuiTransform(GuiAlign.RIGHT_EDGE, new GuiPadding(-8, 32, 0, 24), 0));
         cvInner.addPanel(scDb);
         cvBookmarks.setScrollDriverY(scDb);
     }
 
     private CanvasQuestBookmarks createMainCanvas() {
-        CanvasQuestBookmarks pins = new CanvasQuestBookmarks(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 32, 8, 24), 0), mc.thePlayer);
+        CanvasQuestBookmarks pins = new CanvasQuestBookmarks(
+            new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 32, 8, 24), 0),
+            mc.thePlayer);
         pins.setQuestOpenCallback(pinEntry -> {
             acceptCallback(pinEntry);
-            GuiHome.bookmark = new GuiQuest(parent, pinEntry.getQuest().getKey());
+            GuiHome.bookmark = new GuiQuest(
+                parent,
+                pinEntry.getQuest()
+                    .getKey());
             mc.displayGuiScreen(GuiHome.bookmark);
         });
         pins.setQuestHighlightCallback(pinEntry -> {
@@ -79,26 +92,29 @@ public class GuiBookmarks extends GuiScreenCanvas {
 
     private void createExitButton(CanvasEmpty cvInner) {
         PanelButton btnExit = new PanelButton(
-                new GuiTransform(GuiAlign.BOTTOM_CENTER, -100, -16, 200, 16, 0),
-                0,
-                QuestTranslation.translate("gui.back")
-        );
+            new GuiTransform(GuiAlign.BOTTOM_CENTER, -100, -16, 200, 16, 0),
+            0,
+            QuestTranslation.translate("gui.back"));
         btnExit.setClickAction((b) -> mc.displayGuiScreen(parent));
         cvInner.addPanel(btnExit);
     }
 
     private CanvasEmpty createPopupMenu() {
         return new CanvasEmpty(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 0, 0, 0), 0)) {
+
             @Override
             public boolean onMouseClick(int mx, int my, int click) {
-                if (!this.getTransform().contains(mx, my)) return false;
+                if (!this.getTransform()
+                    .contains(mx, my)) return false;
                 if (click == 1) {
                     FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
                     PanelButtonQuest btn = cvBookmarks.getButtonAt(mx, my);
 
                     if (btn != null) {
-                        UUID questId = btn.getStoredValue().getKey();
-                        int maxWidth = RenderUtils.getStringWidth(QuestTranslation.translate("betterquesting.btn.share_quest"), fr);
+                        UUID questId = btn.getStoredValue()
+                            .getKey();
+                        int maxWidth = RenderUtils
+                            .getStringWidth(QuestTranslation.translate("betterquesting.btn.share_quest"), fr);
 
                         PopContextMenu popup = new PopContextMenu(new GuiRectangle(mx, my, maxWidth + 12, 48), true);
 
@@ -109,33 +125,37 @@ public class GuiBookmarks extends GuiScreenCanvas {
                         };
 
                         String pinPopupText;
-                        if (BookmarkHandler.isBookmarked(questId)){
+                        if (BookmarkHandler.isBookmarked(questId)) {
                             pinPopupText = QuestTranslation.translate("betterquesting.btn.unbookmark_quest");
-                        }else {
+                        } else {
                             pinPopupText = QuestTranslation.translate("betterquesting.btn.bookmark_quest");
                         }
                         popup.addButton(pinPopupText, null, pinQuest);
 
                         Runnable questSharer = () -> {
-                            mc.thePlayer.sendChatMessage("betterquesting.msg.sharequest:" + UuidConverter.encodeUuid(questId));
+                            mc.thePlayer
+                                .sendChatMessage("betterquesting.msg.sharequest:" + UuidConverter.encodeUuid(questId));
                             closePopup();
                         };
-                        popup.addButton(QuestTranslation.translate("betterquesting.btn.share_quest"), null, questSharer);
+                        popup
+                            .addButton(QuestTranslation.translate("betterquesting.btn.share_quest"), null, questSharer);
 
                         Runnable copyQuestId = () -> {
                             StringSelection stringToCopy = new StringSelection(UuidConverter.encodeUuid(questId));
                             try {
-                                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringToCopy, null);
+                                Toolkit.getDefaultToolkit()
+                                    .getSystemClipboard()
+                                    .setContents(stringToCopy, null);
                                 mc.thePlayer.addChatMessage(
-                                        new ChatComponentText(
-                                                QuestTranslation.translate("betterquesting.msg.copy_quest_copied")));
+                                    new ChatComponentText(
+                                        QuestTranslation.translate("betterquesting.msg.copy_quest_copied")));
                                 mc.thePlayer.addChatMessage(
-                                        new ChatComponentText(
-                                                "  " + EnumChatFormatting.AQUA + UuidConverter.encodeUuid(questId)));
+                                    new ChatComponentText(
+                                        "  " + EnumChatFormatting.AQUA + UuidConverter.encodeUuid(questId)));
                             } catch (IllegalStateException e) {
                                 mc.thePlayer.addChatMessage(
-                                        new ChatComponentText(
-                                                QuestTranslation.translate("betterquesting.msg.copy_quest_failed")));
+                                    new ChatComponentText(
+                                        QuestTranslation.translate("betterquesting.msg.copy_quest_failed")));
                             }
                             closePopup();
                         };
@@ -154,7 +174,7 @@ public class GuiBookmarks extends GuiScreenCanvas {
         this.callback = callback;
     }
 
-    private void acceptCallback(QuestSearchEntry questSearchEntry){
+    private void acceptCallback(QuestSearchEntry questSearchEntry) {
         if (callback != null) callback.accept(questSearchEntry);
     }
 }

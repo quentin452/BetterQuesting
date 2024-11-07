@@ -1,5 +1,9 @@
 package bq_standard.client.gui.tasks;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
+
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api2.client.gui.controls.io.ValueFuncIO;
 import betterquesting.api2.client.gui.misc.GuiAlign;
@@ -11,11 +15,9 @@ import betterquesting.api2.client.gui.panels.content.PanelTextBox;
 import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.utils.QuestTranslation;
 import bq_standard.tasks.TaskHunt;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
 
 public class PanelTaskHunt extends CanvasMinimum {
+
     private final TaskHunt task;
     private final IGuiRect initialRect;
 
@@ -42,15 +44,17 @@ public class PanelTaskHunt extends CanvasMinimum {
         int progress = task.getUsersProgress(QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer));
         String tnm = target != null ? target.getCommandSenderName() : task.idName;
 
-        this.addPanel(new PanelTextBox(
-                        new GuiTransform(GuiAlign.TOP_EDGE, 0, 0, width, 12, 0),
-                        QuestTranslation.translate("bq_standard.gui.kill", tnm) + " " + progress + "/" + task.required)
-                .setAlignment(1)
-                .setColor(PresetColor.TEXT_MAIN.getColor()));
+        this.addPanel(
+            new PanelTextBox(
+                new GuiTransform(GuiAlign.TOP_EDGE, 0, 0, width, 12, 0),
+                QuestTranslation.translate("bq_standard.gui.kill", tnm) + " " + progress + "/" + task.required)
+                    .setAlignment(1)
+                    .setColor(PresetColor.TEXT_MAIN.getColor()));
 
-        if (target != null)
-            this.addPanel(new PanelEntityPreview(new GuiTransform(GuiAlign.TOP_LEFT, 0, 16, width, 64, 0), target)
-                    .setRotationDriven(new ValueFuncIO<>(() -> 15F), new ValueFuncIO<>(() -> (float) (Minecraft.getSystemTime() % 30000L / 30000D * 360D))));
+        if (target != null) this.addPanel(
+            new PanelEntityPreview(new GuiTransform(GuiAlign.TOP_LEFT, 0, 16, width, 64, 0), target).setRotationDriven(
+                new ValueFuncIO<>(() -> 15F),
+                new ValueFuncIO<>(() -> (float) (Minecraft.getSystemTime() % 30000L / 30000D * 360D))));
 
         recalcSizes();
     }

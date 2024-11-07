@@ -1,21 +1,6 @@
 package betterquesting.api2.client.gui.panels.content;
 
-import betterquesting.api.storage.BQ_Settings;
-import betterquesting.api.utils.RenderUtils;
-import betterquesting.api2.client.gui.misc.GuiAlign;
-import betterquesting.api2.client.gui.misc.GuiTransform;
-import betterquesting.api2.client.gui.misc.IGuiRect;
-import betterquesting.api2.client.gui.misc.URIHandlers;
-import betterquesting.api2.client.gui.panels.IGuiPanel;
-import betterquesting.api2.client.gui.resources.colors.GuiColorStatic;
-import betterquesting.api2.client.gui.resources.colors.IGuiColor;
-import betterquesting.core.BetterQuesting;
-import com.google.common.collect.ImmutableSet;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.util.MathHelper;
-import org.apache.commons.lang3.StringUtils;
-import org.lwjgl.opengl.GL11;
+import static betterquesting.api.storage.BQ_Settings.textWidthCorrection;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -29,14 +14,34 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import static betterquesting.api.storage.BQ_Settings.textWidthCorrection;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.util.MathHelper;
+
+import org.apache.commons.lang3.StringUtils;
+import org.lwjgl.opengl.GL11;
+
+import com.google.common.collect.ImmutableSet;
+
+import betterquesting.api.storage.BQ_Settings;
+import betterquesting.api.utils.RenderUtils;
+import betterquesting.api2.client.gui.misc.GuiAlign;
+import betterquesting.api2.client.gui.misc.GuiTransform;
+import betterquesting.api2.client.gui.misc.IGuiRect;
+import betterquesting.api2.client.gui.misc.URIHandlers;
+import betterquesting.api2.client.gui.panels.IGuiPanel;
+import betterquesting.api2.client.gui.resources.colors.GuiColorStatic;
+import betterquesting.api2.client.gui.resources.colors.IGuiColor;
+import betterquesting.core.BetterQuesting;
 
 public class PanelTextBox implements IGuiPanel {
+
     /**
      * Tokenizer pattern which is used to tokenize raw text into literal text fragments,
      * (potential) formatting tags, and formatting codes.
      *
-     * <p>This is accomplished by matching empty strings which immediately precede or follow a
+     * <p>
+     * This is accomplished by matching empty strings which immediately precede or follow a
      * square bracket or formatting code.
      */
     private static final Pattern TOKEN_DELIMITER = Pattern.compile("(?=\\[)|(?=§.)|(?<=])|(?<=§.)");
@@ -106,31 +111,41 @@ public class PanelTextBox implements IGuiPanel {
                     // in order of outermost to innermost (reverse of stack order).
                     textBuilder.append(FORMATTING_CODE_RESET);
                     tags.descendingIterator()
-                            .forEachRemaining(
-                                    t -> textBuilder.append(t.getTag().getColourFormattingString()));
+                        .forEachRemaining(
+                            t -> textBuilder.append(
+                                t.getTag()
+                                    .getColourFormattingString()));
                     tags.descendingIterator()
-                            .forEachRemaining(
-                                    t -> textBuilder.append(t.getTag().getTextFormattingString()));
+                        .forEachRemaining(
+                            t -> textBuilder.append(
+                                t.getTag()
+                                    .getTextFormattingString()));
                     continue;
-                } else if (COLOUR_FORMATTING_CODE_PATTERN.matcher(token).matches()) {
-                    textBuilder.append(token);
-                    // Re-apply text formatting codes since we just changed the colour.
-                    tags.descendingIterator()
+                } else if (COLOUR_FORMATTING_CODE_PATTERN.matcher(token)
+                    .matches()) {
+                        textBuilder.append(token);
+                        // Re-apply text formatting codes since we just changed the colour.
+                        tags.descendingIterator()
                             .forEachRemaining(
-                                    t -> textBuilder.append(t.getTag().getTextFormattingString()));
-                    continue;
-                }
+                                t -> textBuilder.append(
+                                    t.getTag()
+                                        .getTextFormattingString()));
+                        continue;
+                    }
 
-                Optional<FormattingTag.TagInstance> openingTagOptional =
-                        FormattingTag.parseOpeningTag(token);
+                Optional<FormattingTag.TagInstance> openingTagOptional = FormattingTag.parseOpeningTag(token);
                 if (openingTagOptional.isPresent()) {
                     FormattingTag.TagInstance openingTag = openingTagOptional.get();
                     tags.push(openingTag);
-                    textBuilder.append(openingTag.getTag().getColourFormattingString());
+                    textBuilder.append(
+                        openingTag.getTag()
+                            .getColourFormattingString());
                     // Re-apply text formatting codes since we may have just changed the colour.
                     tags.descendingIterator()
-                            .forEachRemaining(
-                                    t -> textBuilder.append(t.getTag().getTextFormattingString()));
+                        .forEachRemaining(
+                            t -> textBuilder.append(
+                                t.getTag()
+                                    .getTextFormattingString()));
 
                     if (openingTag.getTag() == FormattingTag.URL) {
                         currUrlStart = textBuilder.length();
@@ -143,13 +158,12 @@ public class PanelTextBox implements IGuiPanel {
                 if (closingTagOptional.isPresent()) {
                     FormattingTag closingTag = closingTagOptional.get();
 
-                    if (!tags.isEmpty() && closingTag == tags.peek().getTag()) {
+                    if (!tags.isEmpty() && closingTag == tags.peek()
+                        .getTag()) {
                         FormattingTag.TagInstance openingTag = tags.pop();
                         if (closingTag == FormattingTag.URL && currUrlStart >= 0) {
-                            String url =
-                                    openingTag.getParams()
-                                            .getOrDefault(
-                                                    "link", textBuilder.substring(currUrlStart));
+                            String url = openingTag.getParams()
+                                .getOrDefault("link", textBuilder.substring(currUrlStart));
                             urlRanges.add(new UrlRange(currUrlStart, textBuilder.length(), url));
                             currUrlStart = -1;
                         }
@@ -159,12 +173,16 @@ public class PanelTextBox implements IGuiPanel {
                         // Note that the tag we just closed was already popped off the stack.
                         textBuilder.append(FORMATTING_CODE_RESET);
                         tags.descendingIterator()
-                                .forEachRemaining(
-                                        t -> textBuilder.append(t.getTag().getColourFormattingString()));
+                            .forEachRemaining(
+                                t -> textBuilder.append(
+                                    t.getTag()
+                                        .getColourFormattingString()));
                         tags.descendingIterator()
-                                .forEachRemaining(
-                                        t -> textBuilder.append(t.getTag().getTextFormattingString()));
-                    }  // Else the closing tag doesn't match the current tag, so ignore it.
+                            .forEachRemaining(
+                                t -> textBuilder.append(
+                                    t.getTag()
+                                        .getTextFormattingString()));
+                    } // Else the closing tag doesn't match the current tag, so ignore it.
 
                     continue;
                 }
@@ -182,7 +200,10 @@ public class PanelTextBox implements IGuiPanel {
 
         if (autoFit) {
             float scale = fontScale / 12F;
-            List<String> sl = RenderUtils.splitStringWithoutFormat(this.text, (int) Math.floor(bounds.getWidth() / scale / textWidthCorrection), fr);
+            List<String> sl = RenderUtils.splitStringWithoutFormat(
+                this.text,
+                (int) Math.floor(bounds.getWidth() / scale / textWidthCorrection),
+                fr);
             lines = sl.size() - 1;
 
             this.transform.h = fr.FONT_HEIGHT * sl.size();
@@ -203,7 +224,10 @@ public class PanelTextBox implements IGuiPanel {
         IGuiRect fullbox = getTransform();
         if (lines == null) {
             float scale = fontScale / 12F;
-            lines = RenderUtils.splitStringWithoutFormat(this.text, (int) Math.floor(fullbox.getWidth() / scale / textWidthCorrection), fr);
+            lines = RenderUtils.splitStringWithoutFormat(
+                this.text,
+                (int) Math.floor(fullbox.getWidth() / scale / textWidthCorrection),
+                fr);
         }
 
         for (UrlRange urlRange : urlRanges) {
@@ -213,7 +237,9 @@ public class PanelTextBox implements IGuiPanel {
 
             int currentPos = 0;
             boolean foundUrlStart = false;
-            for (int lineIndex = 0, lineCount = lines.size(); lineIndex < lineCount; currentPos += lines.get(lineIndex++).length()) {
+            for (int lineIndex = 0, lineCount = lines.size(); lineIndex
+                < lineCount; currentPos += lines.get(lineIndex++)
+                    .length()) {
                 String line = lines.get(lineIndex);
                 if (!foundUrlStart) {
                     if (start < currentPos + line.length()) {
@@ -221,27 +247,51 @@ public class PanelTextBox implements IGuiPanel {
                         if (end <= currentPos + line.length()) {
                             // url on same line, early exit
                             int right = RenderUtils.getStringWidth(line.substring(0, end - currentPos), fr);
-                            GuiTransform location = new GuiTransform(GuiAlign.FULL_BOX, left, fr.FONT_HEIGHT * lineIndex, right - left, fr.FONT_HEIGHT, 0);
+                            GuiTransform location = new GuiTransform(
+                                GuiAlign.FULL_BOX,
+                                left,
+                                fr.FONT_HEIGHT * lineIndex,
+                                right - left,
+                                fr.FONT_HEIGHT,
+                                0);
                             location.setParent(fullbox);
                             hotZones.add(new HotZone(location, url));
                             break;
                         }
                         // url span multiple lines
                         foundUrlStart = true;
-                        GuiTransform location = new GuiTransform(GuiAlign.FULL_BOX, left, fr.FONT_HEIGHT * lineIndex, fullbox.getWidth(), fr.FONT_HEIGHT, 0);
+                        GuiTransform location = new GuiTransform(
+                            GuiAlign.FULL_BOX,
+                            left,
+                            fr.FONT_HEIGHT * lineIndex,
+                            fullbox.getWidth(),
+                            fr.FONT_HEIGHT,
+                            0);
                         location.setParent(fullbox);
                         hotZones.add(new HotZone(location, url));
                     }
                 } else {
                     if (end <= currentPos + line.length()) {
                         // url ends at current line
-                        GuiTransform location = new GuiTransform(GuiAlign.FULL_BOX, 0, fr.FONT_HEIGHT * lineIndex, RenderUtils.getStringWidth(line.substring(0, end - currentPos), fr), fr.FONT_HEIGHT, 0);
+                        GuiTransform location = new GuiTransform(
+                            GuiAlign.FULL_BOX,
+                            0,
+                            fr.FONT_HEIGHT * lineIndex,
+                            RenderUtils.getStringWidth(line.substring(0, end - currentPos), fr),
+                            fr.FONT_HEIGHT,
+                            0);
                         location.setParent(fullbox);
                         hotZones.add(new HotZone(location, url));
                         break;
                     } else {
                         // url still going...
-                        GuiTransform location = new GuiTransform(GuiAlign.FULL_BOX, 0, fr.FONT_HEIGHT * lineIndex, fullbox.getWidth(), fr.FONT_HEIGHT, 0);
+                        GuiTransform location = new GuiTransform(
+                            GuiAlign.FULL_BOX,
+                            0,
+                            fr.FONT_HEIGHT * lineIndex,
+                            fullbox.getWidth(),
+                            fr.FONT_HEIGHT,
+                            0);
                         location.setParent(fullbox);
                         hotZones.add(new HotZone(location, url));
                     }
@@ -286,7 +336,8 @@ public class PanelTextBox implements IGuiPanel {
             return;
         }
 
-        List<String> sl = RenderUtils.splitStringWithoutFormat(text, (int) Math.floor(bounds.getWidth() / scale / textWidthCorrection), fr);
+        List<String> sl = RenderUtils
+            .splitStringWithoutFormat(text, (int) Math.floor(bounds.getWidth() / scale / textWidthCorrection), fr);
         lines = sl.size() - 1;
         bakeHotZones(sl);
 
@@ -328,7 +379,9 @@ public class PanelTextBox implements IGuiPanel {
 
         if (BQ_Settings.urlDebug) {
             for (int i = 0, hotZonesSize = hotZones.size(); i < hotZonesSize; i++) {
-                RenderUtils.drawHighlightBox(hotZones.get(i).location, new GuiColorStatic(i % 3 == 0 ? 255 : 0, i % 3 == 1 ? 255 : 0, i % 3 == 2 ? 255 : 0, 255));
+                RenderUtils.drawHighlightBox(
+                    hotZones.get(i).location,
+                    new GuiColorStatic(i % 3 == 0 ? 255 : 0, i % 3 == 1 ? 255 : 0, i % 3 == 2 ? 255 : 0, 255));
             }
         }
 
@@ -344,8 +397,7 @@ public class PanelTextBox implements IGuiPanel {
                 try {
                     URI tmp;
                     tmp = new URI(hotZone.url);
-                    if (tmp.getScheme() == null)
-                        tmp = new URI(defaultUrlProtocol + "://" + hotZone.url);
+                    if (tmp.getScheme() == null) tmp = new URI(defaultUrlProtocol + "://" + hotZone.url);
                     uri = tmp;
                 } catch (URISyntaxException ex) {
                     return false;
@@ -361,8 +413,10 @@ public class PanelTextBox implements IGuiPanel {
     private static void openURL(URI p_146407_1_) {
         try {
             Class<?> oclass = Class.forName("java.awt.Desktop");
-            Object object = oclass.getMethod("getDesktop").invoke(null);
-            oclass.getMethod("browse", URI.class).invoke(object, p_146407_1_);
+            Object object = oclass.getMethod("getDesktop")
+                .invoke(null);
+            oclass.getMethod("browse", URI.class)
+                .invoke(object, p_146407_1_);
         } catch (Throwable throwable) {
             BetterQuesting.logger.error("Couldn't open link", throwable);
         }
@@ -389,6 +443,7 @@ public class PanelTextBox implements IGuiPanel {
     }
 
     private static class GuiRectText implements IGuiRect {
+
         private final IGuiRect proxy;
         private final boolean useH;
         private int h;
@@ -443,12 +498,12 @@ public class PanelTextBox implements IGuiPanel {
         }
 
         /*
-        @Override
-        public void translate(int x, int y)
-        {
-            proxy.translate(x, y);
-        }
-        */
+         * @Override
+         * public void translate(int x, int y)
+         * {
+         * proxy.translate(x, y);
+         * }
+         */
 
         @Override
         public int compareTo(IGuiRect o) {
@@ -457,6 +512,7 @@ public class PanelTextBox implements IGuiPanel {
     }
 
     private static class UrlRange {
+
         final int start;
         final int end;
         final String url;
@@ -469,6 +525,7 @@ public class PanelTextBox implements IGuiPanel {
     }
 
     private static class HotZone {
+
         final IGuiRect location;
         final String url;
 

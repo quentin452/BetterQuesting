@@ -5,6 +5,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.server.S1FPacketSetExperience;
 
 public class XPHelper {
+
     // Pre-calculated XP levels at 1M intervals for speed searching
     private static long[] QUICK_XP = new long[2147];
 
@@ -31,8 +32,8 @@ public class XPHelper {
 
     public static void syncXP(EntityPlayerMP player) {
         // Make sure the client isn't being stupid about syncing the experience bars which routinely fail
-        player.playerNetServerHandler.sendPacket(
-                new S1FPacketSetExperience(player.experience, player.experienceTotal, player.experienceLevel));
+        player.playerNetServerHandler
+            .sendPacket(new S1FPacketSetExperience(player.experience, player.experienceTotal, player.experienceLevel));
     }
 
     public static long getPlayerXP(EntityPlayer player) {

@@ -1,14 +1,16 @@
 package betterquesting.api2.client.gui.panels;
 
-import betterquesting.api2.client.gui.misc.ComparatorGuiDepth;
-import betterquesting.api2.client.gui.misc.IGuiRect;
-
-import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.annotation.Nonnull;
+
+import betterquesting.api2.client.gui.misc.ComparatorGuiDepth;
+import betterquesting.api2.client.gui.misc.IGuiRect;
+
 public class CanvasMinimum implements IGuiCanvas {
+
     private final List<IGuiPanel> guiPanels = new CopyOnWriteArrayList<>();
     private IGuiRect internalTransform;
     private boolean enabled = true;
@@ -22,6 +24,7 @@ public class CanvasMinimum implements IGuiCanvas {
     @Override
     public IGuiRect getTransform() {
         return new IGuiRect() {
+
             @Override
             public int getX() {
                 return internalTransform.getX();
@@ -195,7 +198,8 @@ public class CanvasMinimum implements IGuiCanvas {
 
         guiPanels.add(panel);
         guiPanels.sort(ComparatorGuiDepth.INSTANCE);
-        panel.getTransform().setParent(getTransform());
+        panel.getTransform()
+            .setParent(getTransform());
         panel.initPanel();
         recalcSizes();
     }

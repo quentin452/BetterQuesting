@@ -1,15 +1,17 @@
 package bq_standard;
 
-import betterquesting.api.utils.NBTConverter;
+import java.util.List;
+import java.util.Set;
+
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 
-import java.util.List;
-import java.util.Set;
+import betterquesting.api.utils.NBTConverter;
 
 public class NBTReplaceUtil {
+
     @SuppressWarnings("unchecked")
     public static <T extends NBTBase> T replaceStrings(T baseTag, String key, String replace) {
         if (baseTag == null) {
@@ -31,7 +33,9 @@ public class NBTReplaceUtil {
             }
         } else if (baseTag instanceof NBTTagString) {
             NBTTagString tString = (NBTTagString) baseTag;
-            return (T) new NBTTagString(tString.func_150285_a_().replaceAll(key, replace));
+            return (T) new NBTTagString(
+                tString.func_150285_a_()
+                    .replaceAll(key, replace));
         }
 
         return baseTag; // Either isn't a string or doesn't contain one

@@ -1,5 +1,14 @@
 package bq_standard.rewards;
 
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
+
 import betterquesting.api.api.ApiReference;
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.questing.IQuest;
@@ -12,16 +21,9 @@ import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.questing.QuestDatabase;
 import bq_standard.client.gui.rewards.PanelRewardQuestCompletion;
 import bq_standard.rewards.factory.FactoryRewardQuestCompletion;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
-
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
 
 public class RewardQuestCompletion implements IReward {
+
     public UUID questNum = null;
 
     @Override
@@ -45,12 +47,13 @@ public class RewardQuestCompletion implements IReward {
             return;
         }
 
-        IQuest targetQuest = QuestingAPI.getAPI(ApiReference.QUEST_DB).get(questNum);
+        IQuest targetQuest = QuestingAPI.getAPI(ApiReference.QUEST_DB)
+            .get(questNum);
         if (targetQuest == null) {
             return;
         }
 
-        QuestCache qc = (QuestCache)player.getExtendedProperties(QuestCache.LOC_QUEST_CACHE.toString());
+        QuestCache qc = (QuestCache) player.getExtendedProperties(QuestCache.LOC_QUEST_CACHE.toString());
         if (qc == null) {
             return;
         }

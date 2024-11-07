@@ -1,16 +1,13 @@
 package betterquesting.blocks;
 
-import betterquesting.api.api.ApiReference;
-import betterquesting.api.api.QuestingAPI;
-import betterquesting.api.properties.NativeProps;
-import betterquesting.api.questing.IQuest;
-import betterquesting.api.questing.IQuestDatabase;
-import betterquesting.api.questing.tasks.IFluidTask;
-import betterquesting.api.questing.tasks.IItemTask;
-import betterquesting.api.questing.tasks.ITask;
-import betterquesting.api2.storage.DBEntry;
-import betterquesting.api2.utils.ParticipantInfo;
-import betterquesting.storage.QuestSettings;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -24,26 +21,29 @@ import net.minecraftforge.fluids.FluidTankInfo;
 import net.minecraftforge.fluids.IFluidHandler;
 import net.minecraftforge.fluids.IFluidTank;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import betterquesting.api.api.ApiReference;
+import betterquesting.api.api.QuestingAPI;
+import betterquesting.api.properties.NativeProps;
+import betterquesting.api.questing.IQuest;
+import betterquesting.api.questing.IQuestDatabase;
+import betterquesting.api.questing.tasks.IFluidTask;
+import betterquesting.api.questing.tasks.IItemTask;
+import betterquesting.api.questing.tasks.ITask;
+import betterquesting.api2.storage.DBEntry;
+import betterquesting.api2.utils.ParticipantInfo;
+import betterquesting.storage.QuestSettings;
 
 public class TileObservationStation extends TileEntity {
+
     public UUID owner = null;
     private static final String NBT_KEY_OWNER = "owner";
 
     @Override
     public void updateEntity() {
-        if (this.owner == null
-            || QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE)
+        if (this.owner == null || QuestSettings.INSTANCE.getProperty(NativeProps.EDIT_MODE)
             || this.worldObj == null
             || this.worldObj.isRemote
-            || this.worldObj.getTotalWorldTime() % 20 != 0
-        )
-            return;
+            || this.worldObj.getTotalWorldTime() % 20 != 0) return;
 
         final EntityPlayerMP player = getPlayerByUUID(this.owner);
         if (player == null) return;
@@ -53,11 +53,8 @@ public class TileObservationStation extends TileEntity {
         List<ItemStack> items = new ArrayList<>();
         List<FluidStack> fluids = new ArrayList<>();
         for (ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
-            TileEntity tile = this.worldObj.getTileEntity(
-                this.xCoord + side.offsetX,
-                this.yCoord + side.offsetY,
-                this.zCoord + side.offsetZ
-            );
+            TileEntity tile = this.worldObj
+                .getTileEntity(this.xCoord + side.offsetX, this.yCoord + side.offsetY, this.zCoord + side.offsetZ);
             if (tile instanceof IInventory) {
                 IInventory inventory = (IInventory) tile;
                 for (int i = 0; i < inventory.getSizeInventory(); i++) {
@@ -92,8 +89,11 @@ public class TileObservationStation extends TileEntity {
         final IQuestDatabase questDB = QuestingAPI.getAPI(ApiReference.QUEST_DB);
         if (questDB == null) return;
 
-        for (Map.Entry<UUID, IQuest> questEntry : questDB.filterKeys(pInfo.getSharedQuests()).entrySet()) {
-            for (DBEntry<ITask> taskEntry : questEntry.getValue().getTasks().getEntries()) {
+        for (Map.Entry<UUID, IQuest> questEntry : questDB.filterKeys(pInfo.getSharedQuests())
+            .entrySet()) {
+            for (DBEntry<ITask> taskEntry : questEntry.getValue()
+                .getTasks()
+                .getEntries()) {
                 final ITask task = taskEntry.getValue();
                 if (task instanceof IItemTask && !items.isEmpty()) {
                     ((IItemTask) task).retrieveItems(pInfo, questEntry, items.toArray(new ItemStack[0]));
@@ -105,14 +105,16 @@ public class TileObservationStation extends TileEntity {
         }
     }
 
-    @SuppressWarnings({"unchecked", "DuplicatedCode"})
+    @SuppressWarnings({ "unchecked", "DuplicatedCode" })
     @Nullable
     private EntityPlayerMP getPlayerByUUID(UUID uuid) {
         MinecraftServer server = MinecraftServer.getServer();
         if (server == null) return null;
 
         for (EntityPlayerMP player : (List<EntityPlayerMP>) server.getConfigurationManager().playerEntityList) {
-            if (player.getGameProfile().getId().equals(uuid)) return player;
+            if (player.getGameProfile()
+                .getId()
+                .equals(uuid)) return player;
         }
 
         return null;

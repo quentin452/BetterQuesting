@@ -1,11 +1,9 @@
 package betterquesting.client;
 
-import betterquesting.api.storage.BQ_Settings;
-import betterquesting.api.utils.RenderUtils;
-import betterquesting.api2.utils.QuestTranslation;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.item.ItemStack;
@@ -13,11 +11,15 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+
 import org.lwjgl.opengl.GL11;
 
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.List;
+import betterquesting.api.storage.BQ_Settings;
+import betterquesting.api.utils.RenderUtils;
+import betterquesting.api2.utils.QuestTranslation;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
 public class QuestNotification {
@@ -56,7 +58,8 @@ public class QuestNotification {
             }
             notice.init = true;
             notice.startTime = Minecraft.getSystemTime();
-            mc.getSoundHandler().playSound(PositionedSoundRecord.func_147674_a(new ResourceLocation(notice.sound), 1.0F));
+            mc.getSoundHandler()
+                .playSound(PositionedSoundRecord.func_147674_a(new ResourceLocation(notice.sound), 1.0F));
         }
 
         if (notice.getTime() >= 6F) {
@@ -84,7 +87,9 @@ public class QuestNotification {
 
             GL11.glEnable(GL11.GL_BLEND);
             GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-            String tmp = EnumChatFormatting.UNDERLINE + "" + EnumChatFormatting.BOLD + QuestTranslation.translate(notice.mainTxt);
+            String tmp = EnumChatFormatting.UNDERLINE + ""
+                + EnumChatFormatting.BOLD
+                + QuestTranslation.translate(notice.mainTxt);
             int txtW = RenderUtils.getStringWidth(tmp, mc.fontRenderer);
             mc.fontRenderer.drawString(tmp, width / 2 - txtW / 2, height / 4, color, true);
             tmp = QuestTranslation.translate(notice.subTxt);
@@ -96,6 +101,7 @@ public class QuestNotification {
     }
 
     public static class QuestNotice {
+
         public long startTime;
         public boolean init = false;
         private final String mainTxt;

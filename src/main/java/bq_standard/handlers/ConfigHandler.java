@@ -1,11 +1,14 @@
 package bq_standard.handlers;
 
-import bq_standard.core.BQS_Settings;
-import bq_standard.core.BQ_Standard;
 import net.minecraftforge.common.config.Configuration;
+
 import org.apache.logging.log4j.Level;
 
+import bq_standard.core.BQS_Settings;
+import bq_standard.core.BQ_Standard;
+
 public class ConfigHandler {
+
     public static Configuration config;
 
     public static void initConfigs() {
@@ -16,8 +19,8 @@ public class ConfigHandler {
 
         config.load();
 
-        BQS_Settings.hideUpdates =
-                config.getBoolean("Hide Updates", Configuration.CATEGORY_GENERAL, false, "Hide update notifications");
+        BQS_Settings.hideUpdates = config
+            .getBoolean("Hide Updates", Configuration.CATEGORY_GENERAL, false, "Hide update notifications");
 
         config.save();
 

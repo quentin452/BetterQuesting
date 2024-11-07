@@ -1,16 +1,19 @@
 package bq_standard.importers.hqm.converters.tasks;
 
+import net.minecraft.item.ItemBlock;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import betterquesting.api.questing.tasks.ITask;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api.utils.JsonHelper;
 import bq_standard.NbtBlockType;
 import bq_standard.importers.hqm.HQMUtilities;
 import bq_standard.tasks.TaskBlockBreak;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import net.minecraft.item.ItemBlock;
 
 public class HQMTaskBlockBreak {
+
     public ITask[] convertTask(JsonObject json) {
         TaskBlockBreak taskBreak = new TaskBlockBreak();
 
@@ -18,16 +21,20 @@ public class HQMTaskBlockBreak {
             if (!(je2 instanceof JsonObject)) continue;
             JsonObject jBlock = je2.getAsJsonObject();
             BigItemStack stack = HQMUtilities.HQMStackT1(JsonHelper.GetObject(jBlock, "item"));
-            if (!(stack.getBaseStack().getItem() instanceof ItemBlock))
-                continue; // Lazy conversion. Too much effort to handle all the edge cases
-            ItemBlock iBlock = (ItemBlock) stack.getBaseStack().getItem();
+            if (!(stack.getBaseStack()
+                .getItem() instanceof ItemBlock)) continue; // Lazy conversion. Too much effort to handle all the edge
+                                                            // cases
+            ItemBlock iBlock = (ItemBlock) stack.getBaseStack()
+                .getItem();
             NbtBlockType blockType = new NbtBlockType();
             blockType.b = iBlock.field_150939_a;
-            blockType.m = stack.getBaseStack().getItemDamage();
-            blockType.n = JsonHelper.GetNumber(jBlock, "required", 1).intValue();
+            blockType.m = stack.getBaseStack()
+                .getItemDamage();
+            blockType.n = JsonHelper.GetNumber(jBlock, "required", 1)
+                .intValue();
             taskBreak.blockTypes.add(blockType);
         }
 
-        return new ITask[]{taskBreak};
+        return new ITask[] { taskBreak };
     }
 }

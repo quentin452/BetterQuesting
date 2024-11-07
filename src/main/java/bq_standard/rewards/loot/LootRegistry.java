@@ -1,16 +1,18 @@
 package bq_standard.rewards.loot;
 
-import betterquesting.api2.storage.DBEntry;
-import betterquesting.api2.storage.INBTPartial;
-import betterquesting.api2.storage.SimpleDatabase;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
+
+import javax.annotation.Nullable;
+
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+
+import betterquesting.api2.storage.DBEntry;
+import betterquesting.api2.storage.INBTPartial;
+import betterquesting.api2.storage.SimpleDatabase;
 
 public class LootRegistry extends SimpleDatabase<LootGroup> implements INBTPartial<NBTTagCompound, Integer> {
     // TODO: Add localised group names
@@ -40,8 +42,9 @@ public class LootRegistry extends SimpleDatabase<LootGroup> implements INBTParti
 
     /**
      *
-     * @param weight A value between 0 and 1 that represents how common this reward is (i.e. higher values mean rarer loot)
-     * @param rand The random instance used to pick the group
+     * @param weight A value between 0 and 1 that represents how common this reward is (i.e. higher values mean rarer
+     *               loot)
+     * @param rand   The random instance used to pick the group
      * @return a loot group with the corresponding rarity of loot
      */
     public LootGroup getWeightedGroup(float weight, Random rand) {
@@ -68,7 +71,8 @@ public class LootRegistry extends SimpleDatabase<LootGroup> implements INBTParti
         NBTTagList jRew = new NBTTagList();
         for (DBEntry<LootGroup> entry : getEntries()) {
             if (subset != null && !subset.contains(entry.getID())) continue;
-            NBTTagCompound jGrp = entry.getValue().writeToNBT(new NBTTagCompound());
+            NBTTagCompound jGrp = entry.getValue()
+                .writeToNBT(new NBTTagCompound());
             jGrp.setInteger("ID", entry.getID());
             jRew.appendTag(jGrp);
         }

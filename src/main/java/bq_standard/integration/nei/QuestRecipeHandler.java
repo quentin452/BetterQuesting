@@ -1,5 +1,32 @@
 package bq_standard.integration.nei;
 
+import static codechicken.lib.gui.GuiDraw.changeTexture;
+import static codechicken.lib.gui.GuiDraw.drawTexturedModalRect;
+import static net.minecraft.util.EnumChatFormatting.DARK_GRAY;
+import static net.minecraft.util.EnumChatFormatting.ITALIC;
+import static net.minecraft.util.EnumChatFormatting.UNDERLINE;
+import static net.minecraft.util.EnumChatFormatting.getTextWithoutFormattingCodes;
+
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+
+import org.lwjgl.opengl.GL11;
+
+import com.google.common.base.Stopwatch;
+
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.rewards.IReward;
@@ -28,30 +55,6 @@ import codechicken.nei.NEIServerUtils;
 import codechicken.nei.PositionedStack;
 import codechicken.nei.recipe.GuiRecipe;
 import codechicken.nei.recipe.TemplateRecipeHandler;
-import com.google.common.base.Stopwatch;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import org.lwjgl.opengl.GL11;
-
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static codechicken.lib.gui.GuiDraw.changeTexture;
-import static codechicken.lib.gui.GuiDraw.drawTexturedModalRect;
-import static net.minecraft.util.EnumChatFormatting.DARK_GRAY;
-import static net.minecraft.util.EnumChatFormatting.ITALIC;
-import static net.minecraft.util.EnumChatFormatting.UNDERLINE;
-import static net.minecraft.util.EnumChatFormatting.getTextWithoutFormattingCodes;
 
 @SuppressWarnings("UnstableApiUsage")
 public class QuestRecipeHandler extends TemplateRecipeHandler {
@@ -81,14 +84,14 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
             setTextColors();
             for (Map.Entry<UUID, IQuest> entry : getVisibleQuests().entrySet()) {
                 if (getTaskItemInputs(getTasks(entry.getValue())).isEmpty()
-                        && getRewardItemOutputs(getRewards(entry.getValue())).isEmpty()) {
+                    && getRewardItemOutputs(getRewards(entry.getValue())).isEmpty()) {
                     continue;
                 }
                 this.arecipes.add(new CachedQuestRecipe(entry));
             }
             if (debug) {
-                BQ_Standard.logger.debug(
-                        String.format("took %s: loadCraftingRecipes(String, Object...)", stopwatch.stop()));
+                BQ_Standard.logger
+                    .debug(String.format("took %s: loadCraftingRecipes(String, Object...)", stopwatch.stop()));
             }
         } else {
             super.loadCraftingRecipes(outputId, results);
@@ -151,7 +154,7 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
             color = textColor;
         }
 
-        //noinspection unchecked
+        // noinspection unchecked
         List<String> titleArray = GuiDraw.fontRenderer.listFormattedStringToWidth(questTitle, GUI_WIDTH);
         int y = 16 - (titleArray.size() - 1) * LINE_SPACE;
         for (String line : titleArray) {
@@ -204,7 +207,8 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
 
             GuiQuest toDisplay = new GuiQuest(parentScreen, recipe.questID);
             toDisplay.setPreviousScreen(Minecraft.getMinecraft().currentScreen);
-            Minecraft.getMinecraft().displayGuiScreen(toDisplay);
+            Minecraft.getMinecraft()
+                .displayGuiScreen(toDisplay);
             if (BQ_Settings.useBookmark) {
                 GuiHome.bookmark = toDisplay;
             }
@@ -220,12 +224,16 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
 
     private static Map<UUID, IQuest> getVisibleQuests() {
         EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-        return QuestDatabase.INSTANCE.filterEntries(
-                (id, quest) -> QuestCache.isQuestShown(quest, QuestingAPI.getQuestingUUID(player), player));
+        return QuestDatabase.INSTANCE
+            .filterEntries((id, quest) -> QuestCache.isQuestShown(quest, QuestingAPI.getQuestingUUID(player), player));
     }
 
     private static List<ITask> getTasks(IQuest quest) {
-        return quest.getTasks().getEntries().stream().map(DBEntry::getValue).collect(Collectors.toList());
+        return quest.getTasks()
+            .getEntries()
+            .stream()
+            .map(DBEntry::getValue)
+            .collect(Collectors.toList());
     }
 
     private static List<BigItemStack> getTaskItemInputs(List<ITask> tasks) {
@@ -242,7 +250,11 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
     }
 
     private static List<IReward> getRewards(IQuest quest) {
-        return quest.getRewards().getEntries().stream().map(DBEntry::getValue).collect(Collectors.toList());
+        return quest.getRewards()
+            .getEntries()
+            .stream()
+            .map(DBEntry::getValue)
+            .collect(Collectors.toList());
     }
 
     private static List<BigItemStack> getRewardItemOutputs(List<IReward> rewards) {
@@ -269,7 +281,9 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
 
     private static List<ItemStack> extractStacks(BigItemStack bigStack) {
         if (bigStack.hasOreDict()) {
-            List<ItemStack> ret = Arrays.asList(bigStack.getOreIngredient().getMatchingStacks());
+            List<ItemStack> ret = Arrays.asList(
+                bigStack.getOreIngredient()
+                    .getMatchingStacks());
             ret.forEach(s -> s.stackSize = bigStack.stackSize);
             return ret;
         } else {
@@ -289,23 +303,23 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
 
         CachedQuestRecipe recipe = (CachedQuestRecipe) this.arecipes.get(recipeIndex);
         String questTitle = UNDERLINE + recipe.questName;
-        //noinspection unchecked
+        // noinspection unchecked
         List<String> titleArray = GuiDraw.fontRenderer.listFormattedStringToWidth(questTitle, GUI_WIDTH);
         int titleWidth = titleArray.stream()
-                .map(GuiDraw::getStringWidth)
-                .max(Comparator.naturalOrder())
-                .orElse(0);
+            .map(GuiDraw::getStringWidth)
+            .max(Comparator.naturalOrder())
+            .orElse(0);
         int titleHeight = GuiDraw.fontRenderer.FONT_HEIGHT + (titleArray.size() - 1) * LINE_SPACE;
 
         Point offset = gui.getRecipePosition(recipeIndex);
         Point pos = GuiDraw.getMousePosition();
         Point relMousePos = new Point(pos.x - gui.guiLeft - offset.x, pos.y - gui.guiTop - offset.y);
-        //noinspection PointlessArithmeticExpression
+        // noinspection PointlessArithmeticExpression
         Rectangle titleArea = new Rectangle(
-                GUI_WIDTH / 2 - titleWidth / 2 - 1,
-                16 - (titleArray.size() - 1) * LINE_SPACE,
-                titleWidth + 1 * 2,
-                titleHeight + 1);
+            GUI_WIDTH / 2 - titleWidth / 2 - 1,
+            16 - (titleArray.size() - 1) * LINE_SPACE,
+            titleWidth + 1 * 2,
+            titleHeight + 1);
         return titleArea.contains(relMousePos);
     }
 
@@ -338,13 +352,13 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
                     int x = xOffset + (index % GRID_X_COUNT) * SLOT_SIZE;
                     int y = yOffset + (index / GRID_Y_COUNT) * SLOT_SIZE;
                     if (task instanceof TaskOptionalRetrieval) {
-                        inputs.add(new CustomPositionedStack(
+                        inputs.add(
+                            new CustomPositionedStack(
                                 extractStacks(stack),
                                 x,
                                 y,
-                                DARK_GRAY.toString()
-                                        + ITALIC
-                                        + QuestTranslation.translate("bq_standard.task.optional_retrieval")));
+                                DARK_GRAY.toString() + ITALIC
+                                    + QuestTranslation.translate("bq_standard.task.optional_retrieval")));
                     } else {
                         inputs.add(new PositionedStack(extractStacks(stack), x, y));
                     }
@@ -362,13 +376,13 @@ public class QuestRecipeHandler extends TemplateRecipeHandler {
                     int x = xOffset + (index % GRID_X_COUNT) * SLOT_SIZE;
                     int y = yOffset + (index / GRID_Y_COUNT) * SLOT_SIZE;
                     if (reward instanceof RewardChoice) {
-                        inputs.add(new CustomPositionedStack(
+                        inputs.add(
+                            new CustomPositionedStack(
                                 extractStacks(stack),
                                 x,
                                 y,
-                                DARK_GRAY.toString()
-                                        + ITALIC
-                                        + QuestTranslation.translate("bq_standard.reward.choice")));
+                                DARK_GRAY.toString() + ITALIC
+                                    + QuestTranslation.translate("bq_standard.reward.choice")));
                     } else {
                         inputs.add(new PositionedStack(extractStacks(stack), x, y));
                     }

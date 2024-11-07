@@ -1,17 +1,19 @@
 package bq_standard.importers.hqm.converters.tasks;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import betterquesting.api.questing.tasks.ITask;
 import betterquesting.api.utils.JsonHelper;
 import bq_standard.importers.hqm.HQMQuestImporter;
 import bq_standard.importers.hqm.converters.HQMRep;
 import bq_standard.tasks.TaskScoreboard;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class HQMTaskReputaion {
+
     public ITask[] convertTask(JsonObject json) {
         List<ITask> tasks = new ArrayList<>();
 
@@ -22,17 +24,23 @@ public class HQMTaskReputaion {
             String repId;
             JsonElement jid = jRep.get("reputation");
             if (jid == null || !jid.isJsonPrimitive()) continue;
-            if (jid.getAsJsonPrimitive().isString()) {
+            if (jid.getAsJsonPrimitive()
+                .isString()) {
                 repId = jid.getAsString();
             } else {
-                repId = jid.getAsNumber().toString();
+                repId = jid.getAsNumber()
+                    .toString();
             }
 
             HQMRep repObj = HQMQuestImporter.INSTANCE.reputations.get(repId);
             if (repObj == null) continue;
 
-            int markA = repObj.getMarker(JsonHelper.GetNumber(jRep, "lower", -1).intValue());
-            int markB = repObj.getMarker(JsonHelper.GetNumber(jRep, "upper", -1).intValue());
+            int markA = repObj.getMarker(
+                JsonHelper.GetNumber(jRep, "lower", -1)
+                    .intValue());
+            int markB = repObj.getMarker(
+                JsonHelper.GetNumber(jRep, "upper", -1)
+                    .intValue());
             boolean invert = JsonHelper.GetBoolean(jRep, "inverted", false);
 
             TaskScoreboard task = new TaskScoreboard();

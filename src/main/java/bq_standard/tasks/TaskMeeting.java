@@ -1,5 +1,18 @@
 package bq_standard.tasks;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.annotation.Nonnull;
+
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
+
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.utils.ItemComparison;
 import betterquesting.api2.client.gui.misc.IGuiRect;
@@ -11,19 +24,9 @@ import bq_standard.tasks.base.TaskBase;
 import bq_standard.tasks.factory.FactoryTaskMeeting;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
-
-import javax.annotation.Nonnull;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 public class TaskMeeting extends TaskBase implements ITaskTickable {
+
     // region Properties
     public String idName = "Villager";
     public int range = 4;
@@ -87,10 +90,10 @@ public class TaskMeeting extends TaskBase implements ITaskTickable {
     public void detect(@Nonnull ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest) {
         if (!pInfo.PLAYER.isEntityAlive()) return;
 
-        //noinspection unchecked
-        List<Entity> list = pInfo.PLAYER.worldObj.getEntitiesWithinAABBExcludingEntity(
-                pInfo.PLAYER, pInfo.PLAYER.boundingBox.expand(range, range, range));
-        //noinspection unchecked
+        // noinspection unchecked
+        List<Entity> list = pInfo.PLAYER.worldObj
+            .getEntitiesWithinAABBExcludingEntity(pInfo.PLAYER, pInfo.PLAYER.boundingBox.expand(range, range, range));
+        // noinspection unchecked
         Class<? extends Entity> target = (Class<? extends Entity>) EntityList.stringToClassMapping.get(idName);
         if (target == null) return;
 
@@ -115,9 +118,7 @@ public class TaskMeeting extends TaskBase implements ITaskTickable {
             }
 
             if (++n >= amount) {
-                pInfo.ALL_UUIDS.forEach((uuid) -> {
-                    if (!isComplete(uuid)) setComplete(uuid);
-                });
+                pInfo.ALL_UUIDS.forEach((uuid) -> { if (!isComplete(uuid)) setComplete(uuid); });
                 pInfo.markDirtyParty(quest.getKey());
                 return;
             }

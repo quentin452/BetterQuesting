@@ -1,13 +1,6 @@
 package betterquesting.api2.storage;
 
-import betterquesting.api.utils.UuidConverter;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Maps;
-
-import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -16,12 +9,22 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.annotation.Nullable;
+
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.Maps;
+
+import betterquesting.api.utils.UuidConverter;
+
 /** Database that uses randomly-generated UUIDs as keys. */
 public class UuidDatabase<T> implements IUuidDatabase<T> {
+
     private final HashBiMap<UUID, T> database = HashBiMap.create();
 
     private int compareEntries(Map.Entry<UUID, T> e1, Map.Entry<UUID, T> e2) {
-        return UuidConverter.encodeUuid(e1.getKey()).compareTo(UuidConverter.encodeUuid(e2.getKey()));
+        return UuidConverter.encodeUuid(e1.getKey())
+            .compareTo(UuidConverter.encodeUuid(e2.getKey()));
     }
 
     @Override
@@ -41,19 +44,24 @@ public class UuidDatabase<T> implements IUuidDatabase<T> {
 
     @Override
     public Stream<Map.Entry<UUID, T>> orderedEntries() {
-        return entrySet().stream().sorted(this::compareEntries);
+        return entrySet().stream()
+            .sorted(this::compareEntries);
     }
 
     @Override
     public Stream<T> getAll(Collection<UUID> keys) {
-        return keys.stream().distinct().filter(database::containsKey).map(database::get);
+        return keys.stream()
+            .distinct()
+            .filter(database::containsKey)
+            .map(database::get);
     }
 
     @Override
     public Map<UUID, T> filterKeys(Collection<UUID> keys) {
-        return keys.stream().distinct()
-                .filter(database::containsKey)
-                .collect(Collectors.toMap(Function.identity(), database::get));
+        return keys.stream()
+            .distinct()
+            .filter(database::containsKey)
+            .collect(Collectors.toMap(Function.identity(), database::get));
     }
 
     @Override

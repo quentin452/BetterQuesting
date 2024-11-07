@@ -1,16 +1,18 @@
 package drethic.questbook.events;
 
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.PlayerEvent;
-import drethic.questbook.config.QBConfig;
-import drethic.questbook.item.QBItems;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.PlayerEvent;
+import drethic.questbook.config.QBConfig;
+import drethic.questbook.item.QBItems;
+
 public enum FMLEventHandler {
 
     INSTANCE;
+
     private static final String NBT_KEY = "questbook.firstjoin";
 
     @SubscribeEvent

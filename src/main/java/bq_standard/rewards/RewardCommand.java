@@ -1,5 +1,17 @@
 package bq_standard.rewards;
 
+import java.util.Map;
+import java.util.UUID;
+
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.command.server.CommandBlockLogic;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
+
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.rewards.IReward;
@@ -10,19 +22,9 @@ import bq_standard.client.gui.rewards.PanelRewardCommand;
 import bq_standard.handlers.EventHandler;
 import bq_standard.rewards.factory.FactoryRewardCommand;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.command.server.CommandBlockLogic;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.ChunkCoordinates;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-
-import java.util.Map;
-import java.util.UUID;
 
 public class RewardCommand implements IReward {
+
     public String command = "/say VAR_NAME Claimed a reward";
     public boolean hideCmd = false;
     public boolean viaPlayer = false;
@@ -47,18 +49,26 @@ public class RewardCommand implements IReward {
         if (player.worldObj.isRemote) return;
 
         String tmp = command.replaceAll("VAR_NAME", player.getCommandSenderName());
-        final String finCom =
-                tmp.replaceAll("VAR_UUID", QuestingAPI.getQuestingUUID(player).toString());
+        final String finCom = tmp.replaceAll(
+            "VAR_UUID",
+            QuestingAPI.getQuestingUUID(player)
+                .toString());
         final MinecraftServer server = MinecraftServer.getServer();
 
         if (viaPlayer) {
             EventHandler.scheduleServerTask(
-                    () -> server.getCommandManager().executeCommand(new AdminExecute(player), finCom));
+                () -> server.getCommandManager()
+                    .executeCommand(new AdminExecute(player), finCom));
         } else {
-            final RewardCommandSender cmdSender =
-                    new RewardCommandSender(player.worldObj, (int) player.posX, (int) player.posY, (int) player.posZ);
+            final RewardCommandSender cmdSender = new RewardCommandSender(
+                player.worldObj,
+                (int) player.posX,
+                (int) player.posY,
+                (int) player.posZ);
 
-            EventHandler.scheduleServerTask(() -> server.getCommandManager().executeCommand(cmdSender, finCom));
+            EventHandler.scheduleServerTask(
+                () -> server.getCommandManager()
+                    .executeCommand(cmdSender, finCom));
         }
     }
 
@@ -88,6 +98,7 @@ public class RewardCommand implements IReward {
     }
 
     public static class RewardCommandSender extends CommandBlockLogic {
+
         private final World world;
         private final ChunkCoordinates blockLoc;
 

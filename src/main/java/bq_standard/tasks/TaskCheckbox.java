@@ -1,5 +1,12 @@
 package bq_standard.tasks;
 
+import java.util.Map;
+import java.util.UUID;
+
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
+
 import betterquesting.api.questing.IQuest;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
@@ -10,14 +17,9 @@ import bq_standard.tasks.base.TaskBase;
 import bq_standard.tasks.factory.FactoryTaskCheckbox;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
-
-import java.util.Map;
-import java.util.UUID;
 
 public class TaskCheckbox extends TaskBase {
+
     // region Properties
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound nbt) {

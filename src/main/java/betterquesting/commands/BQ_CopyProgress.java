@@ -1,19 +1,5 @@
 package betterquesting.commands;
 
-import betterquesting.api.questing.IQuest;
-import betterquesting.network.handlers.NetQuestSync;
-import betterquesting.questing.QuestDatabase;
-import com.google.common.collect.Lists;
-import com.mojang.authlib.GameProfile;
-import net.minecraft.command.CommandBase;
-import net.minecraft.command.CommandException;
-import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.management.PlayerProfileCache;
-import net.minecraft.util.ChatComponentText;
-
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +9,24 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import net.minecraft.command.CommandBase;
+import net.minecraft.command.CommandException;
+import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.management.PlayerProfileCache;
+import net.minecraft.util.ChatComponentText;
+
+import com.google.common.collect.Lists;
+import com.mojang.authlib.GameProfile;
+
+import betterquesting.api.questing.IQuest;
+import betterquesting.network.handlers.NetQuestSync;
+import betterquesting.questing.QuestDatabase;
+
 public class BQ_CopyProgress extends CommandBase {
+
     @Override
     public int getRequiredPermissionLevel() {
         return 2;
@@ -32,13 +35,16 @@ public class BQ_CopyProgress extends CommandBase {
     @SuppressWarnings("unchecked")
     @Override
     public List<String> addTabCompletionOptions(ICommandSender p_71516_1_, String[] p_71516_2_) {
-        if (p_71516_2_.length > 2)
-            return null;
+        if (p_71516_2_.length > 2) return null;
 
         String s = p_71516_2_.length != 0 ? p_71516_2_[p_71516_2_.length - 1] : "";
-        return ((Stream<EntityPlayerMP>)MinecraftServer.getServer().getConfigurationManager().playerEntityList.stream().filter(i -> i instanceof EntityPlayerMP))
-                .filter(o -> o.getDisplayName().startsWith(s))
-                .map(EntityPlayer::getDisplayName).collect(Collectors.toList());
+        return ((Stream<EntityPlayerMP>) MinecraftServer.getServer()
+            .getConfigurationManager().playerEntityList.stream()
+                .filter(i -> i instanceof EntityPlayerMP)).filter(
+                    o -> o.getDisplayName()
+                        .startsWith(s))
+                    .map(EntityPlayer::getDisplayName)
+                    .collect(Collectors.toList());
     }
 
     @Override
@@ -93,30 +99,45 @@ public class BQ_CopyProgress extends CommandBase {
     }
 
     @SuppressWarnings("unchecked")
-    public static EntityPlayerMP getPlayerAdvanced(ICommandSender p_82359_0_, String p_82359_1_){
-        Optional onlinePlayer = MinecraftServer.getServer().getConfigurationManager().playerEntityList.stream().filter(i -> i instanceof EntityPlayerMP)
-                .filter(o -> ((EntityPlayerMP) o).getPersistentID().toString().equals(p_82359_1_) || ((EntityPlayerMP) o).getDisplayName().equals(p_82359_1_)).findFirst();
+    public static EntityPlayerMP getPlayerAdvanced(ICommandSender p_82359_0_, String p_82359_1_) {
+        Optional onlinePlayer = MinecraftServer.getServer()
+            .getConfigurationManager().playerEntityList.stream()
+                .filter(i -> i instanceof EntityPlayerMP)
+                .filter(
+                    o -> ((EntityPlayerMP) o).getPersistentID()
+                        .toString()
+                        .equals(p_82359_1_)
+                        || ((EntityPlayerMP) o).getDisplayName()
+                            .equals(p_82359_1_))
+                .findFirst();
         try {
             return onlinePlayer.isPresent() ? (EntityPlayerMP) onlinePlayer.get() : getPlayer(p_82359_0_, p_82359_1_);
-        }catch (Exception e){
+        } catch (Exception e) {
             return null;
         }
     }
 
-
     @SuppressWarnings("unchecked")
-    private static UUID GetPlayerUUID(String data){
+    private static UUID GetPlayerUUID(String data) {
         try {
             return UUID.fromString(data);
         } catch (IllegalArgumentException e) {
-            Optional onlinePlayer = MinecraftServer.getServer().getConfigurationManager().playerEntityList.stream().filter(i -> i instanceof EntityPlayerMP)
-                    .filter(o -> ((EntityPlayerMP) o).getPersistentID().toString().equals(data) || ((EntityPlayerMP) o).getDisplayName().equals(data)).findFirst();
-            if (onlinePlayer.isPresent())
-                return ((EntityPlayerMP)onlinePlayer.get()).getPersistentID();
+            Optional onlinePlayer = MinecraftServer.getServer()
+                .getConfigurationManager().playerEntityList.stream()
+                    .filter(i -> i instanceof EntityPlayerMP)
+                    .filter(
+                        o -> ((EntityPlayerMP) o).getPersistentID()
+                            .toString()
+                            .equals(data)
+                            || ((EntityPlayerMP) o).getDisplayName()
+                                .equals(data))
+                    .findFirst();
+            if (onlinePlayer.isPresent()) return ((EntityPlayerMP) onlinePlayer.get()).getPersistentID();
 
-            GameProfile gameProfile = new PlayerProfileCache(MinecraftServer.getServer(), MinecraftServer.field_152367_a).func_152655_a(data);
-            if (gameProfile != null)
-                return gameProfile.getId();
+            GameProfile gameProfile = new PlayerProfileCache(
+                MinecraftServer.getServer(),
+                MinecraftServer.field_152367_a).func_152655_a(data);
+            if (gameProfile != null) return gameProfile.getId();
 
             return UUID.nameUUIDFromBytes(data.getBytes(StandardCharsets.UTF_8));
         }

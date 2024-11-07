@@ -1,5 +1,13 @@
 package bq_standard.rewards;
 
+import java.util.Map;
+import java.util.UUID;
+
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
+
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.rewards.IReward;
 import betterquesting.api2.client.gui.misc.IGuiRect;
@@ -9,15 +17,9 @@ import bq_standard.client.gui.rewards.PanelRewardXP;
 import bq_standard.rewards.factory.FactoryRewardXP;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
-
-import java.util.Map;
-import java.util.UUID;
 
 public class RewardXP implements IReward {
+
     public int amount = 1;
     public boolean levels = true;
 

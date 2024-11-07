@@ -1,17 +1,20 @@
 package bq_standard;
 
-import betterquesting.api2.storage.INBTPartial;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+
+import betterquesting.api2.storage.INBTPartial;
+
 public class ScoreBQ implements INBTPartial<NBTTagList, UUID> {
+
     private final TreeMap<UUID, Integer> playerScores = new TreeMap<>();
 
     public synchronized int getScore(@Nonnull UUID uuid) {
@@ -32,7 +35,10 @@ public class ScoreBQ implements INBTPartial<NBTTagList, UUID> {
         for (Entry<UUID, Integer> entry : playerScores.entrySet()) {
             if (subset != null && !subset.contains(entry.getKey())) continue;
             NBTTagCompound jObj = new NBTTagCompound();
-            jObj.setString("uuid", entry.getKey().toString());
+            jObj.setString(
+                "uuid",
+                entry.getKey()
+                    .toString());
             jObj.setInteger("value", entry.getValue());
             nbt.appendTag(jObj);
         }
@@ -49,8 +55,7 @@ public class ScoreBQ implements INBTPartial<NBTTagList, UUID> {
                 NBTTagCompound tag = nbt.getCompoundTagAt(i);
                 playerScores.put(UUID.fromString(tag.getString("uuid")), tag.getInteger("value"));
 
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) {}
         }
     }
 }

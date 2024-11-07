@@ -1,5 +1,8 @@
 package bq_standard.core.proxies;
 
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.MinecraftForge;
+
 import betterquesting.api.api.ApiReference;
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.questing.rewards.IReward;
@@ -36,10 +39,9 @@ import bq_standard.tasks.factory.FactoryTaskRetrieval;
 import bq_standard.tasks.factory.FactoryTaskScoreboard;
 import bq_standard.tasks.factory.FactoryTaskXP;
 import cpw.mods.fml.common.FMLCommonHandler;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.common.MinecraftForge;
 
 public class CommonProxy {
+
     public boolean isClient() {
         return false;
     }
@@ -47,7 +49,9 @@ public class CommonProxy {
     public void registerHandlers() {
         MinecraftForge.EVENT_BUS.register(LootRegistry.INSTANCE);
         EventHandler evHandle = new EventHandler();
-        FMLCommonHandler.instance().bus().register(evHandle);
+        FMLCommonHandler.instance()
+            .bus()
+            .register(evHandle);
         MinecraftForge.EVENT_BUS.register(evHandle);
     }
 
@@ -69,8 +73,8 @@ public class CommonProxy {
         taskReg.register(FactoryTaskInteractEntity.INSTANCE);
         taskReg.register(FactoryTaskOptionalRetrieval.INSTANCE);
 
-        IRegistry<IFactoryData<IReward, NBTTagCompound>, IReward> rewardReg =
-                QuestingAPI.getAPI(ApiReference.REWARD_REG);
+        IRegistry<IFactoryData<IReward, NBTTagCompound>, IReward> rewardReg = QuestingAPI
+            .getAPI(ApiReference.REWARD_REG);
         rewardReg.register(FactoryRewardChoice.INSTANCE);
         rewardReg.register(FactoryRewardCommand.INSTANCE);
         rewardReg.register(FactoryRewardItem.INSTANCE);

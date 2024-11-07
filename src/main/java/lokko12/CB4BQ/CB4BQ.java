@@ -1,18 +1,21 @@
 package lokko12.CB4BQ;
 
+import net.minecraft.block.Block;
+
+import org.apache.logging.log4j.LogManager;
+
 import betterquesting.core.BetterQuesting;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.Mod.Instance;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
-import net.minecraft.block.Block;
-import org.apache.logging.log4j.LogManager;
 
 @Mod(
-        modid = "cb4bq", name = "Command Blocks for Better Questing", version = BetterQuesting.VERSION,
-        dependencies = "required-after:betterquesting"
-)
+    modid = "cb4bq",
+    name = "Command Blocks for Better Questing",
+    version = BetterQuesting.VERSION,
+    dependencies = "required-after:betterquesting")
 public class CB4BQ {
 
     public static Block BlockDLB = new BlockDLB();

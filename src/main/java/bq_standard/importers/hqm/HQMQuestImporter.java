@@ -1,5 +1,29 @@
 package bq_standard.importers.hqm;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.UUID;
+import java.util.concurrent.Future;
+import java.util.function.Function;
+
+import net.minecraft.init.Items;
+import net.minecraft.nbt.NBTTagList;
+
+import org.apache.logging.log4j.Level;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.client.importers.IImporter;
 import betterquesting.api.properties.NativeProps;
@@ -30,29 +54,9 @@ import bq_standard.importers.hqm.converters.tasks.HQMTaskKill;
 import bq_standard.importers.hqm.converters.tasks.HQMTaskLocation;
 import bq_standard.importers.hqm.converters.tasks.HQMTaskReputaion;
 import bq_standard.importers.hqm.converters.tasks.HQMTaskTame;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import net.minecraft.init.Items;
-import net.minecraft.nbt.NBTTagList;
-import org.apache.logging.log4j.Level;
-
-import java.io.File;
-import java.io.FileFilter;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.UUID;
-import java.util.concurrent.Future;
-import java.util.function.Function;
 
 public class HQMQuestImporter implements IImporter {
+
     public static final HQMQuestImporter INSTANCE = new HQMQuestImporter();
     private static final FileFilter FILTER = new FileExtensionFilter(".json");
 
@@ -85,7 +89,9 @@ public class HQMQuestImporter implements IImporter {
 
         for (File selected : files) // Pre-search for reputations required for tasks
         {
-            if (selected == null || !selected.exists() || !selected.getName().equalsIgnoreCase("reputations.json"))
+            if (selected == null || !selected.exists()
+                || !selected.getName()
+                    .equalsIgnoreCase("reputations.json"))
                 continue;
 
             JsonArray json = ReadArrayFromFile(selected);
@@ -93,7 +99,9 @@ public class HQMQuestImporter implements IImporter {
         }
 
         for (File selected : files) {
-            if (selected == null || !selected.exists() || selected.getName().equalsIgnoreCase("reputations.json"))
+            if (selected == null || !selected.exists()
+                || selected.getName()
+                    .equalsIgnoreCase("reputations.json"))
                 continue;
 
             JsonObject json = JsonHelper.ReadFromFile(selected);
@@ -101,7 +109,8 @@ public class HQMQuestImporter implements IImporter {
         }
     }
 
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting()
+        .create();
 
     private static JsonArray ReadArrayFromFile(File file) {
         Future<JsonArray> task = BQThreadedIO.INSTANCE.enqueue(() -> {
@@ -109,10 +118,13 @@ public class HQMQuestImporter implements IImporter {
                 return new JsonArray();
             }
 
-            try (InputStreamReader fr = new InputStreamReader(Files.newInputStream(file.toPath()), StandardCharsets.UTF_8)) {
+            try (InputStreamReader fr = new InputStreamReader(
+                Files.newInputStream(file.toPath()),
+                StandardCharsets.UTF_8)) {
                 return GSON.fromJson(fr, JsonArray.class);
             } catch (Exception e) {
-                QuestingAPI.getLogger().log(Level.ERROR, "An error occured while loading JSON from file:", e);
+                QuestingAPI.getLogger()
+                    .log(Level.ERROR, "An error occured while loading JSON from file:", e);
 
                 int i = 0;
                 File bkup = new File(file.getParent(), "malformed_" + file.getName() + i + ".json");
@@ -122,7 +134,8 @@ public class HQMQuestImporter implements IImporter {
                     bkup = new File(file.getParent(), "malformed_" + file.getName() + i + ".json");
                 }
 
-                QuestingAPI.getLogger().log(Level.ERROR, "Creating backup at: " + bkup.getAbsolutePath());
+                QuestingAPI.getLogger()
+                    .log(Level.ERROR, "Creating backup at: " + bkup.getAbsolutePath());
                 JsonHelper.CopyPaste(file, bkup);
 
                 return new JsonArray(); // Just a safety measure against NPEs
@@ -132,7 +145,8 @@ public class HQMQuestImporter implements IImporter {
         try {
             return task.get(); // Wait for other scheduled file ops to finish
         } catch (Exception e) {
-            QuestingAPI.getLogger().error("Unable to read from file " + file, e);
+            QuestingAPI.getLogger()
+                .error("Unable to read from file " + file, e);
             return new JsonArray();
         }
     }
@@ -151,9 +165,9 @@ public class HQMQuestImporter implements IImporter {
             if (jRep.has("name")) repName = JsonHelper.GetString(jRep, "name", repName);
 
             String repId = "" + (++i);
-            if (jRep.has("Id")) repId = JsonHelper.GetNumber(jRep, "Id", i).toString();
+            if (jRep.has("Id")) repId = JsonHelper.GetNumber(jRep, "Id", i)
+                .toString();
             if (jRep.has("id")) repId = JsonHelper.GetString(jRep, "id", repId);
-
 
             HQMRep repObj = new HQMRep(repName);
 
@@ -168,11 +182,14 @@ public class HQMQuestImporter implements IImporter {
                 JsonObject jMark = e2.getAsJsonObject();
 
                 int mId = m;
-                if (jMark.has("Id")) mId = JsonHelper.GetNumber(jMark, "Id", mId).intValue();
+                if (jMark.has("Id")) mId = JsonHelper.GetNumber(jMark, "Id", mId)
+                    .intValue();
 
                 int mVal = 0;
-                if (jMark.has("Value")) mVal = JsonHelper.GetNumber(jMark, "Value", mVal).intValue();
-                if (jMark.has("value")) mVal = JsonHelper.GetNumber(jMark, "value", mVal).intValue();
+                if (jMark.has("Value")) mVal = JsonHelper.GetNumber(jMark, "Value", mVal)
+                    .intValue();
+                if (jMark.has("value")) mVal = JsonHelper.GetNumber(jMark, "value", mVal)
+                    .intValue();
 
                 repObj.addMarker(mId, mVal);
             }
@@ -219,7 +236,9 @@ public class HQMQuestImporter implements IImporter {
                 while (loadedQuests.contains(idName + " (" + n + ")")) {
                     n++;
                 }
-                BetterQuesting.logger.log(Level.WARN, "Found duplicate quest " + name + ". Any quests with this pre-requisite will need repair!");
+                BetterQuesting.logger.log(
+                    Level.WARN,
+                    "Found duplicate quest " + name + ". Any quests with this pre-requisite will need repair!");
                 idName = name + " (" + n + ")";
             }
 
@@ -240,17 +259,22 @@ public class HQMQuestImporter implements IImporter {
             {
                 JsonObject jRpt = JsonHelper.GetObject(jQuest, "repeat");
                 int rTime = 0;
-                rTime += JsonHelper.GetNumber(jRpt, "days", 0).intValue() * 24000;
-                rTime += JsonHelper.GetNumber(jRpt, "hours", 0).intValue() * 1000;
+                rTime += JsonHelper.GetNumber(jRpt, "days", 0)
+                    .intValue() * 24000;
+                rTime += JsonHelper.GetNumber(jRpt, "hours", 0)
+                    .intValue() * 1000;
                 quest.setProperty(NativeProps.REPEAT_TIME, rTime);
             }
 
             for (JsonElement er : JsonHelper.GetArray(jQuest, "prerequisites")) {
-                if (er == null || !er.isJsonPrimitive() || !er.getAsJsonPrimitive().isString()) {
+                if (er == null || !er.isJsonPrimitive()
+                    || !er.getAsJsonPrimitive()
+                        .isString()) {
                     continue;
                 }
 
-                String id = er.getAsJsonPrimitive().getAsString();
+                String id = er.getAsJsonPrimitive()
+                    .getAsString();
 
                 if (id.startsWith("{") && id.contains("[")) {
                     String[] nParts = id.split("\\[");
@@ -265,11 +289,14 @@ public class HQMQuestImporter implements IImporter {
             }
 
             for (JsonElement er : JsonHelper.GetArray(jQuest, "optionlinks")) {
-                if (er == null || !er.isJsonPrimitive() || !er.getAsJsonPrimitive().isString()) {
+                if (er == null || !er.isJsonPrimitive()
+                    || !er.getAsJsonPrimitive()
+                        .isString()) {
                     continue;
                 }
 
-                String id = er.getAsJsonPrimitive().getAsString();
+                String id = er.getAsJsonPrimitive()
+                    .getAsString();
 
                 if (id.startsWith("{") && id.contains("[")) {
                     String[] nParts = id.split("\\[");
@@ -298,7 +325,8 @@ public class HQMQuestImporter implements IImporter {
                     continue;
                 }
 
-                ITask[] tsks = taskConverters.get(tType).apply(jTask);
+                ITask[] tsks = taskConverters.get(tType)
+                    .apply(jTask);
 
                 if (tsks != null && tsks.length > 0) {
                     IDatabaseNBT<ITask, NBTTagList, NBTTagList> taskReg = quest.getTasks();
@@ -311,7 +339,8 @@ public class HQMQuestImporter implements IImporter {
                     continue;
                 }
 
-                IReward[] rews = entry.getValue().apply(jQuest.get(entry.getKey()));
+                IReward[] rews = entry.getValue()
+                    .apply(jQuest.get(entry.getKey()));
 
                 if (rews != null && rews.length > 0) {
                     IDatabaseNBT<IReward, NBTTagList, NBTTagList> rewardReg = quest.getRewards();
@@ -322,10 +351,14 @@ public class HQMQuestImporter implements IImporter {
             }
 
             if (questLine.containsKey(questDB.lookupKey(quest))) {
-                BetterQuesting.logger.log(Level.WARN, "Tried to add duplicate quest " + quest + " to quest line " + questLine.getUnlocalisedName());
+                BetterQuesting.logger.log(
+                    Level.WARN,
+                    "Tried to add duplicate quest " + quest + " to quest line " + questLine.getUnlocalisedName());
             } else {
-                final int qleX = JsonHelper.GetNumber(jQuest, "x", 0).intValue();
-                final int qleY = JsonHelper.GetNumber(jQuest, "y", 0).intValue();
+                final int qleX = JsonHelper.GetNumber(jQuest, "x", 0)
+                    .intValue();
+                final int qleY = JsonHelper.GetNumber(jQuest, "y", 0)
+                    .intValue();
                 final boolean bigIcon = JsonHelper.GetBoolean(jQuest, "bigicon", false);
 
                 IQuestLineEntry qle = questLine.createNew(questDB.lookupKey(quest));
@@ -337,12 +370,14 @@ public class HQMQuestImporter implements IImporter {
     }
 
     private boolean containsReq(IQuest quest, UUID id) {
-        return quest.getRequirements().contains(id);
+        return quest.getRequirements()
+            .contains(id);
     }
 
     private void addReq(IQuest quest, UUID id) {
         if (containsReq(quest, id)) return;
-        quest.getRequirements().add(id);
+        quest.getRequirements()
+            .add(id);
     }
 
     static {

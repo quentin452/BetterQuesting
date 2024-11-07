@@ -1,16 +1,18 @@
 package betterquesting.client;
 
-import betterquesting.core.BetterQuesting;
-import cpw.mods.fml.common.FMLCommonHandler;
-import net.minecraft.client.Minecraft;
-import org.apache.commons.io.FileUtils;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import net.minecraft.client.Minecraft;
+
+import org.apache.commons.io.FileUtils;
+
+import betterquesting.core.BetterQuesting;
+import cpw.mods.fml.common.FMLCommonHandler;
 
 public class BookmarkHandler {
 
@@ -22,9 +24,9 @@ public class BookmarkHandler {
     public static boolean bookmarkQuest(UUID questId) {
         String uuid = questId.toString();
         boolean added = false;
-        if(BOOKMARKS.contains(uuid)){
+        if (BOOKMARKS.contains(uuid)) {
             BOOKMARKS.remove(uuid);
-        }else{
+        } else {
             BOOKMARKS.add(uuid);
             added = true;
         }
@@ -43,7 +45,7 @@ public class BookmarkHandler {
     }
 
     public static boolean hasChanged() {
-        if(hasChanged) {
+        if (hasChanged) {
             hasChanged = false;
             return true;
         }
@@ -51,9 +53,9 @@ public class BookmarkHandler {
     }
 
     private static void saveBookmarks() {
-        try{
+        try {
             FileUtils.writeLines(bookmarkFile, BOOKMARKS);
-        } catch(IOException ignored) {
+        } catch (IOException ignored) {
             BetterQuesting.logger.warn("Failed to save bookmarks.");
         }
     }
@@ -64,9 +66,9 @@ public class BookmarkHandler {
         BOOKMARKS.clear();
         hasChanged = true;
 
-        if(!bookmarkFile.exists()) return;
+        if (!bookmarkFile.exists()) return;
 
-        try{
+        try {
             List<String> bookmarks = FileUtils.readLines(bookmarkFile, StandardCharsets.UTF_8);
             BOOKMARKS.addAll(bookmarks);
         } catch (IOException ignored) {
@@ -74,12 +76,16 @@ public class BookmarkHandler {
         }
     }
 
-    private static String getIdentifier(String address){
-        if(Minecraft.getMinecraft().isSingleplayer()){
-            return FMLCommonHandler.instance().getMinecraftServerInstance().getFolderName();
+    private static String getIdentifier(String address) {
+        if (Minecraft.getMinecraft()
+            .isSingleplayer()) {
+            return FMLCommonHandler.instance()
+                .getMinecraftServerInstance()
+                .getFolderName();
         }
 
         int index = address.indexOf("/") + 1;
-        return address.substring(index).replace(":", ".");
+        return address.substring(index)
+            .replace(":", ".");
     }
 }

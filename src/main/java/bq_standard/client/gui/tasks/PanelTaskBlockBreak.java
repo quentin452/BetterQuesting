@@ -1,5 +1,10 @@
 package bq_standard.client.gui.tasks;
 
+import java.util.UUID;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.EnumChatFormatting;
+
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api2.client.gui.misc.GuiRectangle;
@@ -10,12 +15,9 @@ import betterquesting.api2.client.gui.panels.content.PanelTextBox;
 import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.utils.QuestTranslation;
 import bq_standard.tasks.TaskBlockBreak;
-import net.minecraft.client.Minecraft;
-import net.minecraft.util.EnumChatFormatting;
-
-import java.util.UUID;
 
 public class PanelTaskBlockBreak extends CanvasMinimum {
+
     private final TaskBlockBreak task;
     private final IGuiRect initialRect;
 
@@ -36,7 +38,8 @@ public class PanelTaskBlockBreak extends CanvasMinimum {
         int listW = initialRect.getWidth();
 
         for (int i = 0; i < task.blockTypes.size(); i++) {
-            BigItemStack stack = task.blockTypes.get(i).getItemStack();
+            BigItemStack stack = task.blockTypes.get(i)
+                .getItemStack();
 
             if (stack == null) {
                 continue;
@@ -47,22 +50,26 @@ public class PanelTaskBlockBreak extends CanvasMinimum {
 
             StringBuilder sb = new StringBuilder();
 
-            sb.append(stack.getBaseStack().getDisplayName());
+            sb.append(
+                stack.getBaseStack()
+                    .getDisplayName());
 
-            if (stack.hasOreDict()) sb.append(" (").append(stack.getOreDict()).append(")");
+            if (stack.hasOreDict()) sb.append(" (")
+                .append(stack.getOreDict())
+                .append(")");
 
             sb.append("\n")
-                    .append(progress[i])
-                    .append("/")
-                    .append(stack.stackSize)
-                    .append("\n");
+                .append(progress[i])
+                .append("/")
+                .append(stack.stackSize)
+                .append("\n");
 
             if (progress[i] >= stack.stackSize || isComplete) {
                 sb.append(EnumChatFormatting.GREEN)
-                        .append(QuestTranslation.translate("betterquesting.tooltip.complete"));
+                    .append(QuestTranslation.translate("betterquesting.tooltip.complete"));
             } else {
                 sb.append(EnumChatFormatting.RED)
-                        .append(QuestTranslation.translate("betterquesting.tooltip.incomplete"));
+                    .append(QuestTranslation.translate("betterquesting.tooltip.incomplete"));
             }
 
             PanelTextBox text = new PanelTextBox(new GuiRectangle(40, i * 36, listW - 40, 36, 0), sb.toString());

@@ -1,20 +1,22 @@
 package bq_standard.rewards.loot;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api.utils.JsonHelper;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.storage.INBTSaveLoad;
 import betterquesting.api2.storage.SimpleDatabase;
 import bq_standard.rewards.loot.LootGroup.LootEntry;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
 
 public class LootGroup extends SimpleDatabase<LootEntry> implements INBTSaveLoad<NBTTagCompound> {
+
     public String name = "Loot Group";
     public int weight = 1;
 
@@ -82,7 +84,8 @@ public class LootGroup extends SimpleDatabase<LootEntry> implements INBTSaveLoad
         for (DBEntry<LootEntry> entry : getEntries()) {
             if (entry == null) continue;
 
-            NBTTagCompound jLoot = entry.getValue().writeToNBT(new NBTTagCompound());
+            NBTTagCompound jLoot = entry.getValue()
+                .writeToNBT(new NBTTagCompound());
             jLoot.setInteger("ID", entry.getID());
             jRew.appendTag(jLoot);
         }
@@ -92,6 +95,7 @@ public class LootGroup extends SimpleDatabase<LootEntry> implements INBTSaveLoad
     }
 
     public static class LootEntry implements INBTSaveLoad<NBTTagCompound> {
+
         public int weight = 1;
         public final List<BigItemStack> items = new ArrayList<>();
 

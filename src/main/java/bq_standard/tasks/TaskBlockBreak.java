@@ -1,18 +1,10 @@
 package bq_standard.tasks;
 
-import betterquesting.api.questing.IQuest;
-import betterquesting.api.utils.ItemComparison;
-import betterquesting.api.utils.NBTConverter;
-import betterquesting.api2.client.gui.misc.IGuiRect;
-import betterquesting.api2.client.gui.panels.IGuiPanel;
-import betterquesting.api2.utils.ParticipantInfo;
-import betterquesting.api2.utils.Tuple2;
-import bq_standard.NbtBlockType;
-import bq_standard.client.gui.tasks.PanelTaskBlockBreak;
-import bq_standard.tasks.base.TaskProgressableBase;
-import bq_standard.tasks.factory.FactoryTaskBlockBreak;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.init.Blocks;
@@ -26,12 +18,22 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.oredict.OreDictionary;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import betterquesting.api.questing.IQuest;
+import betterquesting.api.utils.ItemComparison;
+import betterquesting.api.utils.NBTConverter;
+import betterquesting.api2.client.gui.misc.IGuiRect;
+import betterquesting.api2.client.gui.panels.IGuiPanel;
+import betterquesting.api2.utils.ParticipantInfo;
+import betterquesting.api2.utils.Tuple2;
+import bq_standard.NbtBlockType;
+import bq_standard.client.gui.tasks.PanelTaskBlockBreak;
+import bq_standard.tasks.base.TaskProgressableBase;
+import bq_standard.tasks.factory.FactoryTaskBlockBreak;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 public class TaskBlockBreak extends TaskProgressableBase<int[]> {
+
     // region Properties
     public final List<NbtBlockType> blockTypes = new ArrayList<>();
 
@@ -150,7 +152,8 @@ public class TaskBlockBreak extends TaskProgressableBase<int[]> {
         pInfo.markDirtyParty(quest.getKey());
     }
 
-    public void onBlockBreak(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, Block block, int meta, int x, int y, int z) {
+    public void onBlockBreak(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, Block block, int meta, int x, int y,
+        int z) {
         TileEntity tile = block.hasTileEntity(meta) ? pInfo.PLAYER.worldObj.getTileEntity(x, y, z) : null;
         NBTTagCompound tags = null;
         if (tile != null) {
@@ -165,14 +168,14 @@ public class TaskBlockBreak extends TaskProgressableBase<int[]> {
             NbtBlockType targetBlock = blockTypes.get(i);
 
             int tmpMeta = (targetBlock.m < 0 || targetBlock.m == OreDictionary.WILDCARD_VALUE)
-                    ? OreDictionary.WILDCARD_VALUE
-                    : meta;
-            boolean oreMatch = targetBlock.oreDict.length() > 0
-                    && OreDictionary.getOres(targetBlock.oreDict).contains(new ItemStack(block, 1, tmpMeta));
+                ? OreDictionary.WILDCARD_VALUE
+                : meta;
+            boolean oreMatch = targetBlock.oreDict.length() > 0 && OreDictionary.getOres(targetBlock.oreDict)
+                .contains(new ItemStack(block, 1, tmpMeta));
             final int index = i;
 
             if ((oreMatch || (block == targetBlock.b && (targetBlock.m < 0 || meta == targetBlock.m)))
-                    && ItemComparison.CompareNBTTag(targetBlock.tags, tags, true)) {
+                && ItemComparison.CompareNBTTag(targetBlock.tags, tags, true)) {
                 progress.forEach((entry) -> {
                     if (entry.getSecond()[index] >= targetBlock.n) return;
                     entry.getSecond()[index]++;
@@ -193,7 +196,10 @@ public class TaskBlockBreak extends TaskProgressableBase<int[]> {
         List<String> texts = new ArrayList<>();
         for (NbtBlockType block : blockTypes) {
             if (block.getItemStack() != null) {
-                texts.add(block.getItemStack().getBaseStack().getDisplayName());
+                texts.add(
+                    block.getItemStack()
+                        .getBaseStack()
+                        .getDisplayName());
             }
         }
         return texts;

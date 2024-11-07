@@ -1,16 +1,8 @@
 package bq_standard.items;
 
-import betterquesting.api.api.ApiReference;
-import betterquesting.api.api.QuestingAPI;
-import betterquesting.api.properties.NativeProps;
-import betterquesting.api.utils.BigItemStack;
-import betterquesting.api2.utils.QuestTranslation;
-import bq_standard.core.BQ_Standard;
-import bq_standard.network.handlers.NetLootClaim;
-import bq_standard.rewards.loot.LootGroup;
-import bq_standard.rewards.loot.LootRegistry;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import java.util.ArrayList;
+import java.util.List;
+
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -23,10 +15,20 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ChestGenHooks;
 
-import java.util.ArrayList;
-import java.util.List;
+import betterquesting.api.api.ApiReference;
+import betterquesting.api.api.QuestingAPI;
+import betterquesting.api.properties.NativeProps;
+import betterquesting.api.utils.BigItemStack;
+import betterquesting.api2.utils.QuestTranslation;
+import bq_standard.core.BQ_Standard;
+import bq_standard.network.handlers.NetLootClaim;
+import bq_standard.rewards.loot.LootGroup;
+import bq_standard.rewards.loot.LootRegistry;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 public class ItemLootChest extends Item {
+
     public ItemLootChest() {
         this.setMaxStackSize(1);
         this.setUnlocalizedName("bq_standard.loot_chest");
@@ -79,13 +81,13 @@ public class ItemLootChest extends Item {
                 return stack;
             }
 
-            String loottable =
-                    (stack.getTagCompound() != null && stack.getTagCompound().hasKey("loottable", 8))
-                            ? stack.getTagCompound().getString("loottable")
-                            : "dungeonChest";
+            String loottable = (stack.getTagCompound() != null && stack.getTagCompound()
+                .hasKey("loottable", 8)) ? stack.getTagCompound()
+                    .getString("loottable") : "dungeonChest";
 
             List<BigItemStack> loot = new ArrayList<>();
-            for (int n = 1 + player.getRNG().nextInt(7); n > 0; n--) {
+            for (int n = 1 + player.getRNG()
+                .nextInt(7); n > 0; n--) {
                 loot.add(new BigItemStack(ChestGenHooks.getOneItem(loottable, player.getRNG())));
             }
 
@@ -107,14 +109,14 @@ public class ItemLootChest extends Item {
 
             NetLootClaim.sendReward((EntityPlayerMP) player, "Loot", loot.toArray(new BigItemStack[0]));
         } else if (stack.getItemDamage() >= 102) {
-            if (QuestingAPI.getAPI(ApiReference.SETTINGS).canUserEdit(player)) {
+            if (QuestingAPI.getAPI(ApiReference.SETTINGS)
+                .canUserEdit(player)) {
                 player.openGui(BQ_Standard.instance, 0, world, (int) player.posX, (int) player.posY, (int) player.posZ);
             }
             return stack;
         } else if (!world.isRemote) {
-            float rarity = stack.getItemDamage() == 101
-                    ? itemRand.nextFloat()
-                    : MathHelper.clamp_int(stack.getItemDamage(), 0, 100) / 100F;
+            float rarity = stack.getItemDamage() == 101 ? itemRand.nextFloat()
+                : MathHelper.clamp_int(stack.getItemDamage(), 0, 100) / 100F;
             LootGroup group = LootRegistry.INSTANCE.getWeightedGroup(rarity, itemRand);
             List<BigItemStack> loot = new ArrayList<>();
             String title = "No Loot Setup";
@@ -226,14 +228,17 @@ public class ItemLootChest extends Item {
 
         NBTTagCompound tag = stack.getTagCompound();
         boolean hideTooltip = tag == null || !tag.getBoolean("hideLootInfo");
-        if (hideTooltip && !QuestingAPI.getAPI(ApiReference.SETTINGS).getProperty(NativeProps.EDIT_MODE)) return;
+        if (hideTooltip && !QuestingAPI.getAPI(ApiReference.SETTINGS)
+            .getProperty(NativeProps.EDIT_MODE)) return;
 
         if (stack.getItemDamage() == 104) {
             if (tag == null) return;
             tooltip.add(QuestTranslation.translate("bq_standard.tooltip.fixed_loot", tag.getString("fixedLootName")));
-            tooltip.add(QuestTranslation.translate(
+            tooltip.add(
+                QuestTranslation.translate(
                     "bq_standard.tooltip.fixed_loot_size",
-                    tag.getTagList("fixedLootList", 10).tagCount()));
+                    tag.getTagList("fixedLootList", 10)
+                        .tagCount()));
         } else if (stack.getItemDamage() == 103) {
             if (tag == null) return;
             tooltip.add(QuestTranslation.translate("bq_standard.tooltip.loot_table", tag.getString("loottable")));
@@ -243,8 +248,10 @@ public class ItemLootChest extends Item {
             if (stack.getItemDamage() == 101) {
                 tooltip.add(QuestTranslation.translate("bq_standard.tooltip.loot_chest", "???"));
             } else {
-                tooltip.add(QuestTranslation.translate(
-                        "bq_standard.tooltip.loot_chest", MathHelper.clamp_int(stack.getItemDamage(), 0, 100) + "%"));
+                tooltip.add(
+                    QuestTranslation.translate(
+                        "bq_standard.tooltip.loot_chest",
+                        MathHelper.clamp_int(stack.getItemDamage(), 0, 100) + "%"));
             }
         }
     }

@@ -1,5 +1,21 @@
 package bq_standard.tasks;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
+import net.minecraft.block.Block;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.oredict.OreDictionary;
+
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api.utils.ItemComparison;
@@ -14,22 +30,9 @@ import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskInteractItem;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.block.Block;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.oredict.OreDictionary;
-
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 public class TaskInteractItem extends TaskProgressableBase<Integer> {
+
     // region Properties
     @Nullable
     public BigItemStack targetItem = null;
@@ -112,24 +115,14 @@ public class TaskInteractItem extends TaskProgressableBase<Integer> {
     public void detect(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest) {
         final List<Tuple2<UUID, Integer>> progress = getBulkProgress(pInfo.ALL_UUIDS);
 
-        progress.forEach((value) -> {
-            if (value.getSecond() >= required) setComplete(value.getFirst());
-        });
+        progress.forEach((value) -> { if (value.getSecond() >= required) setComplete(value.getFirst()); });
 
         pInfo.markDirtyParty(quest.getKey());
     }
 
     @SuppressWarnings("DuplicatedCode")
-    public void onInteract(
-            ParticipantInfo pInfo,
-            Map.Entry<UUID, IQuest> quest,
-            ItemStack item,
-            Block block,
-            int meta,
-            int x,
-            int y,
-            int z,
-            boolean isHit) {
+    public void onInteract(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, ItemStack item, Block block, int meta,
+        int x, int y, int z, boolean isHit) {
         if ((!onHit && isHit) || (!onInteract && !isHit)) return;
 
         if (targetBlock.b != Blocks.air && targetBlock.b != null) {
@@ -142,25 +135,24 @@ public class TaskInteractItem extends TaskProgressableBase<Integer> {
             }
 
             int tmpMeta = (targetBlock.m < 0 || targetBlock.m == OreDictionary.WILDCARD_VALUE)
-                    ? OreDictionary.WILDCARD_VALUE
-                    : meta;
-            boolean oreMatch = targetBlock.oreDict.length() > 0
-                    && OreDictionary.getOres(targetBlock.oreDict).contains(new ItemStack(block, 1, tmpMeta));
+                ? OreDictionary.WILDCARD_VALUE
+                : meta;
+            boolean oreMatch = targetBlock.oreDict.length() > 0 && OreDictionary.getOres(targetBlock.oreDict)
+                .contains(new ItemStack(block, 1, tmpMeta));
 
             if ((!oreMatch && (block != targetBlock.b || (targetBlock.m >= 0 && meta != targetBlock.m)))
-                    || !ItemComparison.CompareNBTTag(targetBlock.tags, tags, true)) {
+                || !ItemComparison.CompareNBTTag(targetBlock.tags, tags, true)) {
                 return;
             }
         }
 
         if (targetItem != null) {
-            if (targetItem.hasOreDict()
-                    && !ItemComparison.OreDictionaryMatch(
-                            targetItem.getOreIngredient(),
-                            targetItem.GetTagCompound(),
-                            item,
-                            !ignoreNBT,
-                            partialMatch)) {
+            if (targetItem.hasOreDict() && !ItemComparison.OreDictionaryMatch(
+                targetItem.getOreIngredient(),
+                targetItem.GetTagCompound(),
+                item,
+                !ignoreNBT,
+                partialMatch)) {
                 return;
             } else if (!ItemComparison.StackMatch(targetItem.getBaseStack(), item, !ignoreNBT, partialMatch)) {
                 return;
@@ -183,10 +175,15 @@ public class TaskInteractItem extends TaskProgressableBase<Integer> {
     public List<String> getTextsForSearch() {
         List<String> texts = new ArrayList<>();
         if (targetBlock.getItemStack() != null) {
-            texts.add(targetBlock.getItemStack().getBaseStack().getDisplayName());
+            texts.add(
+                targetBlock.getItemStack()
+                    .getBaseStack()
+                    .getDisplayName());
         }
         if (targetItem != null) {
-            texts.add(targetItem.getBaseStack().getDisplayName());
+            texts.add(
+                targetItem.getBaseStack()
+                    .getDisplayName());
         }
         return texts;
     }

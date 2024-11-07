@@ -1,5 +1,11 @@
 package bq_standard.client.gui.tasks;
 
+import java.util.UUID;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraftforge.fluids.FluidStack;
+
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api2.client.gui.misc.GuiAlign;
 import betterquesting.api2.client.gui.misc.GuiRectangle;
@@ -14,13 +20,9 @@ import bq_standard.core.BQ_Standard;
 import bq_standard.tasks.TaskFluid;
 import codechicken.nei.recipe.GuiCraftingRecipe;
 import cpw.mods.fml.common.Optional.Method;
-import net.minecraft.client.Minecraft;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraftforge.fluids.FluidStack;
-
-import java.util.UUID;
 
 public class PanelTaskFluid extends CanvasMinimum {
+
     private final TaskFluid task;
     private final IGuiRect initialRect;
 
@@ -40,11 +42,12 @@ public class PanelTaskFluid extends CanvasMinimum {
         boolean isComplete = task.isComplete(uuid);
 
         String sCon = (task.consume ? EnumChatFormatting.RED : EnumChatFormatting.GREEN)
-                + QuestTranslation.translate(task.consume ? "gui.yes" : "gui.no");
-        this.addPanel(new PanelTextBox(
-                        new GuiTransform(GuiAlign.TOP_EDGE, 0, 0, listW, 12, 0),
-                        QuestTranslation.translate("bq_standard.btn.consume", sCon))
-                .setColor(PresetColor.TEXT_MAIN.getColor()));
+            + QuestTranslation.translate(task.consume ? "gui.yes" : "gui.no");
+        this.addPanel(
+            new PanelTextBox(
+                new GuiTransform(GuiAlign.TOP_EDGE, 0, 0, listW, 12, 0),
+                QuestTranslation.translate("bq_standard.btn.consume", sCon))
+                    .setColor(PresetColor.TEXT_MAIN.getColor()));
 
         for (int i = 0; i < task.requiredFluids.size(); i++) {
             FluidStack stack = task.requiredFluids.get(i);
@@ -59,15 +62,19 @@ public class PanelTaskFluid extends CanvasMinimum {
 
             StringBuilder sb = new StringBuilder();
 
-            sb.append(stack.getLocalizedName()).append("\n");
-            sb.append(progress[i]).append("/").append(stack.amount).append("mB\n");
+            sb.append(stack.getLocalizedName())
+                .append("\n");
+            sb.append(progress[i])
+                .append("/")
+                .append(stack.amount)
+                .append("mB\n");
 
             if (progress[i] >= stack.amount || isComplete) {
                 sb.append(EnumChatFormatting.GREEN)
-                        .append(QuestTranslation.translate("betterquesting.tooltip.complete"));
+                    .append(QuestTranslation.translate("betterquesting.tooltip.complete"));
             } else {
                 sb.append(EnumChatFormatting.RED)
-                        .append(QuestTranslation.translate("betterquesting.tooltip.incomplete"));
+                    .append(QuestTranslation.translate("betterquesting.tooltip.incomplete"));
             }
 
             PanelTextBox text = new PanelTextBox(new GuiRectangle(36, i * 28 + 12, listW - 36, 28, 0), sb.toString());

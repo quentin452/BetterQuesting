@@ -1,11 +1,11 @@
 package bq_standard.client.gui.panels.content;
 
+import java.util.Objects;
+
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.content.PanelItemSlot;
 import bq_standard.core.BQ_Standard;
-
-import java.util.Objects;
 
 public final class PanelItemSlotBuilder {
 

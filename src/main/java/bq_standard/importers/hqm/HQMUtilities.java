@@ -1,5 +1,19 @@
 package bq_standard.importers.hqm;
 
+import java.util.HashMap;
+
+import net.minecraft.item.Item;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.oredict.OreDictionary;
+
+import org.apache.logging.log4j.Level;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import betterquesting.api.placeholders.PlaceholderConverter;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api.utils.JsonHelper;
@@ -8,34 +22,28 @@ import bq_standard.importers.hqm.converters.items.HQMItem;
 import bq_standard.importers.hqm.converters.items.HQMItemBag;
 import bq_standard.importers.hqm.converters.items.HQMItemHeart;
 import codechicken.nei.util.NBTJson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import net.minecraft.item.Item;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.oredict.OreDictionary;
-import org.apache.logging.log4j.Level;
-
-import java.util.HashMap;
 
 public class HQMUtilities {
+
     /**
      * Get HQM formatted item, Type 1
      */
-    public static BigItemStack HQMStackT1(JsonObject json) // This can return multiple stacks in the event the stack size exceeds 127
+    public static BigItemStack HQMStackT1(JsonObject json) // This can return multiple stacks in the event the stack
+                                                           // size exceeds 127
     {
         final JsonParser parser = new JsonParser();
         String iID = JsonHelper.GetString(json, "id", "minecraft:stone");
-        Item item = (Item)Item.itemRegistry.getObject(iID);
-        int amount = JsonHelper.GetNumber(json, "amount", 1).intValue();
-        int damage = JsonHelper.GetNumber(json, "damage", 0).intValue();
+        Item item = (Item) Item.itemRegistry.getObject(iID);
+        int amount = JsonHelper.GetNumber(json, "amount", 1)
+            .intValue();
+        int damage = JsonHelper.GetNumber(json, "damage", 0)
+            .intValue();
         NBTTagCompound tags = null;
 
         if (json.has("nbt")) {
             try {
-                String rawNbt = json.get("nbt").toString(); // Must use this method. Gson formatting will damage it otherwise
+                String rawNbt = json.get("nbt")
+                    .toString(); // Must use this method. Gson formatting will damage it otherwise
 
                 // Hack job to fix backslashes (why are 2 Json formats being used in HQM?!)
                 rawNbt = rawNbt.replaceFirst("\"", ""); // Delete first quote
@@ -47,9 +55,14 @@ public class HQMUtilities {
                 rawNbt = rawNbt.replace("[\\\"", "[\""); // Fix start of lists
                 rawNbt = rawNbt.replace("\\n", "\n");
 
-                tags = (NBTTagCompound)NBTJson.toNbt(parser.parse(rawNbt).getAsJsonObject());
+                tags = (NBTTagCompound) NBTJson.toNbt(
+                    parser.parse(rawNbt)
+                        .getAsJsonObject());
             } catch (Exception e) {
-                BetterQuesting.logger.log(Level.ERROR, "Unable to convert HQM NBT data. This is likely a HQM Gson/Json formatting issue", e);
+                BetterQuesting.logger.log(
+                    Level.ERROR,
+                    "Unable to convert HQM NBT data. This is likely a HQM Gson/Json formatting issue",
+                    e);
             }
         }
 
@@ -62,21 +75,26 @@ public class HQMUtilities {
     /**
      * Get HQM formatted item, Type 2
      */
-    public static BigItemStack HQMStackT2(JsonObject rJson) // This can return multiple stacks in the event the stack size exceeds 127
+    public static BigItemStack HQMStackT2(JsonObject rJson) // This can return multiple stacks in the event the stack
+                                                            // size exceeds 127
     {
         final JsonParser parser = new JsonParser();
         JsonObject json = JsonHelper.GetObject(rJson, "item");
         String iID = JsonHelper.GetString(json, "id", "minecraft:stone");
-        Item item = (Item)Item.itemRegistry.getObject(iID);
-        int amount = JsonHelper.GetNumber(rJson, "required", 1).intValue();
-        int damage = JsonHelper.GetNumber(json, "damage", 0).intValue();
-        boolean oreDict = JsonHelper.GetString(rJson, "precision", "").equalsIgnoreCase("ORE_DICTIONARY");
+        Item item = (Item) Item.itemRegistry.getObject(iID);
+        int amount = JsonHelper.GetNumber(rJson, "required", 1)
+            .intValue();
+        int damage = JsonHelper.GetNumber(json, "damage", 0)
+            .intValue();
+        boolean oreDict = JsonHelper.GetString(rJson, "precision", "")
+            .equalsIgnoreCase("ORE_DICTIONARY");
 
         NBTTagCompound tags = null;
 
         if (json.has("nbt")) {
             try {
-                String rawNbt = json.get("nbt").toString(); // Must use this method. Gson formatting will damage it otherwise
+                String rawNbt = json.get("nbt")
+                    .toString(); // Must use this method. Gson formatting will damage it otherwise
 
                 // Hack job to fix backslashes (why are 2 Json formats being used in HQM?!)
                 rawNbt = rawNbt.replaceFirst("\"", ""); // Delete first quote
@@ -88,9 +106,14 @@ public class HQMUtilities {
                 rawNbt = rawNbt.replace("[\\\"", "[\""); // Fix start of lists
                 rawNbt = rawNbt.replace("\\n", "\n");
 
-                tags = (NBTTagCompound)NBTJson.toNbt(parser.parse(rawNbt).getAsJsonObject());
+                tags = (NBTTagCompound) NBTJson.toNbt(
+                    parser.parse(rawNbt)
+                        .getAsJsonObject());
             } catch (Exception e) {
-                BetterQuesting.logger.log(Level.ERROR, "Unable to convert HQM NBT data. This is likely a HQM Gson/Json formatting issue", e);
+                BetterQuesting.logger.log(
+                    Level.ERROR,
+                    "Unable to convert HQM NBT data. This is likely a HQM Gson/Json formatting issue",
+                    e);
             }
         }
 
@@ -110,7 +133,8 @@ public class HQMUtilities {
     public static FluidStack HQMStackT3(JsonObject json) {
         String name = JsonHelper.GetString(json, "fluid", "water");
         Fluid fluid = FluidRegistry.getFluid(name);
-        int amount = JsonHelper.GetNumber(json, "required", 1000).intValue();
+        int amount = JsonHelper.GetNumber(json, "required", 1000)
+            .intValue();
 
         return PlaceholderConverter.convertFluid(fluid, name, amount, null);
     }

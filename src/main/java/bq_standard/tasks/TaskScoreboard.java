@@ -1,5 +1,23 @@
 package bq_standard.tasks;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.annotation.Nonnull;
+
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.scoreboard.IScoreObjectiveCriteria;
+import net.minecraft.scoreboard.ScoreDummyCriteria;
+import net.minecraft.scoreboard.ScoreObjective;
+import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.util.Constants;
+
+import org.apache.logging.log4j.Level;
+
 import betterquesting.api.questing.IQuest;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
@@ -12,23 +30,9 @@ import bq_standard.tasks.base.TaskBase;
 import bq_standard.tasks.factory.FactoryTaskScoreboard;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.scoreboard.IScoreObjectiveCriteria;
-import net.minecraft.scoreboard.ScoreDummyCriteria;
-import net.minecraft.scoreboard.ScoreObjective;
-import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.util.Constants;
-import org.apache.logging.log4j.Level;
-
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 public class TaskScoreboard extends TaskBase implements ITaskTickable {
+
     // region Properties
     public String scoreName = "Score";
     public String scoreDisp = "Score";
@@ -49,7 +53,7 @@ public class TaskScoreboard extends TaskBase implements ITaskTickable {
         suffix = nbt.getString("unitSuffix");
         try {
             operation = ScoreOperation.valueOf(
-                    nbt.hasKey("operation", Constants.NBT.TAG_STRING) ? nbt.getString("operation") : "MORE_OR_EQUAL");
+                nbt.hasKey("operation", Constants.NBT.TAG_STRING) ? nbt.getString("operation") : "MORE_OR_EQUAL");
         } catch (Exception e) {
             operation = ScoreOperation.MORE_OR_EQUAL;
         }
@@ -100,8 +104,8 @@ public class TaskScoreboard extends TaskBase implements ITaskTickable {
 
         if (scoreObj == null) {
             try {
-                IScoreObjectiveCriteria criteria =
-                        (IScoreObjectiveCriteria) IScoreObjectiveCriteria.field_96643_a.get(type);
+                IScoreObjectiveCriteria criteria = (IScoreObjectiveCriteria) IScoreObjectiveCriteria.field_96643_a
+                    .get(type);
                 criteria = criteria != null ? criteria : new ScoreDummyCriteria(scoreName);
                 scoreObj = board.addScoreObjective(scoreName, criteria);
                 scoreObj.setDisplayName(scoreDisp);
@@ -112,7 +116,7 @@ public class TaskScoreboard extends TaskBase implements ITaskTickable {
         }
 
         int points = board.func_96529_a(pInfo.PLAYER.getCommandSenderName(), scoreObj)
-                .getScorePoints();
+            .getScorePoints();
         ScoreboardBQ.INSTANCE.setScore(pInfo.UUID, scoreName, points);
 
         if (operation.checkValues(points, target)) {
@@ -122,6 +126,7 @@ public class TaskScoreboard extends TaskBase implements ITaskTickable {
     }
 
     public enum ScoreOperation {
+
         EQUAL("="),
         LESS_THAN("<"),
         MORE_THAN(">"),
@@ -161,8 +166,7 @@ public class TaskScoreboard extends TaskBase implements ITaskTickable {
 
     @Override
     public void tickTask(@Nonnull ParticipantInfo pInfo, @Nonnull Map.Entry<UUID, IQuest> quest) {
-        if (pInfo.PLAYER.ticksExisted % 20 == 0)
-        {
+        if (pInfo.PLAYER.ticksExisted % 20 == 0) {
             detect(pInfo, quest); // Auto-detect once per second
         }
     }

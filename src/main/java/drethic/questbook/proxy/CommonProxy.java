@@ -18,7 +18,9 @@ public class CommonProxy {
     }
 
     public void init(FMLInitializationEvent e) {
-        FMLCommonHandler.instance().bus().register(FMLEventHandler.INSTANCE);
+        FMLCommonHandler.instance()
+            .bus()
+            .register(FMLEventHandler.INSTANCE);
     }
 
     public void postInit(FMLPostInitializationEvent e) {

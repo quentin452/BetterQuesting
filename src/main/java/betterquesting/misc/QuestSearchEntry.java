@@ -1,12 +1,13 @@
 package betterquesting.misc;
 
-import betterquesting.api.questing.IQuest;
-import betterquesting.api.questing.IQuestLine;
-
 import java.util.Map;
 import java.util.UUID;
 
+import betterquesting.api.questing.IQuest;
+import betterquesting.api.questing.IQuestLine;
+
 public class QuestSearchEntry {
+
     public QuestSearchEntry(Map.Entry<UUID, IQuest> quest, Map.Entry<UUID, IQuestLine> questLineEntry) {
         this.quest = quest;
         this.questLineEntry = questLineEntry;

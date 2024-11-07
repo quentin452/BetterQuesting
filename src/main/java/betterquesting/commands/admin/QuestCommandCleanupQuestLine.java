@@ -1,17 +1,5 @@
 package betterquesting.commands.admin;
 
-import betterquesting.api.questing.IQuest;
-import betterquesting.api.questing.IQuestLine;
-import betterquesting.api.questing.IQuestLineEntry;
-import betterquesting.commands.QuestCommandBase;
-import betterquesting.core.BetterQuesting;
-import betterquesting.questing.QuestDatabase;
-import betterquesting.questing.QuestLineDatabase;
-import net.minecraft.command.CommandBase;
-import net.minecraft.command.ICommandSender;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.ChatComponentTranslation;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
@@ -19,7 +7,21 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
 
+import net.minecraft.command.CommandBase;
+import net.minecraft.command.ICommandSender;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.ChatComponentTranslation;
+
+import betterquesting.api.questing.IQuest;
+import betterquesting.api.questing.IQuestLine;
+import betterquesting.api.questing.IQuestLineEntry;
+import betterquesting.commands.QuestCommandBase;
+import betterquesting.core.BetterQuesting;
+import betterquesting.questing.QuestDatabase;
+import betterquesting.questing.QuestLineDatabase;
+
 public class QuestCommandCleanupQuestLine extends QuestCommandBase {
+
     private static final Set<ICommandSender> confirm = Collections.newSetFromMap(new WeakHashMap<>());
 
     @Override
@@ -43,7 +45,11 @@ public class QuestCommandCleanupQuestLine extends QuestCommandBase {
                         IQuest quest = QuestDatabase.INSTANCE.get(questLineEntryDBEntry.getKey());
                         if (quest == null) {
                             removed++;
-                            BetterQuesting.logger.info("Removed QuestLineEntry {} in QuestLine {} pointing into nonexistent quest {}", questLineEntryDBEntry.getValue(), questLineDBEntry.getKey(), questLineEntryDBEntry.getKey());
+                            BetterQuesting.logger.info(
+                                "Removed QuestLineEntry {} in QuestLine {} pointing into nonexistent quest {}",
+                                questLineEntryDBEntry.getValue(),
+                                questLineDBEntry.getKey(),
+                                questLineEntryDBEntry.getKey());
                             keysToRemove.add(questLineEntryDBEntry.getKey());
                         }
                     }

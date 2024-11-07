@@ -1,5 +1,7 @@
 package bq_standard.client.theme;
 
+import net.minecraft.util.ResourceLocation;
+
 import betterquesting.api.api.ApiReference;
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api2.client.gui.misc.GuiRectangle;
@@ -7,9 +9,9 @@ import betterquesting.api2.client.gui.resources.textures.IGuiTexture;
 import betterquesting.api2.client.gui.resources.textures.SimpleTexture;
 import betterquesting.api2.client.gui.themes.IThemeRegistry;
 import bq_standard.core.BQ_Standard;
-import net.minecraft.util.ResourceLocation;
 
 public enum BQSTextures {
+
     LOOT_CHEST("loot_chest"),
     LOOT_GLOW("loot_glow"),
 
@@ -18,8 +20,9 @@ public enum BQSTextures {
     ATK_SYMB("attack_symb"),
     USE_SYMB("use_symb");
 
-    public static final ResourceLocation TX_UI_ELEMENTS =
-            new ResourceLocation(BQ_Standard.MODID, "textures/gui/gui_elements.png");
+    public static final ResourceLocation TX_UI_ELEMENTS = new ResourceLocation(
+        BQ_Standard.MODID,
+        "textures/gui/gui_elements.png");
 
     private final ResourceLocation key;
 
@@ -28,7 +31,8 @@ public enum BQSTextures {
     }
 
     public IGuiTexture getTexture() {
-        return QuestingAPI.getAPI(ApiReference.THEME_REG).getTexture(this.key);
+        return QuestingAPI.getAPI(ApiReference.THEME_REG)
+            .getTexture(this.key);
     }
 
     public ResourceLocation getKey() {

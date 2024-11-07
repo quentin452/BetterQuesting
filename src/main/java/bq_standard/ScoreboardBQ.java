@@ -1,17 +1,20 @@
 package bq_standard;
 
-import betterquesting.api2.storage.INBTPartial;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+
+import betterquesting.api2.storage.INBTPartial;
+
 public class ScoreboardBQ implements INBTPartial<NBTTagList, UUID> {
+
     public static final ScoreboardBQ INSTANCE = new ScoreboardBQ();
 
     private final TreeMap<String, ScoreBQ> objectives = new TreeMap<>();
@@ -41,7 +44,10 @@ public class ScoreboardBQ implements INBTPartial<NBTTagList, UUID> {
         for (Entry<String, ScoreBQ> entry : objectives.entrySet()) {
             NBTTagCompound jObj = new NBTTagCompound();
             jObj.setString("name", entry.getKey());
-            jObj.setTag("scores", entry.getValue().writeToNBT(new NBTTagList(), subset));
+            jObj.setTag(
+                "scores",
+                entry.getValue()
+                    .writeToNBT(new NBTTagList(), subset));
             nbt.appendTag(jObj);
         }
 

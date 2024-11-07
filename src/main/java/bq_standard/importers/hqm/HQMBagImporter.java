@@ -1,19 +1,5 @@
 package bq_standard.importers.hqm;
 
-import betterquesting.api.client.importers.IImporter;
-import betterquesting.api.questing.IQuestDatabase;
-import betterquesting.api.questing.IQuestLineDatabase;
-import betterquesting.api.utils.FileExtensionFilter;
-import betterquesting.api.utils.JsonHelper;
-import bq_standard.network.handlers.NetLootImport;
-import bq_standard.rewards.loot.LootGroup;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
@@ -22,7 +8,24 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
+import betterquesting.api.client.importers.IImporter;
+import betterquesting.api.questing.IQuestDatabase;
+import betterquesting.api.questing.IQuestLineDatabase;
+import betterquesting.api.utils.FileExtensionFilter;
+import betterquesting.api.utils.JsonHelper;
+import bq_standard.network.handlers.NetLootImport;
+import bq_standard.rewards.loot.LootGroup;
+
 public class HQMBagImporter implements IImporter {
+
     public static final HQMBagImporter INSTANCE = new HQMBagImporter();
 
     private final List<LootGroup> hqmLoot = new ArrayList<>();
@@ -60,7 +63,9 @@ public class HQMBagImporter implements IImporter {
                 for (int i = 0; i < jWht.size(); i++) {
                     JsonElement w = jWht.get(i);
 
-                    if (w == null || !w.isJsonPrimitive() || !w.getAsJsonPrimitive().isNumber()) {
+                    if (w == null || !w.isJsonPrimitive()
+                        || !w.getAsJsonPrimitive()
+                            .isNumber()) {
                         continue;
                     }
 
@@ -79,7 +84,8 @@ public class HQMBagImporter implements IImporter {
 
                 JsonObject je = e2.getAsJsonObject();
                 LootGroup.LootEntry lEntry = new LootGroup.LootEntry();
-                lEntry.weight = JsonHelper.GetNumber(je, "limit", 1).intValue();
+                lEntry.weight = JsonHelper.GetNumber(je, "limit", 1)
+                    .intValue();
                 for (JsonElement ji : JsonHelper.GetArray(je, "items")) {
                     if (ji == null || !ji.isJsonObject()) {
                         continue;

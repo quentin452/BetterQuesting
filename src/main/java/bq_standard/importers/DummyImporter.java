@@ -1,22 +1,25 @@
 package bq_standard.importers;
 
-import betterquesting.api.client.importers.IImporter;
-import betterquesting.api.questing.IQuestDatabase;
-import betterquesting.api.questing.IQuestLineDatabase;
-import betterquesting.api.utils.FileExtensionFilter;
-import net.minecraft.nbt.NBTTagList;
-
 import java.io.File;
 import java.io.FileFilter;
 import java.util.HashMap;
 
+import net.minecraft.nbt.NBTTagList;
+
+import betterquesting.api.client.importers.IImporter;
+import betterquesting.api.questing.IQuestDatabase;
+import betterquesting.api.questing.IQuestLineDatabase;
+import betterquesting.api.utils.FileExtensionFilter;
+
 /**
  * Dummy importer that doesn't actually do anything.
  *
- * <p>Mostly just here to keep the package directory around. We should probably just remove the
+ * <p>
+ * Mostly just here to keep the package directory around. We should probably just remove the
  * importer feature entirely if we don't use it.
  */
 public class DummyImporter implements IImporter {
+
     public static final DummyImporter INSTANCE = new DummyImporter();
     private static final FileFilter FILTER = new FileExtensionFilter(".json");
 

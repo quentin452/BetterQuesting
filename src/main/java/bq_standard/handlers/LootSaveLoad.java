@@ -1,16 +1,19 @@
 package bq_standard.handlers;
 
+import java.io.File;
+
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.server.MinecraftServer;
+
+import com.google.gson.JsonObject;
+
 import betterquesting.api.utils.JsonHelper;
 import betterquesting.api.utils.NBTConverter;
 import bq_standard.core.BQ_Standard;
 import bq_standard.rewards.loot.LootRegistry;
-import com.google.gson.JsonObject;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.server.MinecraftServer;
-
-import java.io.File;
 
 public class LootSaveLoad {
+
     public static LootSaveLoad INSTANCE = new LootSaveLoad();
 
     public File worldDir;
@@ -40,9 +43,11 @@ public class LootSaveLoad {
 
     public void SaveLoot() {
         JsonHelper.WriteToFile(
-                new File(worldDir, "QuestLoot.json"),
-                NBTConverter.NBTtoJSON_Compound(
-                        LootRegistry.INSTANCE.writeToNBT(new NBTTagCompound(), null), new JsonObject(), true));
+            new File(worldDir, "QuestLoot.json"),
+            NBTConverter.NBTtoJSON_Compound(
+                LootRegistry.INSTANCE.writeToNBT(new NBTTagCompound(), null),
+                new JsonObject(),
+                true));
     }
 
     public void UnloadLoot() {

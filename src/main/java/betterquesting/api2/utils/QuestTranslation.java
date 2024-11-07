@@ -1,5 +1,11 @@
 package betterquesting.api2.utils;
 
+import java.util.Map;
+import java.util.UUID;
+
+import net.minecraft.client.resources.I18n;
+import net.minecraft.util.StatCollector;
+
 import betterquesting.api.properties.IPropertyContainer;
 import betterquesting.api.properties.IPropertyType;
 import betterquesting.api.properties.NativeProps;
@@ -7,13 +13,9 @@ import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.IQuestLine;
 import betterquesting.api.utils.UuidConverter;
 import betterquesting.core.BetterQuesting;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.StatCollector;
-
-import java.util.Map;
-import java.util.UUID;
 
 public class QuestTranslation {
+
     private static final String QUEST_NAME_KEY = "betterquesting.quest.%s.name";
     private static final String QUEST_DESCRIPTION_KEY = "betterquesting.quest.%s.desc";
     private static final String QUEST_LINE_NAME_KEY = "betterquesting.questline.%s.name";
@@ -26,7 +28,7 @@ public class QuestTranslation {
         }
         return out;
     }
-    
+
     public static String translateTrimmed(String text, Object... args) {
         return translate(text, args).replaceAll("\r", "");
     }
@@ -72,8 +74,7 @@ public class QuestTranslation {
     }
 
     public static String translateQuestLineDescription(UUID questLineId, IQuestLine questLine) {
-        return translateProperty(
-                buildQuestLineDescriptionKey(questLineId), questLine, NativeProps.DESC);
+        return translateProperty(buildQuestLineDescriptionKey(questLineId), questLine, NativeProps.DESC);
     }
 
     public static String translateQuestLineDescription(Map.Entry<UUID, IQuestLine> entry) {
@@ -97,8 +98,7 @@ public class QuestTranslation {
      * Returns the translation, if one exists for {@code key}.
      * If no translation exists, then {@code property} is fetched from {@code container}.
      */
-    private static String translateProperty(
-            String key, IPropertyContainer container, IPropertyType<String> property) {
+    private static String translateProperty(String key, IPropertyContainer container, IPropertyType<String> property) {
         if (StatCollector.canTranslate(key)) {
             // Need to use formatted translation, to properly handle "%%" and "%n".
             return StatCollector.translateToLocalFormatted(key);

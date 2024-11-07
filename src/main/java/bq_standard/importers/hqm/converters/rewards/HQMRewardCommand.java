@@ -1,15 +1,17 @@
 package bq_standard.importers.hqm.converters.rewards;
 
-import betterquesting.api.questing.rewards.IReward;
-import bq_standard.rewards.RewardCommand;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 
-import java.util.ArrayList;
-import java.util.List;
+import betterquesting.api.questing.rewards.IReward;
+import bq_standard.rewards.RewardCommand;
 
 public class HQMRewardCommand {
+
     public IReward[] convertReward(JsonElement json) {
         if (!(json instanceof JsonArray)) return null;
 

@@ -1,5 +1,18 @@
 package bq_standard.tasks;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.ResourceLocation;
+
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.utils.ItemComparison;
 import betterquesting.api2.client.gui.misc.IGuiRect;
@@ -13,20 +26,9 @@ import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskHunt;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 public class TaskHunt extends TaskProgressableBase<Integer> {
+
     // region Properties
     public String idName = "Zombie";
     public String damageType = "";
@@ -108,16 +110,14 @@ public class TaskHunt extends TaskProgressableBase<Integer> {
     public void detect(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest) {
         final List<Tuple2<UUID, Integer>> progress = getBulkProgress(pInfo.ALL_UUIDS);
 
-        progress.forEach((value) -> {
-            if (value.getSecond() >= required) setComplete(value.getFirst());
-        });
+        progress.forEach((value) -> { if (value.getSecond() >= required) setComplete(value.getFirst()); });
 
         pInfo.markDirtyParty(quest.getKey());
     }
 
-    @SuppressWarnings({"unchecked", "DuplicatedCode"})
-    public void onKilledByPlayer(
-            ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, EntityLivingBase entity, DamageSource source) {
+    @SuppressWarnings({ "unchecked", "DuplicatedCode" })
+    public void onKilledByPlayer(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, EntityLivingBase entity,
+        DamageSource source) {
         if (damageType.length() > 0 && (source == null || !damageType.equalsIgnoreCase(source.damageType))) return;
 
         Class<? extends Entity> subject = entity.getClass();

@@ -10,6 +10,7 @@ import net.minecraft.world.World;
  * Elevates the player's privileges to OP level for use in command rewards
  */
 public class AdminExecute implements ICommandSender {
+
     private final EntityPlayer player;
 
     public AdminExecute(EntityPlayer player) {

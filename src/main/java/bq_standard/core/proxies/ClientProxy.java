@@ -9,6 +9,7 @@ import bq_standard.importers.hqm.HQMQuestImporter;
 import bq_standard.integration.nei.IMCForNEI;
 
 public class ClientProxy extends CommonProxy {
+
     @Override
     public boolean isClient() {
         return true;
@@ -25,9 +26,12 @@ public class ClientProxy extends CommonProxy {
     public void registerExpansion() {
         super.registerExpansion();
 
-        QuestingAPI.getAPI(ApiReference.IMPORT_REG).registerImporter(DummyImporter.INSTANCE);
-        QuestingAPI.getAPI(ApiReference.IMPORT_REG).registerImporter(HQMQuestImporter.INSTANCE);
-        QuestingAPI.getAPI(ApiReference.IMPORT_REG).registerImporter(HQMBagImporter.INSTANCE);
+        QuestingAPI.getAPI(ApiReference.IMPORT_REG)
+            .registerImporter(DummyImporter.INSTANCE);
+        QuestingAPI.getAPI(ApiReference.IMPORT_REG)
+            .registerImporter(HQMQuestImporter.INSTANCE);
+        QuestingAPI.getAPI(ApiReference.IMPORT_REG)
+            .registerImporter(HQMBagImporter.INSTANCE);
 
         BQSTextures.registerTextures();
     }

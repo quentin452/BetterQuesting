@@ -1,17 +1,20 @@
 package bq_standard.handlers;
 
-import betterquesting.api.api.QuestingAPI;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+
+import javax.annotation.Nonnull;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.item.ItemStack;
 
-import javax.annotation.Nonnull;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import betterquesting.api.api.QuestingAPI;
 
 public class PlayerContainerListener implements ICrafting {
+
     private static final HashMap<UUID, PlayerContainerListener> LISTEN_MAP = new HashMap<>();
 
     static void refreshListener(@Nonnull EntityPlayer player) {
@@ -26,8 +29,7 @@ public class PlayerContainerListener implements ICrafting {
 
         try {
             player.inventoryContainer.addCraftingToCrafters(listener);
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
     }
 
     private EntityPlayer player;

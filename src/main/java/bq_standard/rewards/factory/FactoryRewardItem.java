@@ -1,13 +1,15 @@
 package bq_standard.rewards.factory;
 
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
+
 import betterquesting.api.questing.rewards.IReward;
 import betterquesting.api2.registry.IFactoryData;
 import bq_standard.core.BQ_Standard;
 import bq_standard.rewards.RewardItem;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 
 public class FactoryRewardItem implements IFactoryData<IReward, NBTTagCompound> {
+
     public static final FactoryRewardItem INSTANCE = new FactoryRewardItem();
 
     @Override

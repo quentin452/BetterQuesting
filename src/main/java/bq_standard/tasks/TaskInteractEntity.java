@@ -1,5 +1,19 @@
 package bq_standard.tasks;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
+
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api.utils.ItemComparison;
@@ -13,20 +27,9 @@ import bq_standard.tasks.base.TaskProgressableBase;
 import bq_standard.tasks.factory.FactoryTaskInteractEntity;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
-
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 public class TaskInteractEntity extends TaskProgressableBase<Integer> {
+
     // region Properties
     @Nullable
     public BigItemStack targetItem = null;
@@ -124,17 +127,16 @@ public class TaskInteractEntity extends TaskProgressableBase<Integer> {
     public void detect(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest) {
         final List<Tuple2<UUID, Integer>> progress = getBulkProgress(pInfo.ALL_UUIDS);
 
-        progress.forEach((value) -> {
-            if (value.getSecond() >= required) setComplete(value.getFirst());
-        });
+        progress.forEach((value) -> { if (value.getSecond() >= required) setComplete(value.getFirst()); });
 
         pInfo.markDirtyParty(quest.getKey());
     }
 
-    public void onInteract(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, ItemStack item, Entity entity, boolean isHit) {
+    public void onInteract(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, ItemStack item, Entity entity,
+        boolean isHit) {
         if ((!onHit && isHit) || (!onInteract && !isHit)) return;
 
-        //noinspection unchecked
+        // noinspection unchecked
         Class<? extends Entity> targetClass = (Class<? extends Entity>) EntityList.stringToClassMapping.get(entityID);
         if (targetClass == null) return; // No idea what we're looking for
 
@@ -151,13 +153,12 @@ public class TaskInteractEntity extends TaskProgressableBase<Integer> {
         }
 
         if (targetItem != null) {
-            if (targetItem.hasOreDict()
-                    && !ItemComparison.OreDictionaryMatch(
-                            targetItem.getOreIngredient(),
-                            targetItem.GetTagCompound(),
-                            item,
-                            !ignoreItemNBT,
-                            partialItemMatch)) {
+            if (targetItem.hasOreDict() && !ItemComparison.OreDictionaryMatch(
+                targetItem.getOreIngredient(),
+                targetItem.GetTagCompound(),
+                item,
+                !ignoreItemNBT,
+                partialItemMatch)) {
                 return;
             } else if (!ItemComparison.StackMatch(targetItem.getBaseStack(), item, !ignoreItemNBT, partialItemMatch)) {
                 return;
@@ -181,7 +182,9 @@ public class TaskInteractEntity extends TaskProgressableBase<Integer> {
         List<String> texts = new ArrayList<>();
         texts.add(entityID);
         if (targetItem != null) {
-            texts.add(targetItem.getBaseStack().getDisplayName());
+            texts.add(
+                targetItem.getBaseStack()
+                    .getDisplayName());
         }
         return texts;
     }

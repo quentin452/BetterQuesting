@@ -1,16 +1,18 @@
 package bq_standard;
 
-import betterquesting.api.placeholders.ItemPlaceholder;
-import betterquesting.api.utils.BigItemStack;
+import javax.annotation.Nullable;
+
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 
-import javax.annotation.Nullable;
+import betterquesting.api.placeholders.ItemPlaceholder;
+import betterquesting.api.utils.BigItemStack;
 
 public class NbtBlockType // TODO: Make a version of this for the base mod and give it a dedicated editor
- {
+{
+
     public Block b = Blocks.log;
     public int m = -1;
     public int n = 1;
@@ -56,7 +58,8 @@ public class NbtBlockType // TODO: Make a version of this for the base mod and g
 
         if (b == null) {
             stack = new BigItemStack(ItemPlaceholder.placeholder, n, m);
-            stack.getBaseStack().setStackDisplayName("NULL");
+            stack.getBaseStack()
+                .setStackDisplayName("NULL");
         } else {
             if (Item.getItemFromBlock(b) == null) return null;
             stack = new BigItemStack(b, n, m);

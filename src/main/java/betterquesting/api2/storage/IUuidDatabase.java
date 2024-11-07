@@ -1,16 +1,18 @@
 package betterquesting.api2.storage;
 
-import com.google.common.collect.BiMap;
-
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 
+import javax.annotation.Nullable;
+
+import com.google.common.collect.BiMap;
+
 /** Database that uses randomly-generated UUIDs as keys. */
 public interface IUuidDatabase<T> extends BiMap<UUID, T> {
+
     /** Returns an unused UUID. */
     UUID generateKey();
 

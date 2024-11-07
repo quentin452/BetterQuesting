@@ -1,25 +1,30 @@
 package bq_standard.network.handlers;
 
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ResourceLocation;
+
+import org.apache.logging.log4j.Level;
+
+import com.mojang.realmsclient.gui.ChatFormatting;
+
 import betterquesting.api.api.ApiReference;
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.network.QuestingPacket;
 import betterquesting.api2.utils.Tuple2;
 import bq_standard.core.BQ_Standard;
 import bq_standard.rewards.loot.LootRegistry;
-import com.mojang.realmsclient.gui.ChatFormatting;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.ResourceLocation;
-import org.apache.logging.log4j.Level;
 
 public class NetLootImport {
+
     private static final ResourceLocation ID_NAME = new ResourceLocation("bq_standard:loot_import");
 
     public static void registerHandler() {
-        QuestingAPI.getAPI(ApiReference.PACKET_REG).registerServerHandler(ID_NAME, NetLootImport::onServer);
+        QuestingAPI.getAPI(ApiReference.PACKET_REG)
+            .registerServerHandler(ID_NAME, NetLootImport::onServer);
     }
 
     // TODO: Rework this for partial importing/editing
@@ -28,7 +33,8 @@ public class NetLootImport {
     public static void importLoot(NBTTagCompound data) {
         NBTTagCompound payload = new NBTTagCompound();
         payload.setTag("data", data);
-        QuestingAPI.getAPI(ApiReference.PACKET_SENDER).sendToServer(new QuestingPacket(ID_NAME, payload));
+        QuestingAPI.getAPI(ApiReference.PACKET_SENDER)
+            .sendToServer(new QuestingPacket(ID_NAME, payload));
     }
 
     private static void onServer(Tuple2<NBTTagCompound, EntityPlayerMP> message) {
@@ -37,13 +43,16 @@ public class NetLootImport {
 
         if (sender.mcServer == null) return;
 
-        if (!sender.mcServer.getConfigurationManager().func_152596_g(sender.getGameProfile())) {
+        if (!sender.mcServer.getConfigurationManager()
+            .func_152596_g(sender.getGameProfile())) {
             BQ_Standard.logger.log(
-                    Level.WARN,
-                    "Player " + sender.getCommandSenderName() + " (UUID:" + QuestingAPI.getQuestingUUID(sender)
-                            + ") tried to import loot without OP permissions!");
-            sender.addChatComponentMessage(
-                    new ChatComponentText(ChatFormatting.RED + "You need to be OP to edit loot!"));
+                Level.WARN,
+                "Player " + sender.getCommandSenderName()
+                    + " (UUID:"
+                    + QuestingAPI.getQuestingUUID(sender)
+                    + ") tried to import loot without OP permissions!");
+            sender
+                .addChatComponentMessage(new ChatComponentText(ChatFormatting.RED + "You need to be OP to edit loot!"));
             return; // Player is not operator. Do nothing
         }
 

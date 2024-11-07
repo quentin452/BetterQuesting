@@ -1,5 +1,10 @@
 package bq_standard.client.gui.tasks;
 
+import java.util.Map;
+import java.util.UUID;
+
+import net.minecraft.client.Minecraft;
+
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api2.client.gui.controls.PanelButton;
@@ -11,12 +16,9 @@ import betterquesting.api2.client.gui.resources.colors.GuiColorStatic;
 import betterquesting.api2.client.gui.themes.presets.PresetIcon;
 import bq_standard.network.handlers.NetTaskCheckbox;
 import bq_standard.tasks.TaskCheckbox;
-import net.minecraft.client.Minecraft;
-
-import java.util.Map;
-import java.util.UUID;
 
 public class PanelTaskCheckbox extends CanvasMinimum {
+
     private final Map.Entry<UUID, IQuest> quest;
     private final TaskCheckbox task;
     private final IGuiRect initialRect;
@@ -35,23 +37,27 @@ public class PanelTaskCheckbox extends CanvasMinimum {
         boolean isComplete = task.isComplete(QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer));
 
         final UUID questID = quest.getKey();
-        final int taskID = quest.getValue().getTasks().getID(task);
+        final int taskID = quest.getValue()
+            .getTasks()
+            .getID(task);
 
-        PanelButton btnCheck =
-                new PanelButton(
-                        new GuiTransform(GuiAlign.TOP_LEFT, (initialRect.getWidth() - 32) / 2, 0, 32, 32, 0), -1, "") {
-                    @Override
-                    public void onButtonClick() {
-                        setIcon(PresetIcon.ICON_TICK.getTexture(), new GuiColorStatic(0xFF00FF00), 4);
-                        setActive(false);
+        PanelButton btnCheck = new PanelButton(
+            new GuiTransform(GuiAlign.TOP_LEFT, (initialRect.getWidth() - 32) / 2, 0, 32, 32, 0),
+            -1,
+            "") {
 
-                        NetTaskCheckbox.requestClick(questID, taskID);
-                    }
-                };
+            @Override
+            public void onButtonClick() {
+                setIcon(PresetIcon.ICON_TICK.getTexture(), new GuiColorStatic(0xFF00FF00), 4);
+                setActive(false);
+
+                NetTaskCheckbox.requestClick(questID, taskID);
+            }
+        };
         btnCheck.setIcon(
-                isComplete ? PresetIcon.ICON_TICK.getTexture() : PresetIcon.ICON_CROSS.getTexture(),
-                new GuiColorStatic(isComplete ? 0xFF00FF00 : 0xFFFF0000),
-                4);
+            isComplete ? PresetIcon.ICON_TICK.getTexture() : PresetIcon.ICON_CROSS.getTexture(),
+            new GuiColorStatic(isComplete ? 0xFF00FF00 : 0xFFFF0000),
+            4);
         btnCheck.setActive(!isComplete);
         this.addPanel(btnCheck);
         recalcSizes();

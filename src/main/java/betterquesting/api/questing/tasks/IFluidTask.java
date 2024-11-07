@@ -1,16 +1,18 @@
 package betterquesting.api.questing.tasks;
 
-import betterquesting.api.questing.IQuest;
-import betterquesting.api2.utils.ParticipantInfo;
-import net.minecraftforge.fluids.FluidStack;
-
 import java.util.Map;
 import java.util.UUID;
 
-public interface IFluidTask extends ITask
-{
-	boolean canAcceptFluid(UUID owner, Map.Entry<UUID, IQuest> quest, FluidStack fluid);
-	FluidStack submitFluid(UUID owner, Map.Entry<UUID, IQuest> quest, FluidStack fluid);
+import net.minecraftforge.fluids.FluidStack;
+
+import betterquesting.api.questing.IQuest;
+import betterquesting.api2.utils.ParticipantInfo;
+
+public interface IFluidTask extends ITask {
+
+    boolean canAcceptFluid(UUID owner, Map.Entry<UUID, IQuest> quest, FluidStack fluid);
+
+    FluidStack submitFluid(UUID owner, Map.Entry<UUID, IQuest> quest, FluidStack fluid);
 
     /**
      * @param fluids read-only list of fluids

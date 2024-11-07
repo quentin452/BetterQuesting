@@ -1,132 +1,125 @@
 package betterquesting.commands;
 
-import betterquesting.commands.client.QuestCommandShow;
-import cpw.mods.fml.common.FMLCommonHandler;
-import net.minecraft.command.CommandBase;
-import net.minecraft.command.ICommandSender;
-import net.minecraft.command.WrongUsageException;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class BQ_CommandClient extends CommandBase
-{
-	private final List<QuestCommandBase> coms = new ArrayList<>();
+import net.minecraft.command.CommandBase;
+import net.minecraft.command.ICommandSender;
+import net.minecraft.command.WrongUsageException;
 
-	public BQ_CommandClient()
-	{
-		coms.add(new QuestCommandShow());
-	}
+import betterquesting.commands.client.QuestCommandShow;
+import cpw.mods.fml.common.FMLCommonHandler;
 
-	@Override
-	public String getCommandName()
-	{
-		return "bq_client";
-	}
+public class BQ_CommandClient extends CommandBase {
 
-	@Override
-	public int getRequiredPermissionLevel()
-	{
-		return 0;
-	}
+    private final List<QuestCommandBase> coms = new ArrayList<>();
 
-	@Override
-	public String getCommandUsage(ICommandSender sender)
-	{
-		StringBuilder txt = new StringBuilder();
+    public BQ_CommandClient() {
+        coms.add(new QuestCommandShow());
+    }
 
-		for(int i = 0; i < coms.size(); i++)
-		{
-			QuestCommandBase c = coms.get(i);
-			txt.append("/bq_client ").append(c.getCommand());
+    @Override
+    public String getCommandName() {
+        return "bq_client";
+    }
 
-			if(c.getUsageSuffix().length() > 0)
-			{
-				txt.append(" ").append(c.getUsageSuffix());
-			}
+    @Override
+    public int getRequiredPermissionLevel() {
+        return 0;
+    }
 
-			if(i < coms.size() - 1)
-			{
-				txt.append(", ");
-			}
-		}
+    @Override
+    public String getCommandUsage(ICommandSender sender) {
+        StringBuilder txt = new StringBuilder();
 
-		return txt.toString();
-	}
+        for (int i = 0; i < coms.size(); i++) {
+            QuestCommandBase c = coms.get(i);
+            txt.append("/bq_client ")
+                .append(c.getCommand());
 
-	@SuppressWarnings("rawtypes")
-	@Override
-	public List addTabCompletionOptions(ICommandSender sender, String[] strings)
-	{
-		if(strings.length == 1)
-		{
-			List<String> base = new ArrayList<>();
-			for(QuestCommandBase c : coms)
-			{
-				base.add(c.getCommand());
-			}
-			return getListOfStringsMatchingLastWord(strings, base.toArray(new String[0]));
-		} else if(strings.length > 1)
-		{
-			for(QuestCommandBase c : coms)
-			{
-				if(c.getCommand().equalsIgnoreCase(strings[0]))
-				{
-					return c.autoComplete(FMLCommonHandler.instance().getMinecraftServerInstance(), sender, strings);
-				}
-			}
-		}
+            if (c.getUsageSuffix()
+                .length() > 0) {
+                txt.append(" ")
+                    .append(c.getUsageSuffix());
+            }
 
-		return Collections.emptyList();
-	}
+            if (i < coms.size() - 1) {
+                txt.append(", ");
+            }
+        }
 
-	@Override
-	public void processCommand(ICommandSender sender, String[] args)
-	{
-		if(args.length < 1)
-		{
-			throw new WrongUsageException(this.getCommandUsage(sender));
-		}
+        return txt.toString();
+    }
 
-		for(QuestCommandBase c : coms)
-		{
-			if(c.getCommand().equalsIgnoreCase(args[0]))
-			{
-				if(c.validArgs(args))
-				{
-					c.runCommand(FMLCommonHandler.instance().getMinecraftServerInstance(), this, sender, args);
-					return;
-				} else
-				{
-					throw c.getException(this);
-				}
-			}
-		}
+    @SuppressWarnings("rawtypes")
+    @Override
+    public List addTabCompletionOptions(ICommandSender sender, String[] strings) {
+        if (strings.length == 1) {
+            List<String> base = new ArrayList<>();
+            for (QuestCommandBase c : coms) {
+                base.add(c.getCommand());
+            }
+            return getListOfStringsMatchingLastWord(strings, base.toArray(new String[0]));
+        } else if (strings.length > 1) {
+            for (QuestCommandBase c : coms) {
+                if (c.getCommand()
+                    .equalsIgnoreCase(strings[0])) {
+                    return c.autoComplete(
+                        FMLCommonHandler.instance()
+                            .getMinecraftServerInstance(),
+                        sender,
+                        strings);
+                }
+            }
+        }
 
-		throw new WrongUsageException(this.getCommandUsage(sender));
-	}
+        return Collections.emptyList();
+    }
 
-	/**
-	 * Return whether the specified command parameter index is a username parameter.
-	 */
-	@Override
-	public boolean isUsernameIndex(String[] args, int index)
-	{
-		if(args.length < 1)
-		{
-			return false;
-		}
+    @Override
+    public void processCommand(ICommandSender sender, String[] args) {
+        if (args.length < 1) {
+            throw new WrongUsageException(this.getCommandUsage(sender));
+        }
 
-		for(QuestCommandBase c : coms)
-		{
-			if(c.getCommand().equalsIgnoreCase(args[0]))
-			{
-				return c.isArgUsername(args, index);
-			}
-		}
+        for (QuestCommandBase c : coms) {
+            if (c.getCommand()
+                .equalsIgnoreCase(args[0])) {
+                if (c.validArgs(args)) {
+                    c.runCommand(
+                        FMLCommonHandler.instance()
+                            .getMinecraftServerInstance(),
+                        this,
+                        sender,
+                        args);
+                    return;
+                } else {
+                    throw c.getException(this);
+                }
+            }
+        }
 
-		return false;
-	}
+        throw new WrongUsageException(this.getCommandUsage(sender));
+    }
+
+    /**
+     * Return whether the specified command parameter index is a username parameter.
+     */
+    @Override
+    public boolean isUsernameIndex(String[] args, int index) {
+        if (args.length < 1) {
+            return false;
+        }
+
+        for (QuestCommandBase c : coms) {
+            if (c.getCommand()
+                .equalsIgnoreCase(args[0])) {
+                return c.isArgUsername(args, index);
+            }
+        }
+
+        return false;
+    }
 
 }

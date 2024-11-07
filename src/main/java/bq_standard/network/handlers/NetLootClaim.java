@@ -1,5 +1,16 @@
 package bq_standard.network.handlers;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.Nonnull;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.ResourceLocation;
+
 import betterquesting.api.api.ApiReference;
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.network.QuestingPacket;
@@ -8,22 +19,15 @@ import bq_standard.client.gui.GuiLootChest;
 import bq_standard.core.BQ_Standard;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ResourceLocation;
-
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.List;
 
 public class NetLootClaim {
+
     private static final ResourceLocation ID_NAME = new ResourceLocation("bq_standard:loot_claim");
 
     public static void registerHandler() {
         if (BQ_Standard.proxy.isClient()) {
-            QuestingAPI.getAPI(ApiReference.PACKET_REG).registerClientHandler(ID_NAME, NetLootClaim::onClient);
+            QuestingAPI.getAPI(ApiReference.PACKET_REG)
+                .registerClientHandler(ID_NAME, NetLootClaim::onClient);
         }
     }
 
@@ -35,7 +39,8 @@ public class NetLootClaim {
         }
         payload.setTag("rewards", list);
         payload.setString("title", title);
-        QuestingAPI.getAPI(ApiReference.PACKET_SENDER).sendToPlayers(new QuestingPacket(ID_NAME, payload), player);
+        QuestingAPI.getAPI(ApiReference.PACKET_SENDER)
+            .sendToPlayers(new QuestingPacket(ID_NAME, payload), player);
     }
 
     @SideOnly(Side.CLIENT)
@@ -49,6 +54,7 @@ public class NetLootClaim {
             rewards.add(BigItemStack.loadItemStackFromNBT(list.getCompoundTagAt(i)));
         }
 
-        Minecraft.getMinecraft().displayGuiScreen(new GuiLootChest(null, rewards, title));
+        Minecraft.getMinecraft()
+            .displayGuiScreen(new GuiLootChest(null, rewards, title));
     }
 }

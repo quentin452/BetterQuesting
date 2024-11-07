@@ -1,11 +1,13 @@
 package bq_standard.integration.nei;
 
+import net.minecraft.nbt.NBTTagCompound;
+
 import bq_standard.core.BQ_Standard;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.event.FMLInterModComms;
-import net.minecraft.nbt.NBTTagCompound;
 
 public class IMCForNEI {
+
     public static void IMCSender() {
         if (Loader.isModLoaded("questbook")) {
             sendHandler("bq_quest", "questbook:ItemQuestBook");

@@ -3,6 +3,7 @@ package bq_standard.importers.hqm.converters;
 import java.util.HashMap;
 
 public class HQMRep {
+
     public final String rName;
 
     private final HashMap<Integer, Integer> markerList = new HashMap<>();

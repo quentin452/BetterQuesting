@@ -1,17 +1,19 @@
 package bq_standard.importers.hqm.converters.tasks;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import betterquesting.api.questing.tasks.ITask;
 import betterquesting.api.utils.JsonHelper;
 import bq_standard.importers.hqm.HQMUtilities;
 import bq_standard.tasks.TaskFluid;
 import bq_standard.tasks.TaskRetrieval;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class HQMTaskDetect {
+
     private final boolean consume;
 
     public HQMTaskDetect(boolean consume) {

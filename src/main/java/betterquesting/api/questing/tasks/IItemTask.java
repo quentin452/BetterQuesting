@@ -1,16 +1,18 @@
 package betterquesting.api.questing.tasks;
 
-import betterquesting.api.questing.IQuest;
-import betterquesting.api2.utils.ParticipantInfo;
-import net.minecraft.item.ItemStack;
-
 import java.util.Map;
 import java.util.UUID;
 
-public interface IItemTask extends ITask
-{
-	boolean canAcceptItem(UUID owner, Map.Entry<UUID, IQuest> quest, ItemStack stack);
-	ItemStack submitItem(UUID owner, Map.Entry<UUID, IQuest> quest, ItemStack stack);
+import net.minecraft.item.ItemStack;
+
+import betterquesting.api.questing.IQuest;
+import betterquesting.api2.utils.ParticipantInfo;
+
+public interface IItemTask extends ITask {
+
+    boolean canAcceptItem(UUID owner, Map.Entry<UUID, IQuest> quest, ItemStack stack);
+
+    ItemStack submitItem(UUID owner, Map.Entry<UUID, IQuest> quest, ItemStack stack);
 
     /**
      * @param items read-only list of items

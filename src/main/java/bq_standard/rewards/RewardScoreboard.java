@@ -1,14 +1,8 @@
 package bq_standard.rewards;
 
-import betterquesting.api.questing.IQuest;
-import betterquesting.api.questing.rewards.IReward;
-import betterquesting.api2.client.gui.misc.IGuiRect;
-import betterquesting.api2.client.gui.panels.IGuiPanel;
-import bq_standard.client.gui.rewards.PanelRewardScoreboard;
-import bq_standard.core.BQ_Standard;
-import bq_standard.rewards.factory.FactoryRewardScoreboard;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import java.util.Map;
+import java.util.UUID;
+
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -18,12 +12,21 @@ import net.minecraft.scoreboard.ScoreDummyCriteria;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.util.ResourceLocation;
+
 import org.apache.logging.log4j.Level;
 
-import java.util.Map;
-import java.util.UUID;
+import betterquesting.api.questing.IQuest;
+import betterquesting.api.questing.rewards.IReward;
+import betterquesting.api2.client.gui.misc.IGuiRect;
+import betterquesting.api2.client.gui.panels.IGuiPanel;
+import bq_standard.client.gui.rewards.PanelRewardScoreboard;
+import bq_standard.core.BQ_Standard;
+import bq_standard.rewards.factory.FactoryRewardScoreboard;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 public class RewardScoreboard implements IReward {
+
     public String score = "Reputation";
     public String type = "dummy";
     public boolean relative = true;
@@ -53,8 +56,8 @@ public class RewardScoreboard implements IReward {
 
         if (scoreObj == null) {
             try {
-                IScoreObjectiveCriteria criteria =
-                        (IScoreObjectiveCriteria) IScoreObjectiveCriteria.field_96643_a.get(type);
+                IScoreObjectiveCriteria criteria = (IScoreObjectiveCriteria) IScoreObjectiveCriteria.field_96643_a
+                    .get(type);
                 criteria = criteria != null ? criteria : new ScoreDummyCriteria(score);
                 scoreObj = board.addScoreObjective(score, criteria);
                 scoreObj.setDisplayName(score);
@@ -63,7 +66,8 @@ public class RewardScoreboard implements IReward {
             }
         }
 
-        if (scoreObj == null || scoreObj.getCriteria().isReadOnly()) {
+        if (scoreObj == null || scoreObj.getCriteria()
+            .isReadOnly()) {
             return;
         }
 

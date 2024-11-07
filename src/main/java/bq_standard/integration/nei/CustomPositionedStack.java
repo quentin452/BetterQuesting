@@ -1,9 +1,9 @@
 package bq_standard.integration.nei;
 
-import codechicken.nei.PositionedStack;
-
 import java.util.Collections;
 import java.util.List;
+
+import codechicken.nei.PositionedStack;
 
 public class CustomPositionedStack extends PositionedStack {
 

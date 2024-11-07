@@ -1,5 +1,19 @@
 package bq_standard.rewards;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.ResourceLocation;
+
+import org.apache.logging.log4j.Level;
+
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.rewards.IReward;
@@ -11,20 +25,9 @@ import bq_standard.NBTReplaceUtil;
 import bq_standard.client.gui.rewards.PanelRewardItem;
 import bq_standard.core.BQ_Standard;
 import bq_standard.rewards.factory.FactoryRewardItem;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ResourceLocation;
-import org.apache.logging.log4j.Level;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 public class RewardItem implements IReward, IRewardItemOutput {
+
     public final List<BigItemStack> items = new ArrayList<>();
 
     @Override
@@ -49,12 +52,14 @@ public class RewardItem implements IReward, IRewardItemOutput {
 
             for (ItemStack s : stack.getCombinedStacks()) {
                 if (s.getTagCompound() != null) {
-                    s.setTagCompound(NBTReplaceUtil.replaceStrings(
-                            s.getTagCompound(), "VAR_NAME", player.getCommandSenderName()));
-                    s.setTagCompound(NBTReplaceUtil.replaceStrings(
+                    s.setTagCompound(
+                        NBTReplaceUtil.replaceStrings(s.getTagCompound(), "VAR_NAME", player.getCommandSenderName()));
+                    s.setTagCompound(
+                        NBTReplaceUtil.replaceStrings(
                             s.getTagCompound(),
                             "VAR_UUID",
-                            QuestingAPI.getQuestingUUID(player).toString()));
+                            QuestingAPI.getQuestingUUID(player)
+                                .toString()));
                 }
 
                 if (!player.inventory.addItemStackToInventory(s)) {

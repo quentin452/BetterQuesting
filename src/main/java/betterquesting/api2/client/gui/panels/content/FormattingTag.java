@@ -1,10 +1,5 @@
 package betterquesting.api2.client.gui.panels.content;
 
-import betterquesting.api.storage.BQ_Settings;
-import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableTable;
-
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Function;
@@ -12,7 +7,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableTable;
+
+import betterquesting.api.storage.BQ_Settings;
+
 public enum FormattingTag {
+
     NOTE("note"),
     WARNING("warn"),
     QUEST("quest"),
@@ -26,33 +28,31 @@ public enum FormattingTag {
     /**
      * Defines a clickable hyperlink.
      *
-     * <p>Params:
+     * <p>
+     * Params:
      * <ul>
-     *     <li>{@code link}: If provided, sets the hyperlink target. If not provided, then the
-     *     <em>exact</em> text contents within the {@code [url]} tags will be the hyperlink target.</li>
+     * <li>{@code link}: If provided, sets the hyperlink target. If not provided, then the
+     * <em>exact</em> text contents within the {@code [url]} tags will be the hyperlink target.</li>
      * </ul>
      *
-     * <p>Example usage:
+     * <p>
+     * Example usage:
      * <ul>
-     *     <li>{@code [url]https://www.example.com[/url]}</li>
-     *     <li>{@code [url link=https://www.example.com]Click me![/url]}</li>
+     * <li>{@code [url]https://www.example.com[/url]}</li>
+     * <li>{@code [url link=https://www.example.com]Click me![/url]}</li>
      * </ul>
      *
-     * <p>URL tags cannot be nested, and will break if you try.
+     * <p>
+     * URL tags cannot be nested, and will break if you try.
      */
-    URL("url"),
-    ;
+    URL("url"),;
 
-    public static final ImmutableMap<String, FormattingTag> NAME_TO_VALUE_MAP =
-            ImmutableMap.copyOf(
-                    Arrays.stream(values())
-                            .collect(
-                                    Collectors.toMap(FormattingTag::getName, Function.identity())));
+    public static final ImmutableMap<String, FormattingTag> NAME_TO_VALUE_MAP = ImmutableMap.copyOf(
+        Arrays.stream(values())
+            .collect(Collectors.toMap(FormattingTag::getName, Function.identity())));
 
-    private static final Pattern OPENING_TAG_PATTERN =
-            Pattern.compile("\\[([0-9a-zA-Z]+)((?: [0-9a-zA-Z]+=[^ ]+)*)]");
-    private static final Pattern OPENING_TAG_PARAMS_PATTERN =
-            Pattern.compile(" ([0-9a-zA-Z]+)=([^ ]+)");
+    private static final Pattern OPENING_TAG_PATTERN = Pattern.compile("\\[([0-9a-zA-Z]+)((?: [0-9a-zA-Z]+=[^ ]+)*)]");
+    private static final Pattern OPENING_TAG_PARAMS_PATTERN = Pattern.compile(" ([0-9a-zA-Z]+)=([^ ]+)");
     private static final Pattern CLOSING_TAG_PATTERN = Pattern.compile("\\[/([0-9a-zA-Z]+)]");
 
     private static final String BQ_DARK_THEME = "betterquesting:dark";
@@ -65,12 +65,10 @@ public enum FormattingTag {
     private static final ImmutableMap<FormattingTag, String> TEXT_FORMATTING_STRING_MAP;
 
     static {
-        ImmutableMap.Builder<FormattingTag, String> defaultFormattingStringMapBuilder =
-                ImmutableMap.builder();
-        ImmutableTable.Builder<FormattingTag, String, String> themeFormattingStringTableBuilder =
-                ImmutableTable.builder();
-        ImmutableMap.Builder<FormattingTag, String> textFormattingStringMapBuilder =
-                ImmutableMap.builder();
+        ImmutableMap.Builder<FormattingTag, String> defaultFormattingStringMapBuilder = ImmutableMap.builder();
+        ImmutableTable.Builder<FormattingTag, String, String> themeFormattingStringTableBuilder = ImmutableTable
+            .builder();
+        ImmutableMap.Builder<FormattingTag, String> textFormattingStringMapBuilder = ImmutableMap.builder();
 
         defaultFormattingStringMapBuilder.put(NOTE, "§3");
         themeFormattingStringTableBuilder.put(NOTE, BQ_ENDER_THEME, "§b");
@@ -118,15 +116,16 @@ public enum FormattingTag {
 
     public String getColourFormattingString() {
         return Objects.firstNonNull(
-                THEME_FORMATTING_STRING_TABLE.get(this, BQ_Settings.curTheme),
-                DEFAULT_FORMATTING_STRING_MAP.getOrDefault(this, ""));
+            THEME_FORMATTING_STRING_TABLE.get(this, BQ_Settings.curTheme),
+            DEFAULT_FORMATTING_STRING_MAP.getOrDefault(this, ""));
     }
 
     /**
      * Unfortunately, in Minecraft 1.7, text formatting codes (bold, italic, etc.) must be
      * re-applied after colour formatting codes.
      *
-     * <p>Having this separate method allows us to handle re-applying these text formatting codes
+     * <p>
+     * Having this separate method allows us to handle re-applying these text formatting codes
      * where needed.
      */
     public String getTextFormattingString() {
@@ -169,13 +168,16 @@ public enum FormattingTag {
      * Helper object which represents an instance of an opening formatting tag, complete with
      * optional parameters.
      *
-     * <p>Parameters are specified using the form {@code paramName=value}. The parameter value is
+     * <p>
+     * Parameters are specified using the form {@code paramName=value}. The parameter value is
      * not allowed to contain spaces or square brackets.
      *
-     * <p>The reason why parameter values cannot contain square brackets, is because they would
+     * <p>
+     * The reason why parameter values cannot contain square brackets, is because they would
      * interfere with the string tokenization logic in {@link PanelTextBox}.
      */
     public static class TagInstance {
+
         private final FormattingTag tag;
         private final ImmutableMap<String, String> params;
 
