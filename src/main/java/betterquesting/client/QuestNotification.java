@@ -60,7 +60,7 @@ public class QuestNotification {
             notice.init = true;
             notice.startTime = Minecraft.getSystemTime();
             // lower volume for default xp jingle, standard volume for custom sounds
-            float volume = notice.sound.equals(NativeProps.SOUND_COMPLETE.getDefault()) ? 0.4f : 1f;
+            float volume = notice.sound.equals(NativeProps.SOUND_COMPLETE.getDefault()) ? 0.25f : 1f;
             mc.getSoundHandler()
                 .playSound(new QuestCompleteSound(new ResourceLocation(notice.sound), volume));
         }
