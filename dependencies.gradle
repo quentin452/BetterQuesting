@@ -1,9 +1,9 @@
 // Add your dependencies here
 
 dependencies {
-    implementation 'com.github.GTNewHorizons:NotEnoughItems:2.7.38-GTNH:dev'
+    implementation 'com.github.GTNewHorizons:NotEnoughItems:2.7.62-GTNH:dev'
     compileOnly 'com.github.GTNewHorizons:DuraDisplay:1.3.4:dev'
 
     // For testing translations
-    runtimeOnly 'com.github.GTNewHorizons:TX-Loader:1.8.4'
+    runtimeOnly 'com.github.GTNewHorizons:TX-Loader:1.8.5'
 }
