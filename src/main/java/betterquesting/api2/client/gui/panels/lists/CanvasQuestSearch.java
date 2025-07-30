@@ -133,13 +133,13 @@ public class CanvasQuestSearch extends CanvasSearch<QuestSearchEntry, QuestSearc
                 .error(
                     "Unexpected exception while checking if quest with ID '{}' from quest line '{}' matches query '{}'!",
                     UuidConverter.encodeUuid(
-                        entry.getQuestLineEntry()
-                            .getKey())
-                        .toLowerCase(),
-                    UuidConverter.encodeUuid(
                         entry.getQuest()
                             .getKey())
                         .toLowerCase(),
+                        UuidConverter.encodeUuid(
+                        entry.getQuestLineEntry()
+                            .getKey())
+                        .toLowerCase()
                     query);
             QuestingAPI.getLogger()
                 .error(t);
