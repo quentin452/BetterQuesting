@@ -131,7 +131,11 @@ public class CanvasQuestSearch extends CanvasSearch<QuestSearchEntry, QuestSearc
         } catch (Throwable t) {
             QuestingAPI.getLogger()
                 .error(
-                    "Unexpected exception while checking if quest with ID '{}' matches query '{}'!",
+                    "Unexpected exception while checking if quest with ID '{}' from quest line '{}' matches query '{}'!",
+                    UuidConverter.encodeUuid(
+                        entry.getQuestLineEntry()
+                            .getKey())
+                        .toLowerCase(),
                     UuidConverter.encodeUuid(
                         entry.getQuest()
                             .getKey())
