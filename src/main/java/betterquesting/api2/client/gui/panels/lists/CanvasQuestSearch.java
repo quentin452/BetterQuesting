@@ -136,7 +136,7 @@ public class CanvasQuestSearch extends CanvasSearch<QuestSearchEntry, QuestSearc
                         entry.getQuest()
                             .getKey())
                         .toLowerCase(),
-                        UuidConverter.encodeUuid(
+                    UuidConverter.encodeUuid(
                         entry.getQuestLineEntry()
                             .getKey())
                         .toLowerCase(),
