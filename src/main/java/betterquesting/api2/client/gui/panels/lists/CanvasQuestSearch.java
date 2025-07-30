@@ -139,7 +139,7 @@ public class CanvasQuestSearch extends CanvasSearch<QuestSearchEntry, QuestSearc
                         UuidConverter.encodeUuid(
                         entry.getQuestLineEntry()
                             .getKey())
-                        .toLowerCase()
+                        .toLowerCase(),
                     query);
             QuestingAPI.getLogger()
                 .error(t);
