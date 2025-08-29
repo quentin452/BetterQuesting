@@ -292,13 +292,18 @@ public class NBTConverter {
             if (!format) {
                 tags.setTag(key, JSONtoNBT_Element(entry.getValue(), (byte) 0, false));
             } else {
-                String[] s = key.split(":");
+                // Optimized key parsing without String.split()
                 byte id = 0;
+                String keyToUse = key;
 
                 try {
-                    id = Byte.parseByte(s[s.length - 1]);
-                    key = key.substring(0, key.lastIndexOf(":" + id));
-                } catch (Exception e) {
+                    int lastColonIndex = key.lastIndexOf(':');
+                    if (lastColonIndex != -1) {
+                        id = Byte.parseByte(key.substring(lastColonIndex + 1));
+                        keyToUse = key.substring(0, lastColonIndex); // Simple colon cut
+                    }
+                } catch (Exception e) { // Catch all exceptions
+                    // Invalid ID format, use original key and id=0
                     if (tags.hasKey(key)) {
                         QuestingAPI.getLogger()
                             .log(Level.WARN, "JSON/NBT formatting conflict on key '" + key + "'. Skipping...");
@@ -306,7 +311,7 @@ public class NBTConverter {
                     }
                 }
 
-                tags.setTag(key, JSONtoNBT_Element(entry.getValue(), id, true));
+                tags.setTag(keyToUse, JSONtoNBT_Element(entry.getValue(), id, true));
             }
         }
 
@@ -362,9 +367,8 @@ public class NBTConverter {
 
                 if (jObj.isJsonArray()) {
                     JsonArray jAry = jObj.getAsJsonArray();
-
-                    for (int i = 0; i < jAry.size(); i++) {
-                        JsonElement jElm = jAry.get(i);
+                    // enhanced for-loop for better performance
+                    for (JsonElement jElm : jAry) {
                         tList.appendTag(JSONtoNBT_Element(jElm, (byte) 0, format));
                     }
                 } else if (jObj.isJsonObject()) {
@@ -372,10 +376,13 @@ public class NBTConverter {
 
                     for (Entry<String, JsonElement> entry : jAry.entrySet()) {
                         try {
-                            String[] s = entry.getKey()
-                                .split(":");
-                            byte id2 = Byte.parseByte(s[s.length - 1]);
-                            // String key = entry.getKey().substring(0, entry.getKey().lastIndexOf(":" + id));
+                            // Avoid String.split() for better performance
+                            String key = entry.getKey();
+                            byte id2 = 0;
+                            int lastColonIndex = key.lastIndexOf(':');
+                            if (lastColonIndex != -1) {
+                                id2 = Byte.parseByte(key.substring(lastColonIndex + 1));
+                            }
                             tList.appendTag(JSONtoNBT_Element(entry.getValue(), id2, format));
                         } catch (Exception e) {
                             tList.appendTag(JSONtoNBT_Element(entry.getValue(), (byte) 0, format));
@@ -453,7 +460,7 @@ public class NBTConverter {
             if (prim.isNumber()) {
                 if (prim.getAsString()
                     .contains(".")) // Just in case we'll choose the largest possible container supporting this number
-                                    // type (Long or Double)
+                // type (Long or Double)
                 {
                     tagID = 6;
                 } else {
@@ -469,8 +476,8 @@ public class NBTConverter {
 
             for (JsonElement entry : array) {
                 if (entry.isJsonPrimitive() && tagID == 0) // Note: TagLists can only support Integers, Bytes and
-                                                           // Compounds (Strings can be stored but require special
-                                                           // handling)
+                // Compounds (Strings can be stored but require special
+                // handling)
                 {
                     try {
                         for (JsonElement element : array) {
