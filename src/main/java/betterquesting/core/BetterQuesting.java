@@ -26,6 +26,7 @@ import betterquesting.blocks.TileSubmitStation;
 import betterquesting.client.CreativeTabQuesting;
 import betterquesting.commands.BQ_CommandAdmin;
 import betterquesting.commands.BQ_CommandDebug;
+import betterquesting.commands.BQ_CommandExport;
 import betterquesting.commands.BQ_CommandUser;
 import betterquesting.commands.BQ_CopyProgress;
 import betterquesting.core.proxies.CommonProxy;
@@ -99,6 +100,8 @@ public class BetterQuesting {
 
         network.registerMessage(PacketQuesting.HandleClient.class, PacketQuesting.class, 0, Side.CLIENT);
         network.registerMessage(PacketQuesting.HandleServer.class, PacketQuesting.class, 0, Side.SERVER);
+
+        betterquesting.loaders.dsl.DslInitializer.initialize();
     }
 
     @EventHandler
@@ -177,6 +180,7 @@ public class BetterQuesting {
         manager.registerCommand(new BQ_CopyProgress());
         manager.registerCommand(new BQ_CommandAdmin());
         manager.registerCommand(new BQ_CommandUser());
+        manager.registerCommand(new BQ_CommandExport());
 
         if ((Boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment"))
             manager.registerCommand(new BQ_CommandDebug());
@@ -193,6 +197,7 @@ public class BetterQuesting {
 
     @EventHandler
     public void serverStop(FMLServerStoppedEvent event) {
+        betterquesting.loaders.dsl.DslFileWatcher.stopWatching();
         SaveLoadHandler.INSTANCE.unloadDatabases();
     }
 }

@@ -1,24 +1,22 @@
-BetterQuesting
+BetterQuestingCat
 ============
 
-A new and improved questing mod for Minecraft pack creators
+A fork of Better Questing with quests scripting support.
 
-Standard Expansion
-============
+### DSL Quest Loader
+- **Dynamic Quests Loading**: Create and modify quests using `.dsl` script files
+- **Hot Reload**: Automatically reload quests when DSL files change
 
-Contains all the basic tasks, rewards, importers and themes for the Better Questing mod
+### DSL Syntax
+Full syntax details can be found in: `docs/dsl_reference.md`
 
-Quest Book
-============
+## Directory Structure
 
-Contains a basic quest book item to give the player something to interact with if there are keybinding conflicts.
-
-# CB-for-BQ
-Command Blocks for Better Questing
-
- - Adds 3 Blocks:
- - Default Load Block to Load Quests after an update.
- - Hardcore Switch Block to activate/deactivate Hardcore Mode.
- - Reset Block to Reset Quests of the Player thats activating it.
- - Blocks can be used in MP but cannot be crafted.
- - works with BQ1 and SHOULD work with BQ2 aswell (untested)
+```
+config/betterquesting/questsloader/
+├── gamemode/
+│   ├── modname1/
+│   │   └── quests.dsl
+│   └── modname2/
+│       └── quests.dsl
+```

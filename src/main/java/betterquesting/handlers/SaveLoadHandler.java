@@ -43,6 +43,9 @@ import betterquesting.storage.QuestSettings;
 import cpw.mods.fml.common.Loader;
 import io.netty.util.internal.ConcurrentSet;
 
+import betterquesting.loaders.dsl.DslQuestLoader;
+import betterquesting.loaders.dsl.DslFileWatcher;
+
 public class SaveLoadHandler {
 
     public static SaveLoadHandler INSTANCE = new SaveLoadHandler();
@@ -246,6 +249,12 @@ public class SaveLoadHandler {
 
         hasUpdate = packName.equals(QuestSettings.INSTANCE.getProperty(NativeProps.PACK_NAME))
             && packVer > QuestSettings.INSTANCE.getProperty(NativeProps.PACK_VER);
+        try {
+            DslQuestLoader.loadDslQuests();
+            DslFileWatcher.startWatching();
+        } catch (Exception e) {
+            BetterQuesting.logger.error("Error loading DSL quests", e);
+        }
     }
 
     private void loadProgress() {
